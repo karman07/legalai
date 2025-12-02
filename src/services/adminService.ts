@@ -41,7 +41,7 @@ class AdminService {
 
     // Response interceptor for error handling
     this.api.interceptors.response.use(
-      (response) => response,
+      (response: any) => response,
       (error: AxiosError<ApiError>) => {
         this.handleError(error);
         return Promise.reject(error);
