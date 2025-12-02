@@ -1004,7 +1004,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
             </div>
-            </div>
+          </div>
           </div>
           <DialogFooter>
             <Button onClick={closeDialog} variant="outline" disabled={actionLoading}>
