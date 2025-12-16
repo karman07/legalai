@@ -1,0 +1,513 @@
+{
+	"info": {
+		"_postman_id": "audio-lessons-api-collection",
+		"name": "Audio Lessons API (Admin & User)",
+		"description": "Complete API collection for audio lesson management with automatic transcription",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{ADMIN_TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "ADMIN_TOKEN",
+			"value": "your_admin_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "USER_TOKEN",
+			"value": "your_user_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "LESSON_ID",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Admin Endpoints",
+			"item": [
+				{
+					"name": "Upload Audio Lesson",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('LESSON_ID', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Select audio file (MP3, WAV, M4A, etc.)"
+								},
+								{
+									"key": "title",
+									"value": "Constitutional Law Lecture 1",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Introduction to constitutional law and basic structure doctrine",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "Constitutional Law",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "[\"constitutional law\",\"basic structure\",\"introduction\"]",
+									"type": "text",
+									"description": "Send as JSON array string"
+								},
+								{
+									"key": "language",
+									"value": "en",
+									"type": "text"
+								},
+								{
+									"key": "duration",
+									"value": "3600",
+									"type": "text",
+									"description": "Duration in seconds"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons"
+							]
+						},
+						"description": "Upload audio lesson with automatic transcription. File size up to 500MB."
+					},
+					"response": []
+				},
+				{
+					"name": "List All Audio Lessons (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons?page=1&limit=10",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "Constitutional Law",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get paginated list of all audio lessons with optional filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audio Lesson by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{LESSON_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons",
+								"{{LESSON_ID}}"
+							]
+						},
+						"description": "Get complete details including transcript if available."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/categories",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons",
+								"categories"
+							]
+						},
+						"description": "Get all unique categories."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Audio Lesson Metadata",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Updated Constitutional Law Lecture",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Revised content with latest amendments",
+									"type": "text"
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{LESSON_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons",
+								"{{LESSON_ID}}"
+							]
+						},
+						"description": "Update audio lesson metadata without replacing file."
+					},
+					"response": []
+				},
+				{
+					"name": "Replace Audio File",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "New audio file"
+								},
+								{
+									"key": "title",
+									"value": "Updated Lesson Title",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{LESSON_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons",
+								"{{LESSON_ID}}"
+							]
+						},
+						"description": "Replace audio file. This triggers re-transcription."
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Transcription",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{LESSON_ID}}/retry-transcription",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons",
+								"{{LESSON_ID}}",
+								"retry-transcription"
+							]
+						},
+						"description": "Manually retry transcription if it failed."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Audio Lesson",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{LESSON_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"admin",
+								"audio-lessons",
+								"{{LESSON_ID}}"
+							]
+						},
+						"description": "Permanently delete audio lesson."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Endpoints",
+			"item": [
+				{
+					"name": "List Audio Lessons (User)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{USER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/audio-lessons?page=1&limit=12",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"audio-lessons"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								},
+								{
+									"key": "category",
+									"value": "Constitutional Law",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "fundamental rights",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get active audio lessons with pagination and filters."
+					},
+					"response": []
+				},
+				{
+					"name": "Search Audio Lessons",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{USER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/audio-lessons/search?q=constitutional&page=1&limit=12",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"audio-lessons",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "constitutional"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								}
+							]
+						},
+						"description": "Search in title, description, transcript, and tags."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories (User)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{USER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/audio-lessons/categories",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"audio-lessons",
+								"categories"
+							]
+						},
+						"description": "Get all available categories."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Category",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{USER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/audio-lessons/category/Constitutional Law?page=1&limit=12",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"audio-lessons",
+								"category",
+								"Constitutional Law"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "12"
+								}
+							]
+						},
+						"description": "Get lessons filtered by category."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audio Lesson by ID (User)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{USER_TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/audio-lessons/{{LESSON_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"audio-lessons",
+								"{{LESSON_ID}}"
+							]
+						},
+						"description": "Get audio lesson details with transcript."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

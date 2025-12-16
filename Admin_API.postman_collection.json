@@ -1,0 +1,818 @@
+{
+	"info": {
+		"_postman_id": "admin-api-collection",
+		"name": "LegalPadhai Admin API",
+		"description": "Complete API collection for admin operations - User Management, Audio Lessons, PDFs, and Quizzes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{ADMIN_TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "ADMIN_TOKEN",
+			"value": "your_admin_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "USER_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "AUDIO_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PDF_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "QUIZ_ID",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('USER_ID', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"SecurePass123\",\n  \"name\": \"New User\",\n  \"role\": \"user\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users"]
+						},
+						"description": "Create a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users?page=1&limit=10",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get paginated list of all users"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/search?q=john",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "john"
+								}
+							]
+						},
+						"description": "Search users by email or name"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/stats",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "stats"]
+						},
+						"description": "Get user statistics (total, active, inactive, admins)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}"]
+						},
+						"description": "Get user details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User with Password",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}/password",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}", "password"]
+						},
+						"description": "Get user with password hash (for debugging)"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify User Email",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}/verify",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}", "verify"]
+						},
+						"description": "Manually verify user's email"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"NewSecurePass123\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}/password",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}", "password"]
+						},
+						"description": "Update user's password"
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle User Status",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}/toggle-status",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}", "toggle-status"]
+						},
+						"description": "Toggle user's active/inactive status"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}/role",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}", "role"]
+						},
+						"description": "Update user's role (user/admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/users/{{USER_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "users", "{{USER_ID}}"]
+						},
+						"description": "Permanently delete user"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Audio Lessons",
+			"item": [
+				{
+					"name": "Upload Audio Lesson",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('AUDIO_ID', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Audio file (MP3, WAV, M4A, etc.)"
+								},
+								{
+									"key": "title",
+									"value": "Constitutional Law Lecture 1",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Introduction to constitutional law",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "constitution",
+									"type": "text",
+									"description": "Category ID: constitution, ipc, bns, crpc, bnss, iea, bse, cpc, contract, companies"
+								},
+								{
+									"key": "tags",
+									"value": "[\"constitutional law\", \"fundamental rights\"]",
+									"type": "text",
+									"description": "JSON array of tags"
+								},
+								{
+									"key": "language",
+									"value": "en",
+									"type": "text"
+								},
+								{
+									"key": "duration",
+									"value": "3600",
+									"type": "text",
+									"description": "Duration in seconds"
+								},
+								{
+									"key": "transcriptFile",
+									"type": "file",
+									"src": [],
+									"description": "Optional: Pre-made transcript file (TXT, PDF, DOC, DOCX, MD)",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons"]
+						},
+						"description": "Upload audio lesson with automatic transcription. Max 500MB."
+					},
+					"response": []
+				},
+				{
+					"name": "List All Audio Lessons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons?page=1&limit=10",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get paginated list of all audio lessons"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories with Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/categories",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons", "categories"]
+						},
+						"description": "Get all categories with lesson counts"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/categories/all",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons", "categories", "all"]
+						},
+						"description": "Get all available categories"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audio Lesson by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{AUDIO_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons", "{{AUDIO_ID}}"]
+						},
+						"description": "Get audio lesson details"
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Transcription",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{AUDIO_ID}}/retry-transcription",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons", "{{AUDIO_ID}}", "retry-transcription"]
+						},
+						"description": "Manually retry failed transcription"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Audio Lesson",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Updated Title",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Updated description",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "ipc",
+									"type": "text"
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Optional: Replace audio file (triggers re-transcription)",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{AUDIO_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons", "{{AUDIO_ID}}"]
+						},
+						"description": "Update audio lesson metadata or replace file"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Audio Lesson",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/audio-lessons/{{AUDIO_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "audio-lessons", "{{AUDIO_ID}}"]
+						},
+						"description": "Permanently delete audio lesson and file"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "PDFs",
+			"item": [
+				{
+					"name": "Upload PDF",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('PDF_ID', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "PDF or document file"
+								},
+								{
+									"key": "title",
+									"value": "Kesavananda Bharati v. State of Kerala",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Landmark case on basic structure doctrine",
+									"type": "text"
+								},
+								{
+									"key": "category",
+									"value": "Constitutional Law",
+									"type": "text"
+								},
+								{
+									"key": "caseTitle",
+									"value": "Kesavananda Bharati v. State of Kerala",
+									"type": "text"
+								},
+								{
+									"key": "caseNumber",
+									"value": "Writ Petition (Civil) No. 135 of 1970",
+									"type": "text"
+								},
+								{
+									"key": "year",
+									"value": "1973",
+									"type": "text"
+								},
+								{
+									"key": "court",
+									"value": "{\"id\": \"sc\", \"name\": \"Supreme Court of India\", \"level\": \"supreme\"}",
+									"type": "text",
+									"description": "JSON object with court details"
+								},
+								{
+									"key": "keywords",
+									"value": "[\"basic structure\", \"constitutional amendment\", \"Article 368\"]",
+									"type": "text",
+									"description": "JSON array of keywords"
+								},
+								{
+									"key": "judges",
+									"value": "[\"S.M. Sikri\", \"K.S. Hegde\", \"A.N. Grover\"]",
+									"type": "text",
+									"description": "JSON array of judge names"
+								},
+								{
+									"key": "summary",
+									"value": "The Supreme Court held that Parliament cannot amend the basic structure of the Constitution.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/pdfs",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "pdfs"]
+						},
+						"description": "Upload PDF document. Max 100MB."
+					},
+					"response": []
+				},
+				{
+					"name": "List All PDFs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/pdfs?page=1&limit=10&isActive=true",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "pdfs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"description": "Filter by active status"
+								}
+							]
+						},
+						"description": "Get paginated list of all PDFs"
+					},
+					"response": []
+				},
+				{
+					"name": "Get PDF by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "pdfs", "{{PDF_ID}}"]
+						},
+						"description": "Get PDF details"
+					},
+					"response": []
+				},
+				{
+					"name": "Update PDF",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Updated Title",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Updated description",
+									"type": "text"
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Optional: Replace PDF file",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "pdfs", "{{PDF_ID}}"]
+						},
+						"description": "Update PDF metadata or replace file"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete PDF",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "pdfs", "{{PDF_ID}}"]
+						},
+						"description": "Permanently delete PDF and file"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Quizzes",
+			"item": [
+				{
+					"name": "Create Quiz",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('QUIZ_ID', response._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Constitutional Law Mock Test\",\n  \"description\": \"50 questions on constitutional law\",\n  \"topic\": \"Constitutional Law\",\n  \"type\": \"mocktest\",\n  \"isPublished\": true,\n  \"questions\": [\n    {\n      \"text\": \"Which article deals with Right to Equality?\",\n      \"options\": [\"Article 14\", \"Article 19\", \"Article 21\", \"Article 32\"],\n      \"correctOptionIndex\": 0,\n      \"explanation\": \"Article 14 deals with equality before law.\"\n    },\n    {\n      \"text\": \"Who is the head of the state in India?\",\n      \"options\": [\"Prime Minister\", \"President\", \"Chief Justice\", \"Governor\"],\n      \"correctOptionIndex\": 1,\n      \"explanation\": \"The President is the head of the state.\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/quizzes",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "quizzes"]
+						},
+						"description": "Create a new quiz"
+					},
+					"response": []
+				},
+				{
+					"name": "List All Quizzes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/quizzes?page=1&limit=10&type=mocktest&isPublished=true",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "quizzes"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "type",
+									"value": "mocktest",
+									"description": "pyq or mocktest"
+								},
+								{
+									"key": "isPublished",
+									"value": "true"
+								},
+								{
+									"key": "topic",
+									"value": "Constitutional Law",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get paginated list of all quizzes"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Quiz by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/quizzes/{{QUIZ_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "quizzes", "{{QUIZ_ID}}"]
+						},
+						"description": "Get quiz details with correct answers"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Quiz",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Quiz Title\",\n  \"isPublished\": true,\n  \"questions\": [\n    {\n      \"text\": \"Updated question?\",\n      \"options\": [\"A\", \"B\", \"C\", \"D\"],\n      \"correctOptionIndex\": 0,\n      \"explanation\": \"Explanation here\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/admin/quizzes/{{QUIZ_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "quizzes", "{{QUIZ_ID}}"]
+						},
+						"description": "Update quiz details"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Quiz",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/admin/quizzes/{{QUIZ_ID}}",
+							"host": ["{{BASE_URL}}"],
+							"path": ["admin", "quizzes", "{{QUIZ_ID}}"]
+						},
+						"description": "Permanently delete quiz"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

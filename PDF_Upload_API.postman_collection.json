@@ -1,0 +1,345 @@
+{
+	"info": {
+		"_postman_id": "pdf-upload-api-collection",
+		"name": "PDF Upload API (Admin)",
+		"description": "Admin endpoints for PDF upload, update, list, get, and delete operations with Multer file handling",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{ADMIN_TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "ADMIN_TOKEN",
+			"value": "your_admin_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "PDF_ID",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Upload PDF",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 201) {",
+							"    const response = pm.response.json();",
+							"    pm.collectionVariables.set('PDF_ID', response._id);",
+							"    pm.environment.set('LAST_PDF_ID', response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "title",
+							"value": "IPC Study Material",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "Complete IPC notes for law students",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs"
+					]
+				},
+				"description": "Upload a new PDF file with metadata. Select a PDF file in the 'file' field."
+			},
+			"response": []
+		},
+		{
+			"name": "Upload PDF with Case Law Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 201) {",
+							"    const response = pm.response.json();",
+							"    pm.collectionVariables.set('PDF_ID', response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "title",
+							"value": "Kesavananda Bharati vs State of Kerala",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "Landmark case on basic structure doctrine",
+							"type": "text"
+						},
+						{
+							"key": "caseTitle",
+							"value": "Kesavananda Bharati vs State of Kerala",
+							"type": "text"
+						},
+						{
+							"key": "caseNumber",
+							"value": "Writ Petition (Civil) 135 of 1970",
+							"type": "text"
+						},
+						{
+							"key": "court",
+							"value": "{\"id\":\"SC001\",\"name\":\"Supreme Court of India\",\"level\":\"supreme\"}",
+							"type": "text",
+							"description": "Send as JSON string"
+						},
+						{
+							"key": "judgmentDate",
+							"value": "1973-04-24",
+							"type": "text"
+						},
+						{
+							"key": "year",
+							"value": "1973",
+							"type": "text"
+						},
+						{
+							"key": "citation",
+							"value": "AIR 1973 SC 1461",
+							"type": "text"
+						},
+						{
+							"key": "judges",
+							"value": "[\"S.M. Sikri\",\"K.S. Hegde\",\"A.N. Grover\"]",
+							"type": "text",
+							"description": "Send as JSON array string"
+						},
+						{
+							"key": "summary",
+							"value": "This case established the basic structure doctrine, which prevents Parliament from altering certain fundamental features of the Constitution.",
+							"type": "text"
+						},
+						{
+							"key": "keywords",
+							"value": "[\"basic structure\",\"fundamental rights\",\"constitutional amendment\",\"Article 368\"]",
+							"type": "text",
+							"description": "Send as JSON array string"
+						},
+						{
+							"key": "category",
+							"value": "Constitutional Law",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs"
+					]
+				},
+				"description": "Upload a PDF with complete case law metadata including court details, judges, and keywords."
+			},
+			"response": []
+		},
+		{
+			"name": "List All PDFs",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs?page=1&limit=10&isActive=true",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "isActive",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Get paginated list of all PDFs with optional filtering by active status."
+			},
+			"response": []
+		},
+		{
+			"name": "Get PDF by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs",
+						"{{PDF_ID}}"
+					]
+				},
+				"description": "Get details of a specific PDF by ID. The PDF_ID variable is auto-set after uploading a PDF."
+			},
+			"response": []
+		},
+		{
+			"name": "Update PDF Metadata",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "title",
+							"value": "Updated IPC Study Material",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "Revised notes with 2023 amendments",
+							"type": "text"
+						},
+						{
+							"key": "isActive",
+							"value": "true",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs",
+						"{{PDF_ID}}"
+					]
+				},
+				"description": "Update PDF metadata without replacing the file."
+			},
+			"response": []
+		},
+		{
+			"name": "Update PDF File",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "title",
+							"value": "Updated PDF Title",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs",
+						"{{PDF_ID}}"
+					]
+				},
+				"description": "Replace the PDF file and optionally update metadata."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete PDF",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/admin/pdfs/{{PDF_ID}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"admin",
+						"pdfs",
+						"{{PDF_ID}}"
+					]
+				},
+				"description": "Permanently delete a PDF record from the database."
+			},
+			"response": []
+		}
+	]
+}

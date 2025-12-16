@@ -1,0 +1,114 @@
+{
+  "info": {
+    "name": "LegalPadhai - Quiz (User)",
+    "_postman_id": "b1a1f4f6-1234-5678-9abc-quiz-user-collection",
+    "description": "User-only quiz endpoints: list, get, submit answers",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Published Quizzes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/quizzes?topic={{topic}}&page={{page}}&limit={{limit}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes"
+          ],
+          "query": [
+            {"key": "topic", "value": "{{topic}}"},
+            {"key": "page", "value": "{{page}}"},
+            {"key": "limit", "value": "{{limit}}"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Published Quiz",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/quizzes/{{quiz_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            "{{quiz_id}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Submit Answers",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{user_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"answers\": [1, 0]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/quizzes/{{quiz_id}}/submit",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            "{{quiz_id}}",
+            "submit"
+          ]
+        }
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Ensure defaults for pagination",
+          "if (!pm.collectionVariables.get('page')) pm.collectionVariables.set('page', '1');",
+          "if (!pm.collectionVariables.get('limit')) pm.collectionVariables.set('limit', '10');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api" },
+    { "key": "user_token", "value": "" },
+    { "key": "topic", "value": "" },
+    { "key": "page", "value": "1" },
+    { "key": "limit", "value": "10" },
+    { "key": "quiz_id", "value": "" }
+  ]
+}

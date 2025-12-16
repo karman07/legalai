@@ -1,0 +1,119 @@
+{
+  "info": {
+    "name": "LegalPadhai - Quiz (Admin)",
+    "_postman_id": "b1a1f4f6-1234-5678-9abc-quiz-admin-collection",
+    "description": "Admin-only quiz endpoints: create, list, get, update, delete",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Quiz",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text"},
+          {"key": "Content-Type", "value": "application/json", "type": "text"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"IPC Basics Quiz\",\n  \"topic\": \"IPC\",\n  \"description\": \"Intro IPC sections\",\n  \"isPublished\": true,\n  \"questions\": [\n    {\n      \"text\": \"Section 420 deals with?\",\n      \"options\": [\"Forgery\",\"Cheating\",\"Theft\",\"Assault\"],\n      \"correctOptionIndex\": 1,\n      \"explanation\": \"Cheating is covered under 420\"\n    },\n    {\n      \"text\": \"IPC enacted in?\",\n      \"options\": [\"1860\",\"1947\",\"1950\",\"1972\"],\n      \"correctOptionIndex\": 0,\n      \"explanation\": \"IPC came into force in 1862\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/admin/quizzes",
+          "host": ["{{base_url}}"],
+          "path": ["admin","quizzes"]
+        }
+      }
+    },
+    {
+      "name": "List Quizzes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/quizzes?topic={{topic}}&page={{page}}&limit={{limit}}&isPublished={{isPublished}}",
+          "host": ["{{base_url}}"],
+          "path": ["admin","quizzes"],
+          "query": [
+            {"key": "topic", "value": "{{topic}}"},
+            {"key": "page", "value": "{{page}}"},
+            {"key": "limit", "value": "{{limit}}"},
+            {"key": "isPublished", "value": "{{isPublished}}"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Quiz by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/quizzes/{{quiz_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["admin","quizzes","{{quiz_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Quiz",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text"},
+          {"key": "Content-Type", "value": "application/json", "type": "text"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"IPC Basics Quiz - Updated\",\n  \"isPublished\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/admin/quizzes/{{quiz_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["admin","quizzes","{{quiz_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete Quiz",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{admin_token}}", "type": "text"}
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/quizzes/{{quiz_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["admin","quizzes","{{quiz_id}}"]
+        }
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Default variables",
+          "if (!pm.collectionVariables.get('page')) pm.collectionVariables.set('page', '1');",
+          "if (!pm.collectionVariables.get('limit')) pm.collectionVariables.set('limit', '10');",
+          "if (!pm.collectionVariables.get('isPublished')) pm.collectionVariables.set('isPublished', '');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:3000/api"},
+    {"key": "admin_token", "value": ""},
+    {"key": "topic", "value": ""},
+    {"key": "page", "value": "1"},
+    {"key": "limit", "value": "10"},
+    {"key": "isPublished", "value": ""},
+    {"key": "quiz_id", "value": ""}
+  ]
+}
