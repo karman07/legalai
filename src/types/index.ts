@@ -111,3 +111,55 @@ export interface PaginationState {
   total: number;
   totalPages: number;
 }
+
+// Quiz Types
+export interface QuizQuestion {
+  text: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation?: string;
+}
+
+export interface Quiz {
+  _id: string;
+  title: string;
+  topic: string;
+  description?: string;
+  branch?: string;
+  course?: string;
+  isPublished: boolean;
+  questions: QuizQuestion[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateQuizPayload {
+  title: string;
+  topic: string;
+  description?: string;
+  branch?: string;
+  course?: string;
+  isPublished?: boolean;
+  questions: QuizQuestion[];
+}
+
+export interface UpdateQuizPayload {
+  title?: string;
+  topic?: string;
+  description?: string;
+  branch?: string;
+  course?: string;
+  isPublished?: boolean;
+  questions?: QuizQuestion[];
+}
+
+export interface PaginatedQuizResponse {
+  quizzes: Quiz[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages?: number;
+    totalPages?: number;
+  };
+}

@@ -1,0 +1,1 @@
+export { QuizAdmin } from './quiz';

@@ -4,8 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Menu } from 'lucide-react';
-import { Sidebar } from '../components/layout/Sidebar';
 import { StatsCards } from '../components/dashboard/StatsCards';
 import { Charts } from '../components/dashboard/Charts';
 import { UserTable } from '../components/dashboard/UserTable';
@@ -13,14 +11,7 @@ import { adminService } from '../services/adminService';
 import { PAGINATION } from '../constants/app';
 import type { User, UserStats, PaginationState } from '../types';
 
-export const Dashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => {
-  // Sidebar state - open on desktop (>= 1024px), closed on mobile
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 1024;
-    }
-    return true;
-  });
+export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -92,28 +83,16 @@ export const Dashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => 
     fetchUsers();
   }, []);
 
+  // content-only component; sidebar is controlled by parent layout
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-        onLogout={onLogout}
-      />
-
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'}`}>
-        <main className="p-6 lg:p-8">
+      <div className="transition-all duration-300">
+        <main className="p-6 lg:p-6">
           {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* Sidebar Toggle Button - visible on all screens */}
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
-                title="Toggle Sidebar"
-              >
-                <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-              </button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   User Dashboard
@@ -126,12 +105,12 @@ export const Dashboard: React.FC<{ onLogout?: () => void }> = ({ onLogout }) => 
           </div>
 
           {/* Statistics Cards */}
-          <div className="mb-8">
+          <div className="mb-6">
             <StatsCards stats={stats} loading={statsLoading} />
           </div>
 
           {/* Charts */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Charts stats={stats} loading={statsLoading} />
           </div>
 

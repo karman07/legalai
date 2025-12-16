@@ -4,7 +4,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: 'http://82.112.231.134:7001/api',
+  BASE_URL: 'http://localhost:3000/api',
   TIMEOUT: 30000,
 } as const;
 
@@ -25,6 +25,15 @@ export const API_ENDPOINTS = {
     USER_VERIFY: (userId: string) => `/admin/users/${userId}/verify`,
     USER_ROLE: (userId: string) => `/admin/users/${userId}/role`,
     USER_TOGGLE_STATUS: (userId: string) => `/admin/users/${userId}/toggle-status`,
+  },
+  
+  // Admin Quiz Management
+  QUIZZES: {
+    LIST: '/admin/quizzes',
+    CREATE: '/admin/quizzes',
+    BY_ID: (quizId: string) => `/admin/quizzes/${quizId}`,
+    UPDATE: (quizId: string) => `/admin/quizzes/${quizId}`,
+    DELETE: (quizId: string) => `/admin/quizzes/${quizId}`,
   },
 } as const;
 

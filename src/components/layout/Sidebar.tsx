@@ -11,6 +11,8 @@ import {
   LogOut,
   Menu,
   X,
+  Music,
+  FileText,
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { adminService } from '../../services/adminService';
@@ -20,9 +22,11 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   onLogout?: () => void;
+  onNavigate?: (view: 'dashboard' | 'quizzes' | 'media') => void;
+  currentView?: 'dashboard' | 'quizzes' | 'media';
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onLogout }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onLogout, onNavigate, currentView = 'dashboard' }) => {
   const { theme, toggleTheme } = useTheme();
   const currentUser = adminService.getCurrentUser();
 
@@ -38,7 +42,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onLogout }) 
       icon: LayoutDashboard,
       label: 'User Dashboard',
       href: '#',
-      active: true,
+      key: 'dashboard' as const,
+    },
+    {
+      icon: LayoutDashboard,
+      label: 'Quizzes',
+      href: '#',
+      key: 'quizzes' as const,
+    },
+    {
+      icon: Music,
+      label: 'Media Manager',
+      href: '#',
+      key: 'media' as const,
     },
   ];
 
@@ -55,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onLogout }) 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out",
+          "fixed top-0 left-0 z-50 h-screen w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -86,19 +102,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, onLogout }) 
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <a
+                <button
                   key={item.label}
-                  href={item.href}
+                  onClick={() => onNavigate?.(item.key)}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-                    item.active
+                    "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors w-full text-left",
+                    currentView === item.key
                       ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   )}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
-                </a>
+                </button>
               );
             })}
           </nav>
