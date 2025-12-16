@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Edit, Trash2, Eye, Search, FileText } from 'lucide-react';
+import { Upload, Edit, Trash2, Eye, Search } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';

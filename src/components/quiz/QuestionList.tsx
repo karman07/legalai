@@ -36,7 +36,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({ questions, onAdd, on
               question={question}
               index={index}
               onUpdate={onUpdate}
-              onRemove={onRemove}
+              onRemove={() => onRemove(index)}
             />
           ))}
         </div>

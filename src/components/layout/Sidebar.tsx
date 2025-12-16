@@ -12,7 +12,6 @@ import {
   Menu,
   X,
   Music,
-  FileText,
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { adminService } from '../../services/adminService';
