@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Volume2, FileAudio, Clock, Tag, Languages, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Volume2, FileText, Loader2, Search, Clock } from 'lucide-react';
 import { audioLessonsAPI, AudioLesson } from '../services/api';
 
 export default function AudioLessons() {
@@ -11,12 +11,12 @@ export default function AudioLessons() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchAudioLessons();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
-
-
 
   const fetchAudioLessons = async () => {
     try {
@@ -55,207 +55,211 @@ export default function AudioLessons() {
     });
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'processing':
-        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'failed':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
-    }
-  };
+
 
   const categories = ['all', ...Array.from(new Set(audioLessons.map(l => l.category).filter((c): c is string => Boolean(c))))];
-  const filteredLessons = selectedCategory === 'all' 
-    ? audioLessons 
-    : audioLessons.filter(l => l.category === selectedCategory);
+  const filteredLessons = audioLessons
+    .filter(l => selectedCategory === 'all' || l.category === selectedCategory)
+    .filter(l => 
+      searchQuery === '' || 
+      l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   if (loading && audioLessons.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-amber-600 animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">Loading audio lessons...</p>
-        </div>
+        <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-3">Audio Lessons</h1>
-          <p className="text-lg text-slate-600">Immersive legal education through audio lectures</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-4xl font-bold text-slate-900">Audio Lessons</h1>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-amber-600">{filteredLessons.length}</div>
+              <div className="text-xs text-slate-500">Available Lessons</div>
+            </div>
+          </div>
+          
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by title or description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm hover:border-slate-400 transition-colors"
+            />
+          </div>
         </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center space-x-3">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
 
         {categories.length > 1 && (
-          <div className="mb-8 flex flex-wrap gap-3">
+          <div className="mb-8 flex gap-3 overflow-x-auto pb-2">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all transform hover:scale-105 ${
+                className={`px-5 py-2.5 font-medium transition-all rounded-lg whitespace-nowrap ${
                   selectedCategory === cat
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-                    : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-amber-400 shadow-sm'
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 hover:border-slate-300'
                 }`}
               >
-                {cat === 'all' ? 'All Categories' : cat}
+                {cat === 'all' ? 'All Lessons' : cat}
               </button>
             ))}
           </div>
         )}
 
-        <div className="grid gap-6">
-          {filteredLessons.map((lesson) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredLessons.map((lesson, index) => (
             <div
               key={lesson._id}
-              className="bg-white border-2 border-slate-200 rounded-2xl p-8 hover:shadow-2xl hover:border-amber-300 transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => lesson.isActive && handleOpenPlayer(lesson._id)}
+              className={`group relative border border-slate-200 rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 bg-white transform hover:-translate-y-1 ${
+                lesson.isActive ? 'cursor-pointer hover:border-amber-300' : 'cursor-not-allowed opacity-50'
+              }`}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-start space-x-4">
-                  <button
-                    onClick={() => handleOpenPlayer(lesson._id)}
-                    disabled={!lesson.isActive}
-                    className={`flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all transform hover:scale-110 ${
-                      lesson.isActive
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xl hover:shadow-2xl'
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <Play className="w-7 h-7 ml-1" />
-                  </button>
+              {/* Gradient Overlay on Hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-orange-50/0 group-hover:from-amber-50/50 group-hover:to-orange-50/30 transition-all duration-300 pointer-events-none" />
+              
+              {/* Content */}
+              <div className="relative">
+                {/* Header with Icon */}
+                <div className="p-6 pb-4">
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm mb-4">
+                      <FileText className="w-8 h-8 text-amber-600" />
+                    </div>
+                    <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
+                      {lesson.transcript ? `${lesson.transcript.split(/\s+/).length} words` : formatFileSize(lesson.fileSize)}
+                    </div>
+                  </div>
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2 hover:text-amber-600 transition-colors cursor-pointer" onClick={() => handleOpenPlayer(lesson._id)}>
-                      {lesson.title}
-                    </h3>
-                    
-                    {lesson.description && (
-                      <p className="text-slate-600 mb-3">{lesson.description}</p>
+                  {/* Title */}
+                  <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-amber-600 transition-colors leading-tight text-center">
+                    {lesson.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-sm text-slate-600 line-clamp-3 min-h-[3.75rem] leading-relaxed">
+                    {lesson.description || (lesson.transcript ? lesson.transcript.slice(0, 150).trim() + '...' : 'Listen to this audio lesson')}
+                  </p>
+                </div>
+
+                {/* Metadata Pills */}
+                <div className="px-6 pb-4">
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{formatDate(lesson.createdAt)}</span>
+                    </div>
+                    {lesson.language && (
+                      <>
+                        <span>•</span>
+                        <span className="uppercase font-medium">{lesson.language}</span>
+                      </>
                     )}
+                  </div>
+                </div>
 
-                    <div className="flex flex-wrap items-center gap-5 text-sm text-slate-600">
-                      <div className="flex items-center space-x-1">
-                        <FileAudio className="w-4 h-4" />
-                        <span>{lesson.fileName}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1">
-                        <Volume2 className="w-4 h-4" />
-                        <span>{formatFileSize(lesson.fileSize)}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{formatDate(lesson.createdAt)}</span>
-                      </div>
-
-                      {lesson.language && (
-                        <div className="flex items-center space-x-1">
-                          <Languages className="w-4 h-4" />
-                          <span>{lesson.language.toUpperCase()}</span>
-                        </div>
+                {/* Tags */}
+                {lesson.tags.length > 0 && (
+                  <div className="px-6 pb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {lesson.tags.slice(0, 3).map((tag, idx) => (
+                        <span key={idx} className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium hover:bg-slate-200 transition-colors">
+                          {tag}
+                        </span>
+                      ))}
+                      {lesson.tags.length > 3 && (
+                        <span className="text-xs px-2.5 py-1 text-slate-400 font-medium">+{lesson.tags.length - 3} more</span>
                       )}
+                    </div>
+                  </div>
+                )}
 
+                {/* Footer */}
+                <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-50/50 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       {lesson.category && (
-                        <div className="flex items-center space-x-1">
-                          <Tag className="w-4 h-4" />
-                          <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 rounded-full text-xs font-semibold">
-                            {lesson.category}
-                          </span>
-                        </div>
+                        <span className="text-xs font-semibold text-slate-700 px-2.5 py-1 bg-white rounded-full border border-slate-200">
+                          {lesson.category}
+                        </span>
                       )}
                     </div>
-
-                    {lesson.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {lesson.tags.map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 rounded-lg text-xs font-medium border border-slate-300"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Transcription Status */}
-                    <div className="flex items-center space-x-2 mt-3">
-                      {getStatusIcon(lesson.transcriptionStatus)}
-                      <span className="text-sm text-slate-500 capitalize">
-                        Transcription: {lesson.transcriptionStatus}
+                    {lesson.transcriptionStatus === 'completed' && (
+                      <span className="text-xs text-green-600 font-semibold flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Transcript
                       </span>
-                    </div>
-
-                    {/* Show transcript if available */}
-                    {lesson.transcript && lesson.transcriptionStatus === 'completed' && (
-                      <details className="mt-4">
-                        <summary className="cursor-pointer text-sm font-semibold text-amber-600 hover:text-amber-700 flex items-center space-x-2">
-                          <span>View Transcript</span>
-                        </summary>
-                        <div className="mt-3 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl text-sm text-slate-700 leading-relaxed border border-slate-200">
-                          {lesson.transcript}
-                        </div>
-                      </details>
-                    )}
-
-                    {lesson.transcriptionError && (
-                      <div className="mt-2 text-sm text-red-600">
-                        Transcription error: {lesson.transcriptionError}
-                      </div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
-          {filteredLessons.length === 0 && !loading && (
-            <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-300">
-              <FileAudio className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">No audio lessons found</h3>
-              <p className="text-slate-600 text-lg">
-                {selectedCategory !== 'all'
-                  ? 'Try selecting a different category'
-                  : 'Check back later for new content'}
-              </p>
-            </div>
-          )}
-      </div>
+        {filteredLessons.length === 0 && !loading && (
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+            <Volume2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No lessons found</h3>
+            <p className="text-slate-500">
+              {searchQuery ? 'Try adjusting your search terms' : selectedCategory !== 'all'
+                ? 'No lessons in this category'
+                : 'No audio lessons available'}
+            </p>
+          </div>
+        )}
 
         {totalPages > 1 && (
-          <div className="mt-10 flex items-center justify-center space-x-3">
+          <div className="mt-10 flex items-center justify-center gap-3">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1 || loading}
-              className="px-6 py-3 bg-white border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 hover:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+              className="px-5 py-2.5 text-sm font-medium border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
             >
               Previous
             </button>
-            
-            <span className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-lg">
-              Page {page} of {totalPages}
-            </span>
-            
+            <div className="flex items-center gap-2">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                      page === pageNum
+                        ? 'bg-amber-500 text-white shadow-md'
+                        : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              {totalPages > 5 && <span className="text-slate-400">...</span>}
+            </div>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages || loading}
-              className="px-6 py-3 bg-white border-2 border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 hover:border-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+              className="px-5 py-2.5 text-sm font-medium border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow"
             >
               Next
             </button>

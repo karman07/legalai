@@ -13,7 +13,6 @@ import AudioPage from './pages/AudioPage';
 import LibraryPage from './pages/LibraryPage';
 import AnswersPage from './pages/AnswersPage';
 import AudioPlayer from './components/AudioPlayer';
-import AudioLessons from './components/AudioLessons';
 import { useAuth } from './contexts/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -39,8 +38,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
       <Route
         path="/dashboard"
         element={
@@ -102,14 +101,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AudioPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/audio-lessons"
-        element={
-          <ProtectedRoute>
-            <AudioLessons />
           </ProtectedRoute>
         }
       />
