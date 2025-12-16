@@ -28,7 +28,7 @@ export default function ScannedAnswers() {
   const [evaluationMarks, setEvaluationMarks] = useState<number>(0);
   const [evaluationFeedback, setEvaluationFeedback] = useState('');
 
-  const isEvaluator = profile?.role === 'educator' || profile?.role === 'admin';
+  const isEvaluator = user?.role === 'educator' || user?.role === 'admin';
 
   useEffect(() => {
     loadAnswers();

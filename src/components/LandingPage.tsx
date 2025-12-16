@@ -1,7 +1,18 @@
 import { Link } from 'react-router-dom';
-import { Scale, BookOpen, HelpCircle, BookMarked, MessageSquare, Brain, Volume2, FileText, ArrowRight, Users, Award, Zap } from 'lucide-react';
+import { Scale, BookOpen, HelpCircle, BookMarked, MessageSquare, Brain, Volume2, FileText, ArrowRight, Users, Award, Zap, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 export default function LandingPage() {
+  const { user } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const features = [
     {
       icon: BookOpen,
@@ -80,18 +91,39 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                to="/auth"
-                className="px-4 py-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
-              >
-                Login
-              </Link>
-              <Link
-                to="/auth"
-                className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors shadow-md"
-              >
-                Get Started
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-sm text-slate-700">{user.email}</span>
+                  <Link
+                    to="/dashboard"
+                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 px-4 py-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/auth"
+                    className="px-4 py-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/auth"
+                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -120,7 +152,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
             <Link
-              to="/auth"
+              to={user ? "/dashboard" : "/auth"}
               className="w-full sm:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
             >
               <span>Start Learning Free</span>
@@ -231,7 +263,7 @@ export default function LandingPage() {
             Join LegalEdu India today and transform your legal education journey
           </p>
           <Link
-            to="/auth"
+            to={user ? "/dashboard" : "/auth"}
             className="inline-flex items-center space-x-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
           >
             <span>Get Started Now</span>

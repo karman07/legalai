@@ -20,7 +20,7 @@ type FeatureLayoutProps = {
 };
 
 export default function FeatureLayout({ children }: FeatureLayoutProps) {
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -95,8 +95,8 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
             <div className="flex items-center space-x-3">
               <GraduationCap className="w-10 h-10 text-slate-600 bg-slate-100 p-2 rounded-full" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">{profile?.full_name}</p>
-                <p className="text-xs text-slate-500 capitalize">{profile?.role}</p>
+                <p className="text-sm font-medium text-slate-900 truncate">{user?.name || 'User'}</p>
+                <p className="text-xs text-slate-500 capitalize">{user?.role || 'Student'}</p>
               </div>
             </div>
           </div>

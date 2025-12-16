@@ -43,7 +43,7 @@ export default function AskDoubt() {
     priority: 'medium' as 'low' | 'medium' | 'high',
   });
 
-  const isTeacher = profile?.role === 'educator' || profile?.role === 'admin';
+  const isTeacher = user?.role === 'educator' || user?.role === 'admin';
 
   useEffect(() => {
     loadDoubts();

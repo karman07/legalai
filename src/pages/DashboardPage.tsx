@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -99,8 +99,8 @@ export default function DashboardPage() {
               <div className="hidden sm:flex items-center space-x-3">
                 <GraduationCap className="w-5 h-5 text-slate-600" />
                 <div className="text-right">
-                  <p className="text-sm font-medium text-slate-900">{profile?.full_name}</p>
-                  <p className="text-xs text-slate-500 capitalize">{profile?.role}</p>
+                  <p className="text-sm font-medium text-slate-900">{user?.name}</p>
+                  <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
                 </div>
               </div>
               <button
@@ -118,7 +118,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-3">
-            Welcome back, {profile?.full_name}!
+            Welcome back, {user?.name || 'User'}!
           </h1>
           <p className="text-xl text-slate-600">
             Choose a learning tool to continue your legal education journey

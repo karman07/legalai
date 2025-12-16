@@ -42,4 +42,37 @@ async function apiClient<T>(
   return handleResponse<T>(response);
 }
 
+// Audio Lessons API
+export interface AudioLesson {
+  _id: string;
+  title: string;
+  description?: string;
+  audioUrl: string;
+  fileName: string;
+  fileSize: number;
+  category?: string;
+  tags: string[];
+  isActive: boolean;
+  language?: string;
+  transcriptionStatus: 'pending' | 'processing' | 'completed' | 'failed';
+  transcript?: string;
+  transcriptionError?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AudioLessonsResponse {
+  items: AudioLesson[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export const audioLessonsAPI = {
+  getAudioLessons: async (page = 1, limit = 10): Promise<AudioLessonsResponse> => {
+    return apiClient<AudioLessonsResponse>(`/audio-lessons?page=${page}&limit=${limit}`);
+  },
+};
+
 export default apiClient;

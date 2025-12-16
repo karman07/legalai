@@ -1,10 +1,10 @@
 import FeatureLayout from '../components/FeatureLayout';
-import BareActReader from '../components/BareActReader';
+import AudioLessons from '../components/AudioLessons';
 
 export default function AudioPage() {
   return (
     <FeatureLayout>
-      <BareActReader />
+      <AudioLessons />
     </FeatureLayout>
   );
 }

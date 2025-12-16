@@ -27,7 +27,7 @@ import LibraryComponent from './Library';
 type Tab = 'mcq' | 'cases' | 'chatbot' | 'expert' | 'tts' | 'answers' | 'notes' | 'doubts' | 'library';
 
 export default function Dashboard() {
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('mcq');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -74,8 +74,8 @@ export default function Dashboard() {
               <div className="hidden sm:flex items-center space-x-3">
                 <GraduationCap className="w-5 h-5 text-slate-600" />
                 <div className="text-right">
-                  <p className="text-sm font-medium text-slate-900">{profile?.full_name}</p>
-                  <p className="text-xs text-slate-500 capitalize">{profile?.role}</p>
+                  <p className="text-sm font-medium text-slate-900">{user?.name || 'User'}</p>
+                  <p className="text-xs text-slate-500 capitalize">{user?.role || 'Student'}</p>
                 </div>
               </div>
               <button
