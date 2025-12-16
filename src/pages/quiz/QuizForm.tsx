@@ -142,7 +142,7 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
                 key={idx}
                 question={q}
                 index={idx}
-                onChange={(field, value) => updateQuestion(idx, { [field]: value })}
+                onUpdate={(index, field, value) => updateQuestion(index, { [field]: value })}
                 onRemove={() => removeQuestion(idx)}
               />
             ))
