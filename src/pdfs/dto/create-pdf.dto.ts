@@ -2,16 +2,17 @@ import { IsArray, IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString,
 import { Type, Transform } from 'class-transformer';
 
 export class CourtDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  id: string;
+  id?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  name?: string;
 
+  @IsOptional()
   @IsEnum(['supreme', 'high', 'district'])
-  level: 'supreme' | 'high' | 'district';
+  level?: 'supreme' | 'high' | 'district';
 
   @IsOptional()
   @IsString()
