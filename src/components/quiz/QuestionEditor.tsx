@@ -8,11 +8,15 @@ import { QuizQuestion } from '../../types';
 interface QuestionEditorProps {
   question: QuizQuestion;
   index: number;
-  onChange: (field: keyof QuizQuestion, value: any) => void;
+  onUpdate: (index: number, field: keyof QuizQuestion, value: any) => void;
   onRemove: () => void;
 }
 
-export const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, index, onChange, onRemove }) => {
+export const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, index, onUpdate, onRemove }) => {
+  const onChange = (field: keyof QuizQuestion, value: any) => {
+    onUpdate(index, field, value);
+  };
+
   const updateOption = (optionIndex: number, value: string) => {
     const newOptions = [...question.options];
     newOptions[optionIndex] = value;
