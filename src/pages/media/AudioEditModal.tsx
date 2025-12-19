@@ -19,13 +19,18 @@ export const AudioEditModal = ({ audio, onClose, onSuccess, categories }: AudioE
     title: audio.title,
     description: audio.description || '',
     category: audio.category,
-    language: audio.language || 'en',
     tags: audio.tags?.join(', ') || '',
-    duration: audio.duration?.toString() || '',
+    englishTranscription: audio.englishTranscription || '',
+    hindiTranscription: audio.hindiTranscription || '',
+    easyEnglishTranscription: audio.easyEnglishTranscription || '',
+    easyHindiTranscription: audio.easyHindiTranscription || '',
+    englishAudioUrl: audio.englishAudio?.url || '',
+    hindiAudioUrl: audio.hindiAudio?.url || '',
+    sections: JSON.stringify(audio.sections || [], null, 2),
     isActive: audio.isActive,
   });
-  const [replaceFile, setReplaceFile] = useState<File | null>(null);
-  const [transcriptFile, setTranscriptFile] = useState<File | null>(null);
+  const [englishAudioFile, setEnglishAudioFile] = useState<File | null>(null);
+  const [hindiAudioFile, setHindiAudioFile] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +39,18 @@ export const AudioEditModal = ({ audio, onClose, onSuccess, categories }: AudioE
       const data = new FormData();
       data.append('title', formData.title);
       data.append('category', formData.category);
-      data.append('language', formData.language);
+      data.append('description', formData.description);
       data.append('isActive', String(formData.isActive));
-      if (formData.description) data.append('description', formData.description);
       if (formData.tags) data.append('tags', JSON.stringify(formData.tags.split(',').map(t => t.trim()).filter(t => t)));
-      if (formData.duration) data.append('duration', formData.duration);
-      if (replaceFile) data.append('file', replaceFile);
-      if (transcriptFile) data.append('transcriptFile', transcriptFile);
+      if (formData.englishTranscription) data.append('englishTranscription', formData.englishTranscription);
+      if (formData.hindiTranscription) data.append('hindiTranscription', formData.hindiTranscription);
+      if (formData.easyEnglishTranscription) data.append('easyEnglishTranscription', formData.easyEnglishTranscription);
+      if (formData.easyHindiTranscription) data.append('easyHindiTranscription', formData.easyHindiTranscription);
+      if (formData.englishAudioUrl) data.append('englishAudioUrl', formData.englishAudioUrl);
+      if (formData.hindiAudioUrl) data.append('hindiAudioUrl', formData.hindiAudioUrl);
+      if (formData.sections) data.append('sections', formData.sections);
+      if (englishAudioFile) data.append('englishAudio', englishAudioFile);
+      if (hindiAudioFile) data.append('hindiAudio', hindiAudioFile);
 
       await mediaService.updateAudio(audio._id, data);
       onSuccess();
@@ -52,7 +62,7 @@ export const AudioEditModal = ({ audio, onClose, onSuccess, categories }: AudioE
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Audio Lesson</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
@@ -60,111 +70,91 @@ export const AudioEditModal = ({ audio, onClose, onSuccess, categories }: AudioE
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-medium mb-2">Title *</label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-              />
+              <Input value={formData.title} onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))} required />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">Category *</label>
-              <Select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                required
-              >
+              <Select value={formData.category} onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))} required>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Language</label>
-              <Select
-                value={formData.language}
-                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              >
-                <option value="en">English</option>
-                <option value="hi">Hindi</option>
-              </Select>
+              <label className="block text-sm font-medium mb-2">Tags (comma-separated)</label>
+              <Input value={formData.tags} onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))} />
             </div>
 
             <div className="col-span-2">
               <label className="block text-sm font-medium mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
-                rows={2}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Duration (seconds)</label>
-              <Input
-                type="number"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                placeholder="e.g., 3600"
-              />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-sm font-medium mb-2">Tags (comma-separated)</label>
-              <Input
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="e.g., constitutional law, fundamental rights"
-              />
+              <textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" rows={2} />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-gray-800">
-            <input
-              type="checkbox"
-              id="isActive"
-              checked={formData.isActive}
-              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4"
-            />
-            <label htmlFor="isActive" className="text-sm font-medium">
-              Active
-            </label>
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3">Audio Files</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Replace English Audio</label>
+                <input type="file" accept="audio/*" onChange={(e) => setEnglishAudioFile(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" />
+                {audio.englishAudio && <p className="text-xs text-gray-500 mt-1">Current: {audio.englishAudio.fileName}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">English Audio URL</label>
+                <Input value={formData.englishAudioUrl} onChange={(e) => setFormData(prev => ({ ...prev, englishAudioUrl: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Replace Hindi Audio</label>
+                <input type="file" accept="audio/*" onChange={(e) => setHindiAudioFile(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" />
+                {audio.hindiAudio && <p className="text-xs text-gray-500 mt-1">Current: {audio.hindiAudio.fileName}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Hindi Audio URL</label>
+                <Input value={formData.hindiAudioUrl} onChange={(e) => setFormData(prev => ({ ...prev, hindiAudioUrl: e.target.value }))} />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Replace Audio File (Optional)</label>
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setReplaceFile(e.target.files?.[0] || null)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
-            />
-            <p className="text-xs text-gray-500 mt-1">Uploading new file will trigger re-transcription</p>
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3">Transcriptions</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-2">English Transcription</label>
+                <textarea value={formData.englishTranscription} onChange={(e) => setFormData(prev => ({ ...prev, englishTranscription: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Hindi Transcription</label>
+                <textarea value={formData.hindiTranscription} onChange={(e) => setFormData(prev => ({ ...prev, hindiTranscription: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Easy English Transcription</label>
+                <textarea value={formData.easyEnglishTranscription} onChange={(e) => setFormData(prev => ({ ...prev, easyEnglishTranscription: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" rows={3} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Easy Hindi Transcription</label>
+                <textarea value={formData.easyHindiTranscription} onChange={(e) => setFormData(prev => ({ ...prev, easyHindiTranscription: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" rows={3} />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Update Transcript File (Optional)</label>
-            <input
-              type="file"
-              accept=".txt,.pdf,.doc,.docx,.md"
-              onChange={(e) => setTranscriptFile(e.target.files?.[0] || null)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
-            />
+          <div className="border-t pt-4">
+            <h3 className="font-semibold mb-3">Sections (JSON)</h3>
+            <textarea value={formData.sections} onChange={(e) => setFormData(prev => ({ ...prev, sections: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 font-mono text-sm" rows={6} />
+          </div>
+
+          <div className="flex items-center gap-2 pt-4 border-t">
+            <input type="checkbox" id="isActive" checked={formData.isActive} onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))} className="w-4 h-4" />
+            <label htmlFor="isActive" className="text-sm font-medium">Active</label>
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
             <Button type="submit" disabled={saving} className="flex-1 gap-2">
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Save Changes'}

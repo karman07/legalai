@@ -71,14 +71,19 @@ class MediaService {
     toast.success('Audio deleted successfully');
   }
 
-  async retryTranscription(id: string): Promise<void> {
-    await this.api.post(`/admin/audio-lessons/${id}/retry-transcription`);
-    toast.success('Transcription retry initiated');
+  async updateSections(id: string, sections: any[]): Promise<AudioLesson> {
+    const { data } = await this.api.put(`/admin/audio-lessons/${id}/sections`, { sections });
+    toast.success('Sections updated successfully');
+    return data;
   }
 
   async getCategories(): Promise<Category[]> {
-    const { data } = await this.api.get('/admin/audio-lessons/categories');
-    return data.categories || data;
+    try {
+      const { data } = await this.api.get('/admin/audio-lessons/categories');
+      return data.categories || data;
+    } catch {
+      return [];
+    }
   }
 
   // PDF APIs

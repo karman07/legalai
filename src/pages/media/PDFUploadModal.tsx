@@ -35,25 +35,26 @@ export const PDFUploadModal = ({ onClose, onSuccess }: { onClose: () => void; on
       const data = new FormData();
       data.append('file', pdfFile);
       data.append('title', formData.title);
+      data.append('isActive', 'true');
       if (formData.description) data.append('description', formData.description);
       if (formData.category) data.append('category', formData.category);
       if (formData.caseTitle) data.append('caseTitle', formData.caseTitle);
       if (formData.caseNumber) data.append('caseNumber', formData.caseNumber);
       if (formData.year) data.append('year', formData.year);
-      if (formData.courtId && formData.courtName && formData.courtLevel) {
-        data.append('court', JSON.stringify({
-          id: formData.courtId,
-          name: formData.courtName,
-          level: formData.courtLevel,
-        }));
-      }
-      if (formData.keywords) {
-        data.append('keywords', JSON.stringify(formData.keywords.split(',').map(k => k.trim())));
-      }
-      if (formData.judges) {
-        data.append('judges', JSON.stringify(formData.judges.split(',').map(j => j.trim())));
-      }
       if (formData.summary) data.append('summary', formData.summary);
+      
+      // Court data - send individual fields
+      if (formData.courtId) data.append('court[id]', formData.courtId);
+      if (formData.courtName) data.append('court[name]', formData.courtName);
+      if (formData.courtLevel) data.append('court[level]', formData.courtLevel);
+      
+      // Keywords - send as individual array items
+      const keywordsArray = formData.keywords ? formData.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
+      keywordsArray.forEach(keyword => data.append('keywords[]', keyword));
+      
+      // Judges - send as individual array items
+      const judgesArray = formData.judges ? formData.judges.split(',').map(j => j.trim()).filter(j => j) : [];
+      judgesArray.forEach(judge => data.append('judges[]', judge));
 
       await mediaService.uploadPDF(data);
       onSuccess();

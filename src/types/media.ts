@@ -4,13 +4,29 @@ export interface AudioLesson {
   description?: string;
   category: string;
   tags?: string[];
-  language?: string;
-  duration?: number;
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  transcriptUrl?: string;
-  transcriptStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  englishAudio?: {
+    url: string;
+    fileName: string;
+    fileSize: number;
+  };
+  hindiAudio?: {
+    url: string;
+    fileName: string;
+    fileSize: number;
+  };
+  englishTranscription?: string;
+  hindiTranscription?: string;
+  easyEnglishTranscription?: string;
+  easyHindiTranscription?: string;
+  sections?: Array<{
+    title: string;
+    startTime: number;
+    endTime: number;
+    hindiText?: string;
+    englishText?: string;
+    easyHindiText?: string;
+    easyEnglishText?: string;
+  }>;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

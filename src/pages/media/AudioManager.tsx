@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Edit, Trash2, Play, RefreshCw, Search } from 'lucide-react';
+import { Upload, Edit, Trash2, Play, Search } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -58,12 +58,7 @@ export const AudioManager = () => {
     } catch (e) {}
   };
 
-  const handleRetryTranscription = async (id: string) => {
-    try {
-      await mediaService.retryTranscription(id);
-      fetchAudios();
-    } catch (e) {}
-  };
+
 
   const filteredAudios = audios.filter((a) => {
     const matchesSearch = a.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,17 +66,11 @@ export const AudioManager = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return 'N/A';
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return 'N/A';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -136,9 +125,9 @@ export const AudioManager = () => {
                           </h3>
                           <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                             <span>{audio.category}</span>
-                            <span>• {formatDuration(audio.duration)}</span>
-                            <span>• {formatFileSize(audio.fileSize)}</span>
-                            {audio.language && <span>• {audio.language.toUpperCase()}</span>}
+                            {audio.englishAudio && <span>• EN: {formatFileSize(audio.englishAudio.fileSize)}</span>}
+                            {audio.hindiAudio && <span>• HI: {formatFileSize(audio.hindiAudio.fileSize)}</span>}
+                            {audio.sections && <span>• {audio.sections.length} sections</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -162,31 +151,12 @@ export const AudioManager = () => {
 
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Transcript:</span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded border ${
-                              audio.transcriptStatus === 'completed'
-                                ? 'border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
-                                : audio.transcriptStatus === 'processing'
-                                ? 'border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
-                                : audio.transcriptStatus === 'failed'
-                                ? 'border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
-                                : 'border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400'
-                            }`}
-                          >
-                            {audio.transcriptStatus || 'pending'}
-                          </span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Transcriptions:</span>
+                          {audio.englishTranscription && <span className="px-2 py-1 text-xs rounded border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400">EN</span>}
+                          {audio.hindiTranscription && <span className="px-2 py-1 text-xs rounded border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400">HI</span>}
+                          {audio.easyEnglishTranscription && <span className="px-2 py-1 text-xs rounded border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400">Easy EN</span>}
+                          {audio.easyHindiTranscription && <span className="px-2 py-1 text-xs rounded border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400">Easy HI</span>}
                         </div>
-                        {audio.transcriptUrl && (
-                          <a
-                            href={audio.transcriptUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:underline text-xs"
-                          >
-                            View Transcript
-                          </a>
-                        )}
                       </div>
 
                       {audio.tags && audio.tags.length > 0 && (
@@ -204,22 +174,19 @@ export const AudioManager = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <Button variant="outline" size="sm" onClick={() => window.open(audio.fileUrl, '_blank')} className="gap-2">
-                        <Play className="w-4 h-4" /> Play
-                      </Button>
+                      {audio.englishAudio && (
+                        <Button variant="outline" size="sm" onClick={() => window.open(audio.englishAudio!.url, '_blank')} className="gap-2">
+                          <Play className="w-4 h-4" /> EN
+                        </Button>
+                      )}
+                      {audio.hindiAudio && (
+                        <Button variant="outline" size="sm" onClick={() => window.open(audio.hindiAudio!.url, '_blank')} className="gap-2">
+                          <Play className="w-4 h-4" /> HI
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" onClick={() => setEditingAudio(audio)} className="gap-2">
                         <Edit className="w-4 h-4" /> Edit
                       </Button>
-                      {audio.transcriptStatus === 'failed' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRetryTranscription(audio._id)}
-                          className="gap-2"
-                        >
-                          <RefreshCw className="w-4 h-4" /> Retry
-                        </Button>
-                      )}
                       <Button variant="outline" size="sm" onClick={() => handleDelete(audio._id)} className="gap-2 text-red-600 hover:text-red-700 dark:text-red-400">
                         <Trash2 className="w-4 h-4" /> Delete
                       </Button>
