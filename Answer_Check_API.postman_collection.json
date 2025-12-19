@@ -1,0 +1,199 @@
+{
+  "info": {
+    "name": "Answer Check API",
+    "description": "API collection for Answer Checking module with AI evaluation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Check Answer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "question",
+              "value": "Explain the concept of constitutional law and its importance in a democratic society.",
+              "type": "text"
+            },
+            {
+              "key": "totalMarks",
+              "value": "10",
+              "type": "text"
+            },
+            {
+              "key": "gradingCriteria",
+              "value": "Focus on clarity of explanation, use of examples, understanding of legal principles, and relevance to democratic governance.",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/answer-check/check",
+          "host": ["{{base_url}}"],
+          "path": ["answer-check", "check"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get History",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/answer-check/history?page=1&limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["answer-check", "history"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get History - Page 2",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/answer-check/history?page=2&limit=5",
+          "host": ["{{base_url}}"],
+          "path": ["answer-check", "history"],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            },
+            {
+              "key": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Specific Answer Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/answer-check/{{answer_check_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["answer-check", "{{answer_check_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Answer - PDF",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "question",
+              "value": "What are the fundamental rights guaranteed by the Indian Constitution?",
+              "type": "text"
+            },
+            {
+              "key": "totalMarks",
+              "value": "15",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/answer-check/check",
+          "host": ["{{base_url}}"],
+          "path": ["answer-check", "check"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Answer - Image",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "question",
+              "value": "Solve the given mathematical problem and show all steps.",
+              "type": "text"
+            },
+            {
+              "key": "totalMarks",
+              "value": "20",
+              "type": "text"
+            },
+            {
+              "key": "gradingCriteria",
+              "value": "Award marks for correct method (10 marks), correct calculation (5 marks), and clear presentation (5 marks).",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/answer-check/check",
+          "host": ["{{base_url}}"],
+          "path": ["answer-check", "check"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -73,7 +73,7 @@ export class UpdatePdfDto {
     }
     return value;
   })
-  @ValidateNested()
+  @ValidateNested({ each: false })
   @Type(() => CourtDto)
   court?: CourtDto;
 

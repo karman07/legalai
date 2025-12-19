@@ -10,33 +10,44 @@ export class PdfsController {
   @Get()
   async list(
     @Query('page') page = '1',
-    @Query('limit') limit = '12',
+    @Query('limit') limit = '20',
     @Query('category') category?: string,
     @Query('year') year?: string,
     @Query('courtLevel') courtLevel?: string,
-    @Query('search') search?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
   ) {
-    const filters: any = { isActive: true }; // Only show active PDFs to users
+    const filters: any = { isActive: true };
 
     if (category) filters.category = category;
     if (year) filters.year = parseInt(year);
     if (courtLevel) filters['court.level'] = courtLevel;
 
-    // Handle search across multiple fields
-    if (search) {
-      filters.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { caseTitle: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { summary: { $regex: search, $options: 'i' } },
-        { keywords: { $in: [new RegExp(search, 'i')] } },
-      ];
+    // Handle sorting
+    let sort: Record<string, 1 | -1> = { createdAt: -1 };
+    if (sortBy) {
+      const order = sortOrder === 'asc' ? 1 : -1;
+      switch (sortBy) {
+        case 'title':
+          sort = { title: order };
+          break;
+        case 'year':
+          sort = { year: order };
+          break;
+        case 'views':
+          sort = { viewCount: order };
+          break;
+        case 'date':
+        default:
+          sort = { createdAt: order };
+      }
     }
 
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
       filters,
+      sort,
     });
   }
 
@@ -49,35 +60,34 @@ export class PdfsController {
   async search(
     @Query('q') query: string,
     @Query('page') page = '1',
-    @Query('limit') limit = '12',
+    @Query('limit') limit = '20',
+    @Query('category') category?: string,
+    @Query('year') year?: string,
+    @Query('courtLevel') courtLevel?: string,
   ) {
-    if (!query) {
-      return { items: [], total: 0, page: 1, limit: parseInt(limit), totalPages: 0 };
-    }
+    const filters: any = {};
+    if (category) filters.category = category;
+    if (year) filters.year = parseInt(year);
+    if (courtLevel) filters['court.level'] = courtLevel;
 
-    const filters: any = {
-      isActive: true,
-      $or: [
-        { title: { $regex: query, $options: 'i' } },
-        { caseTitle: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { summary: { $regex: query, $options: 'i' } },
-        { keywords: { $in: [new RegExp(query, 'i')] } },
-      ],
-    };
-
-    return this.pdfsService.findAll({
+    return this.pdfsService.searchPdfs({
+      query,
       page: parseInt(page),
       limit: parseInt(limit),
       filters,
     });
   }
 
+  @Get('stats')
+  async getStats() {
+    return this.pdfsService.getStats();
+  }
+
   @Get('category/:category')
   async getByCategory(
     @Param('category') category: string,
     @Query('page') page = '1',
-    @Query('limit') limit = '12',
+    @Query('limit') limit = '20',
   ) {
     return this.pdfsService.findAll({
       page: parseInt(page),

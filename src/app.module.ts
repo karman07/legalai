@@ -11,6 +11,8 @@ import { QuizzesModule } from './quizzes/quizzes.module';
 import { AiModule } from './ai/ai.module';
 import { PdfsModule } from './pdfs/pdfs.module';
 import { AudioLessonsModule } from './audio-lessons/audio-lessons.module';
+import { NotesModule } from './notes/notes.module';
+import { AnswerCheckModule } from './answer-check/answer-check.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { AudioLessonsModule } from './audio-lessons/audio-lessons.module';
     AiModule,
     PdfsModule,
     AudioLessonsModule,
+    NotesModule,
+    AnswerCheckModule,
   ],
   controllers: [AppController],
   providers: [AppService],

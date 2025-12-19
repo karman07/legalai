@@ -1,6 +1,7 @@
-import { IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { VALID_CATEGORY_IDS } from '../../common/enums/audio-lesson-category.enum';
+import { AudioSectionDto } from './create-audio-lesson.dto';
 
 export class UpdateAudioLessonDto {
   @IsOptional()
@@ -31,6 +32,60 @@ export class UpdateAudioLessonDto {
   @IsString({ each: true })
   tags?: string[];
 
+  // Audio URLs (if providing URLs instead of files)
+  @IsOptional()
+  @IsString()
+  englishAudioUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  hindiAudioUrl?: string;
+
+  // Admin-provided transcriptions
+  @IsOptional()
+  @IsString()
+  englishTranscription?: string;
+
+  @IsOptional()
+  @IsString()
+  hindiTranscription?: string;
+
+  @IsOptional()
+  @IsString()
+  easyEnglishTranscription?: string;
+
+  @IsOptional()
+  @IsString()
+  easyHindiTranscription?: string;
+
+  // Sections with timestamps and texts
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AudioSectionDto)
+  sections?: AudioSectionDto[];
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value === 'true';
+    }
+    return value;
+  })
+  @IsBoolean()
+  isActive?: boolean;
+
+  // Legacy fields for backward compatibility
   @IsOptional()
   @IsString()
   language?: string;
@@ -46,16 +101,6 @@ export class UpdateAudioLessonDto {
   @IsInt()
   @Min(0)
   duration?: number;
-
-  @IsOptional()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return value === 'true';
-    }
-    return value;
-  })
-  @IsBoolean()
-  isActive?: boolean;
 
   // These will be set by the controller after file upload
   audioUrl?: string;

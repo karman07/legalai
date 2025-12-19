@@ -4,6 +4,45 @@ import { VALID_CATEGORY_IDS } from '../common/enums/audio-lesson-category.enum';
 
 export type AudioLessonDocument = AudioLesson & Document;
 
+@Schema({ _id: false })
+export class AudioFile {
+  @Prop({ required: true })
+  url: string;
+
+  @Prop({ required: true })
+  fileName: string;
+
+  @Prop({ required: true })
+  fileSize: number;
+
+  @Prop()
+  duration?: number;
+}
+
+@Schema({ _id: false })
+export class AudioSection {
+  @Prop({ required: true })
+  title: string;
+
+  @Prop({ required: true })
+  startTime: number; // in seconds
+
+  @Prop({ required: true })
+  endTime: number; // in seconds
+
+  @Prop()
+  hindiText?: string;
+
+  @Prop()
+  englishText?: string;
+
+  @Prop()
+  easyHindiText?: string;
+
+  @Prop()
+  easyEnglishText?: string;
+}
+
 @Schema({ timestamps: true })
 export class AudioLesson {
   @Prop({ required: true })
@@ -12,20 +51,29 @@ export class AudioLesson {
   @Prop()
   description?: string;
 
-  @Prop({ required: true })
-  audioUrl: string;
+  // Audio Files
+  @Prop({ type: AudioFile })
+  englishAudio?: AudioFile;
 
-  @Prop({ required: true })
-  fileName: string;
+  @Prop({ type: AudioFile })
+  hindiAudio?: AudioFile;
 
-  @Prop({ required: true })
-  fileSize: number; // in bytes
+  // Admin-provided transcriptions
+  @Prop()
+  englishTranscription?: string;
 
   @Prop()
-  duration?: number; // in seconds
+  hindiTranscription?: string;
 
   @Prop()
-  transcript?: string; // Auto-generated transcript from Whisper API
+  easyEnglishTranscription?: string;
+
+  @Prop()
+  easyHindiTranscription?: string;
+
+  // Sections with timestamps and texts
+  @Prop({ type: [AudioSection] })
+  sections?: AudioSection[];
 
   @Prop({ enum: VALID_CATEGORY_IDS })
   category?: string;
@@ -39,14 +87,24 @@ export class AudioLesson {
   @Prop({ default: true })
   isActive: boolean;
 
+  // Legacy fields for backward compatibility
   @Prop()
-  language?: string; // e.g., 'en', 'hi', etc.
+  audioUrl?: string;
 
   @Prop()
-  transcriptionStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  fileName?: string;
 
   @Prop()
-  transcriptionError?: string;
+  fileSize?: number;
+
+  @Prop()
+  duration?: number;
+
+  @Prop()
+  transcript?: string;
+
+  @Prop()
+  language?: string;
 }
 
 export const AudioLessonSchema = SchemaFactory.createForClass(AudioLesson);

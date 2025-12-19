@@ -22,53 +22,32 @@ export class AudioLessonsAdminController {
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor([
-      { name: 'file', maxCount: 1 },
-      { name: 'transcriptFile', maxCount: 1 },
+      { name: 'englishAudio', maxCount: 1 },
+      { name: 'hindiAudio', maxCount: 1 },
+      { name: 'file', maxCount: 1 }, // Legacy support
     ], {
       storage: diskStorage({
-        destination: (req, file, cb) => {
-          // Audio files go to ./uploads/audio, text files go to ./uploads/transcripts
-          const dest = file.fieldname === 'transcriptFile' ? './uploads/transcripts' : './uploads/audio';
-          cb(null, dest);
-        },
+        destination: './uploads/audio',
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
-          const prefix = file.fieldname === 'transcriptFile' ? 'transcript' : 'audio';
+          let prefix = 'audio';
+          if (file.fieldname === 'englishAudio') prefix = 'english';
+          else if (file.fieldname === 'hindiAudio') prefix = 'hindi';
           cb(null, `${prefix}-${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
-        if (file.fieldname === 'file') {
-          // Accept common audio formats for 'file' field
-          const allowedMimes = [
-            'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
-            'audio/x-wav', 'audio/mp4', 'audio/m4a', 'audio/x-m4a',
-            'audio/aac', 'audio/ogg', 'audio/webm', 'audio/flac',
-          ];
-          
-          if (allowedMimes.includes(file.mimetype) || file.originalname.match(/\.(mp3|wav|m4a|aac|ogg|webm|flac)$/i)) {
-            cb(null, true);
-          } else {
-            cb(new BadRequestException('Only audio files are allowed for audio field'), false);
-          }
-        } else if (file.fieldname === 'transcriptFile') {
-          // Accept text files (PDF, DOC, DOCX, MD, TXT) for 'transcriptFile' field
-          const allowedTextMimes = [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain',
-            'text/markdown',
-          ];
-          
-          if (allowedTextMimes.includes(file.mimetype) || file.originalname.match(/\.(pdf|doc|docx|txt|md)$/i)) {
-            cb(null, true);
-          } else {
-            cb(new BadRequestException('Only text files (PDF, DOC, DOCX, TXT, MD) are allowed for transcript'), false);
-          }
+        const allowedMimes = [
+          'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
+          'audio/x-wav', 'audio/mp4', 'audio/m4a', 'audio/x-m4a',
+          'audio/aac', 'audio/ogg', 'audio/webm', 'audio/flac',
+        ];
+        
+        if (allowedMimes.includes(file.mimetype) || file.originalname.match(/\.(mp3|wav|m4a|aac|ogg|webm|flac)$/i)) {
+          cb(null, true);
         } else {
-          cb(new BadRequestException('Invalid field name'), false);
+          cb(new BadRequestException('Only audio files are allowed'), false);
         }
       },
       limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max
@@ -76,17 +55,19 @@ export class AudioLessonsAdminController {
   )
   async create(
     @Body() dto: CreateAudioLessonDto,
-    @UploadedFiles() files: { file?: Express.Multer.File[], transcriptFile?: Express.Multer.File[] },
+    @UploadedFiles() files: { englishAudio?: Express.Multer.File[], hindiAudio?: Express.Multer.File[], file?: Express.Multer.File[] },
     @Req() req: Request,
   ) {
-    const audioFile = files?.file?.[0];
-    const textFile = files?.transcriptFile?.[0];
+    const englishAudioFile = files?.englishAudio?.[0];
+    const hindiAudioFile = files?.hindiAudio?.[0];
+    const legacyAudioFile = files?.file?.[0]; // Legacy support
     
-    if (!audioFile) {
-      throw new BadRequestException('Audio file is required');
+    // Validate that at least one audio source is provided
+    if (!englishAudioFile && !hindiAudioFile && !legacyAudioFile && !dto.englishAudioUrl && !dto.hindiAudioUrl) {
+      throw new BadRequestException('At least one audio file or URL is required');
     }
+    
     const uploadedBy = (req as any)?.user?.id || (req as any)?.user?._id;
-    const audioUrl = `/uploads/audio/${audioFile.filename}`;
     
     // Parse JSON arrays from form-data
     const parsedDto = { ...dto };
@@ -97,42 +78,28 @@ export class AudioLessonsAdminController {
         throw new BadRequestException('Invalid tags JSON format');
       }
     }
-    
-    // If text file is provided, extract transcript from it
-    let transcript: string | undefined;
-    if (textFile) {
+    if (typeof dto.sections === 'string') {
       try {
-        const textFilePath = textFile.path;
-        const fileExtension = extname(textFile.originalname).toLowerCase();
-        
-        // For plain text files, read directly
-        if (['.txt', '.md'].includes(fileExtension)) {
-          transcript = await fs.readFile(textFilePath, 'utf-8');
-        } 
-        // For PDF/DOC files, you might want to use a library like pdf-parse or mammoth
-        // For now, we'll just store the file path and indicate manual upload
-        else {
-          // Store reference to the file for manual processing
-          transcript = `[Transcript file uploaded: ${textFile.originalname}. Please process manually or use text extraction library.]`;
-        }
-        
-        // Optionally delete the text file after reading (or keep it)
-        // await fs.unlink(textFilePath);
-      } catch (error) {
-        console.error('Error reading transcript file:', error);
-        throw new BadRequestException('Failed to read transcript file');
+        parsedDto.sections = JSON.parse(dto.sections as any);
+      } catch (e) {
+        throw new BadRequestException('Invalid sections JSON format');
       }
     }
     
+    // Legacy support - convert old format to new
+    if (legacyAudioFile) {
+      parsedDto.audioUrl = `/uploads/audio/${legacyAudioFile.filename}`;
+      parsedDto.fileName = legacyAudioFile.originalname;
+      parsedDto.fileSize = legacyAudioFile.size;
+    }
+    
     return this.audioLessonsService.create(
-      {
-        ...parsedDto,
-        audioUrl,
-        fileName: audioFile.originalname,
-        fileSize: audioFile.size,
-        transcript, // Pass transcript if text file was provided
-      } as any,
+      parsedDto,
       uploadedBy,
+      {
+        englishAudio: englishAudioFile,
+        hindiAudio: hindiAudioFile,
+      },
     );
   }
 
@@ -169,20 +136,30 @@ export class AudioLessonsAdminController {
     return this.audioLessonsService.findOne(id);
   }
 
-  @Post(':id/retry-transcription')
-  async retryTranscription(@Param('id') id: string) {
-    return this.audioLessonsService.retryTranscription(id);
+  @Put(':id/sections')
+  async updateSections(
+    @Param('id') id: string,
+    @Body() body: { sections: any[] },
+  ) {
+    return this.audioLessonsService.updateSections(id, body.sections);
   }
 
   @Put(':id')
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileFieldsInterceptor([
+      { name: 'englishAudio', maxCount: 1 },
+      { name: 'hindiAudio', maxCount: 1 },
+      { name: 'file', maxCount: 1 }, // Legacy support
+    ], {
       storage: diskStorage({
         destination: './uploads/audio',
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
-          cb(null, `audio-${uniqueSuffix}${ext}`);
+          let prefix = 'audio';
+          if (file.fieldname === 'englishAudio') prefix = 'english';
+          else if (file.fieldname === 'hindiAudio') prefix = 'hindi';
+          cb(null, `${prefix}-${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
@@ -204,8 +181,12 @@ export class AudioLessonsAdminController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateAudioLessonDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles() files: { englishAudio?: Express.Multer.File[], hindiAudio?: Express.Multer.File[], file?: Express.Multer.File[] },
   ) {
+    const englishAudioFile = files?.englishAudio?.[0];
+    const hindiAudioFile = files?.hindiAudio?.[0];
+    const legacyAudioFile = files?.file?.[0];
+    
     // Parse JSON arrays from form-data
     const parsedDto = { ...dto };
     if (typeof dto.tags === 'string') {
@@ -215,17 +196,25 @@ export class AudioLessonsAdminController {
         throw new BadRequestException('Invalid tags JSON format');
       }
     }
-    
-    if (file) {
-      const audioUrl = `/uploads/audio/${file.filename}`;
-      return this.audioLessonsService.update(id, {
-        ...parsedDto,
-        audioUrl,
-        fileName: file.originalname,
-        fileSize: file.size,
-      });
+    if (typeof dto.sections === 'string') {
+      try {
+        parsedDto.sections = JSON.parse(dto.sections as any);
+      } catch (e) {
+        throw new BadRequestException('Invalid sections JSON format');
+      }
     }
-    return this.audioLessonsService.update(id, parsedDto);
+    
+    // Legacy support
+    if (legacyAudioFile) {
+      parsedDto.audioUrl = `/uploads/audio/${legacyAudioFile.filename}`;
+      parsedDto.fileName = legacyAudioFile.originalname;
+      parsedDto.fileSize = legacyAudioFile.size;
+    }
+    
+    return this.audioLessonsService.update(id, parsedDto, {
+      englishAudio: englishAudioFile,
+      hindiAudio: hindiAudioFile,
+    });
   }
 
   @Delete(':id')

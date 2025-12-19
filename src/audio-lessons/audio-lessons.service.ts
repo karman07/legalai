@@ -1,41 +1,68 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AudioLesson, AudioLessonDocument } from '../schemas/audio-lesson.schema';
+import { AudioLesson, AudioLessonDocument, AudioFile } from '../schemas/audio-lesson.schema';
 import { CreateAudioLessonDto } from './dto/create-audio-lesson.dto';
 import { UpdateAudioLessonDto } from './dto/update-audio-lesson.dto';
-import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import * as FormData from 'form-data';
-import { AUDIO_LESSON_CATEGORIES, getCategoryById } from '../common/enums/audio-lesson-category.enum';
+import { AUDIO_LESSON_CATEGORIES } from '../common/enums/audio-lesson-category.enum';
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
 
 @Injectable()
 export class AudioLessonsService {
   constructor(
     @InjectModel(AudioLesson.name) private readonly audioLessonModel: Model<AudioLessonDocument>,
-    private readonly configService: ConfigService,
   ) {}
 
-  async create(createDto: CreateAudioLessonDto, uploadedBy?: string) {
-    // If transcript is provided, mark as completed; otherwise, pending
-    const transcriptionStatus = createDto.transcript ? 'completed' : 'pending';
-    
-    const doc = new this.audioLessonModel({
-      ...createDto,
+  async create(createDto: CreateAudioLessonDto, uploadedBy?: string, files?: { englishAudio?: Express.Multer.File; hindiAudio?: Express.Multer.File }) {
+    const lessonData: any = {
+      title: createDto.title,
+      description: createDto.description,
+      category: createDto.category,
+      tags: createDto.tags,
+      sections: createDto.sections,
+      englishTranscription: createDto.englishTranscription,
+      hindiTranscription: createDto.hindiTranscription,
+      easyEnglishTranscription: createDto.easyEnglishTranscription,
+      easyHindiTranscription: createDto.easyHindiTranscription,
       uploadedBy: uploadedBy ? new Types.ObjectId(uploadedBy) : undefined,
-      transcriptionStatus,
-    });
-    const saved = await doc.save();
-    
-    // Only trigger transcription if no transcript was provided
-    if (!createDto.transcript) {
-      this.transcribeAudio(saved._id.toString(), saved.audioUrl).catch(err => {
-        console.error('Transcription failed:', err);
-      });
+    };
+
+    // Handle English Audio
+    if (files?.englishAudio) {
+      lessonData.englishAudio = {
+        url: `/uploads/audio/${files.englishAudio.filename}`,
+        fileName: files.englishAudio.originalname,
+        fileSize: files.englishAudio.size,
+      };
+    } else if (createDto.englishAudioUrl) {
+      lessonData.englishAudio = await this.downloadAndStoreAudio(createDto.englishAudioUrl, 'english');
     }
-    
-    return saved;
+
+    // Handle Hindi Audio
+    if (files?.hindiAudio) {
+      lessonData.hindiAudio = {
+        url: `/uploads/audio/${files.hindiAudio.filename}`,
+        fileName: files.hindiAudio.originalname,
+        fileSize: files.hindiAudio.size,
+      };
+    } else if (createDto.hindiAudioUrl) {
+      lessonData.hindiAudio = await this.downloadAndStoreAudio(createDto.hindiAudioUrl, 'hindi');
+    }
+
+    // Legacy support
+    if (createDto.audioUrl || createDto.fileName) {
+      lessonData.audioUrl = createDto.audioUrl;
+      lessonData.fileName = createDto.fileName;
+      lessonData.fileSize = createDto.fileSize;
+      lessonData.transcript = createDto.transcript;
+      lessonData.language = createDto.language;
+    }
+
+    const doc = new this.audioLessonModel(lessonData);
+    return await doc.save();
   }
 
   async findAll(params: { page?: number; limit?: number; filters?: Record<string, any> }) {
@@ -69,20 +96,38 @@ export class AudioLessonsService {
     return lesson;
   }
 
-  async update(id: string, updateDto: UpdateAudioLessonDto) {
+  async update(id: string, updateDto: UpdateAudioLessonDto, files?: { englishAudio?: Express.Multer.File; hindiAudio?: Express.Multer.File }) {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid audio lesson id');
     }
-    const updated = await this.audioLessonModel.findByIdAndUpdate(id, updateDto, { new: true });
-    if (!updated) throw new NotFoundException('Audio lesson not found');
-    
-    // If audio file was replaced, trigger re-transcription
-    if (updateDto.audioUrl) {
-      this.transcribeAudio(id, updateDto.audioUrl).catch(err => {
-        console.error('Re-transcription failed:', err);
-      });
+
+    const updateData: any = { ...updateDto };
+
+    // Handle English Audio update
+    if (files?.englishAudio) {
+      updateData.englishAudio = {
+        url: `/uploads/audio/${files.englishAudio.filename}`,
+        fileName: files.englishAudio.originalname,
+        fileSize: files.englishAudio.size,
+      };
+    } else if (updateDto.englishAudioUrl) {
+      updateData.englishAudio = await this.downloadAndStoreAudio(updateDto.englishAudioUrl, 'english');
     }
-    
+
+    // Handle Hindi Audio update
+    if (files?.hindiAudio) {
+      updateData.hindiAudio = {
+        url: `/uploads/audio/${files.hindiAudio.filename}`,
+        fileName: files.hindiAudio.originalname,
+        fileSize: files.hindiAudio.size,
+      };
+    } else if (updateDto.hindiAudioUrl) {
+      updateData.hindiAudio = await this.downloadAndStoreAudio(updateDto.hindiAudioUrl, 'hindi');
+    }
+
+    const updated = await this.audioLessonModel.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updated) throw new NotFoundException('Audio lesson not found');
+
     return updated;
   }
 
@@ -93,25 +138,28 @@ export class AudioLessonsService {
     const res = await this.audioLessonModel.findByIdAndDelete(id);
     if (!res) throw new NotFoundException('Audio lesson not found');
     
-    // Delete the physical audio file from server
+    // Delete physical audio files from server
     try {
+      if (res.englishAudio?.url) {
+        const filePath = path.join(process.cwd(), res.englishAudio.url.replace(/^\//, ''));
+        await fs.unlink(filePath);
+      }
+      if (res.hindiAudio?.url) {
+        const filePath = path.join(process.cwd(), res.hindiAudio.url.replace(/^\//, ''));
+        await fs.unlink(filePath);
+      }
       if (res.audioUrl) {
-        // Convert URL path to absolute file path
-        // Assuming audioUrl is like '/uploads/audio/filename.wav'
         const filePath = path.join(process.cwd(), res.audioUrl.replace(/^\//, ''));
         await fs.unlink(filePath);
-        console.log(`Deleted file: ${filePath}`);
       }
     } catch (error) {
-      console.error(`Failed to delete file for audio lesson ${id}:`, error.message);
-      // Don't throw error - DB record is already deleted
+      console.error(`Failed to delete files for audio lesson ${id}:`, error.message);
     }
     
     return { message: 'Audio lesson deleted successfully', id };
   }
 
   async getCategories() {
-    // Return all predefined categories with usage count
     const usedCategories = await this.audioLessonModel.distinct('category', { isActive: true });
     
     return AUDIO_LESSON_CATEGORIES.map(category => ({
@@ -122,7 +170,6 @@ export class AudioLessonsService {
   }
 
   async getCategoriesWithCount() {
-    // Get categories with actual lesson count
     const pipeline = [
       { $match: { isActive: true, category: { $exists: true, $ne: null } } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
@@ -137,234 +184,55 @@ export class AudioLessonsService {
     }));
   }
 
-  async transcribeAudio(lessonId: string, audioPath: string): Promise<void> {
-    const transcriptionMethod = this.configService.get<string>('TRANSCRIPTION_METHOD') || 'none';
-    const path = require('path');
-    
+  private async downloadAndStoreAudio(audioUrl: string, language: 'english' | 'hindi'): Promise<AudioFile> {
     try {
-      // Update status to processing
-      await this.audioLessonModel.findByIdAndUpdate(lessonId, {
-        transcriptionStatus: 'processing',
-      });
-
-      // Construct full file path - audioPath is like '/uploads/audio/file.mp3'
-      // Remove leading slash and prepend with './' for relative path
-      const filePath = audioPath.startsWith('/') 
-        ? `.${audioPath}` 
-        : `./${audioPath}`;
-      
-      // Resolve to absolute path for reliability
-      const absolutePath = path.resolve(filePath);
-      
-      // Check if file exists
-      try {
-        await fs.access(absolutePath);
-      } catch (error) {
-        throw new Error(`Audio file not found: ${absolutePath}`);
+      const response = await fetch(audioUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
       }
 
-      let transcript: string;
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'audio');
+      await fs.mkdir(uploadsDir, { recursive: true });
 
-      if (transcriptionMethod === 'openai') {
-        transcript = await this.transcribeWithOpenAI(absolutePath);
-      } else if (transcriptionMethod === 'whisper-local') {
-        transcript = await this.transcribeWithLocalWhisper(absolutePath);
-      } else if (transcriptionMethod === 'assemblyai') {
-        transcript = await this.transcribeWithAssemblyAI(absolutePath);
-      } else {
-        console.warn('No transcription method configured, skipping');
-        await this.audioLessonModel.findByIdAndUpdate(lessonId, {
-          transcriptionStatus: 'failed',
-          transcriptionError: 'No transcription method configured',
-        });
-        return;
-      }
+      // Generate filename
+      const urlPath = new URL(audioUrl).pathname;
+      const extension = path.extname(urlPath) || '.mp3';
+      const filename = `${language}-${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
+      const filePath = path.join(uploadsDir, filename);
 
-      // Update with transcript
-      await this.audioLessonModel.findByIdAndUpdate(lessonId, {
-        transcript,
-        transcriptionStatus: 'completed',
-        transcriptionError: null,
-      });
+      // Download and save file
+      const fileStream = createWriteStream(filePath);
+      await pipeline(response.body, fileStream);
 
-      console.log(`Transcription completed for lesson ${lessonId}`);
+      // Get file stats
+      const stats = await fs.stat(filePath);
+
+      return {
+        url: `/uploads/audio/${filename}`,
+        fileName: path.basename(urlPath),
+        fileSize: stats.size,
+      };
     } catch (error) {
-      console.error(`Transcription error for lesson ${lessonId}:`, error);
-      await this.audioLessonModel.findByIdAndUpdate(lessonId, {
-        transcriptionStatus: 'failed',
-        transcriptionError: error.message,
-      });
+      throw new BadRequestException(`Failed to download audio from URL: ${error.message}`);
     }
   }
 
-  private async transcribeWithOpenAI(filePath: string): Promise<string> {
-    const openaiApiKey = this.configService.get<string>('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
+  async updateSections(lessonId: string, sections: any[]) {
+    if (!lessonId || !Types.ObjectId.isValid(lessonId)) {
+      throw new NotFoundException('Invalid audio lesson id');
     }
-
-    const fileBuffer = await fs.readFile(filePath);
-    const formData = new FormData();
-    formData.append('file', fileBuffer, { filename: filePath.split('/').pop() });
-    formData.append('model', 'whisper-1');
-    formData.append('response_format', 'text');
-
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        ...formData.getHeaders(),
-      },
-      body: formData as any,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI Whisper API error: ${response.status} - ${errorText}`);
-    }
-
-    return await response.text();
-  }
-
-  private async transcribeWithLocalWhisper(filePath: string): Promise<string> {
-    const { exec } = require('child_process');
-    const { promisify } = require('util');
-    const path = require('path');
-    const execAsync = promisify(exec);
-
-    // Python executable path
-    const pythonPath = 'C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python312\\python.exe';
     
-    // Transcription script path (resolve to absolute)
-    const scriptPath = path.resolve(__dirname, '..', '..', 'scripts', 'transcribe.py');
+    const updated = await this.audioLessonModel.findByIdAndUpdate(
+      lessonId,
+      { sections },
+      { new: true }
+    );
     
-    // Output directory for transcripts (resolve to absolute)
-    const outputDir = path.resolve('./uploads/transcripts');
-    await fs.mkdir(outputDir, { recursive: true });
+    if (!updated) {
+      throw new NotFoundException('Audio lesson not found');
+    }
     
-    // Generate output file path
-    const audioFileName = path.basename(filePath, path.extname(filePath));
-    const transcriptPath = path.join(outputDir, `${audioFileName}.txt`);
-    
-    console.log('Transcribing with local Whisper:');
-    console.log('  Audio file:', filePath);
-    console.log('  Script:', scriptPath);
-    console.log('  Output:', transcriptPath);
-    
-    // Run Python transcription script
-    try {
-      const { stdout, stderr } = await execAsync(
-        `"${pythonPath}" "${scriptPath}" "${filePath}" "${transcriptPath}"`,
-        { 
-          maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large transcripts
-          cwd: path.resolve('.'), // Set working directory
-        }
-      );
-      
-      if (stderr) {
-        console.log('Whisper stderr:', stderr);
-      }
-      if (stdout) {
-        console.log('Whisper stdout:', stdout);
-      }
-    } catch (error) {
-      console.error('Python execution error:', error);
-      throw new Error(`Local Whisper transcription failed: ${error.message}\nStderr: ${error.stderr || 'none'}\nStdout: ${error.stdout || 'none'}`);
-    }
-
-    // Verify transcript file was created
-    try {
-      await fs.access(transcriptPath);
-    } catch (error) {
-      throw new Error(`Transcript file was not created at: ${transcriptPath}`);
-    }
-
-    // Read the generated transcript
-    const transcript = await fs.readFile(transcriptPath, 'utf-8');
-    
-    // Clean up transcript file
-    await fs.unlink(transcriptPath).catch(() => {});
-    
-    return transcript.trim();
-  }
-
-  private async transcribeWithAssemblyAI(filePath: string): Promise<string> {
-    const assemblyApiKey = this.configService.get<string>('ASSEMBLYAI_API_KEY');
-    if (!assemblyApiKey) {
-      throw new Error('ASSEMBLYAI_API_KEY not configured');
-    }
-
-    // Step 1: Upload file
-    const fileBuffer = await fs.readFile(filePath);
-    const uploadResponse = await fetch('https://api.assemblyai.com/v2/upload', {
-      method: 'POST',
-      headers: {
-        'authorization': assemblyApiKey,
-      },
-      body: fileBuffer,
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error(`AssemblyAI upload failed: ${uploadResponse.status}`);
-    }
-
-    const { upload_url } = await uploadResponse.json();
-
-    // Step 2: Request transcription
-    const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
-      method: 'POST',
-      headers: {
-        'authorization': assemblyApiKey,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        audio_url: upload_url,
-      }),
-    });
-
-    if (!transcriptResponse.ok) {
-      throw new Error(`AssemblyAI transcription request failed: ${transcriptResponse.status}`);
-    }
-
-    const { id } = await transcriptResponse.json();
-
-    // Step 3: Poll for completion
-    let transcript = null;
-    let attempts = 0;
-    const maxAttempts = 300; // 5 minutes max
-
-    while (attempts < maxAttempts) {
-      const statusResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${id}`, {
-        headers: { 'authorization': assemblyApiKey },
-      });
-
-      const result = await statusResponse.json();
-
-      if (result.status === 'completed') {
-        transcript = result.text;
-        break;
-      } else if (result.status === 'error') {
-        throw new Error(`AssemblyAI transcription failed: ${result.error}`);
-      }
-
-      // Wait 1 second before next check
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      attempts++;
-    }
-
-    if (!transcript) {
-      throw new Error('AssemblyAI transcription timeout');
-    }
-
-    return transcript;
-  }
-
-  async retryTranscription(id: string) {
-    const lesson = await this.findOne(id);
-    if (!lesson.audioUrl) {
-      throw new NotFoundException('No audio file found for this lesson');
-    }
-    await this.transcribeAudio(id, lesson.audioUrl);
-    return { message: 'Transcription retry initiated' };
+    return updated;
   }
 }

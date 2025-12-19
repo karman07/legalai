@@ -11,11 +11,6 @@ async function bootstrap() {
   // Get config service
   const configService = app.get(ConfigService);
   
-  // Serve static files from uploads directory
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads',
-  });
-  
   // Enable CORS for all origins
   app.enableCors({
     origin: '*', // Allow all origins
@@ -24,8 +19,19 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization,Accept',
   });
   
-  // Add headers for Firebase popup authentication
-  app.use((req, res, next) => {
+  // Serve static files from uploads directory with CORS headers
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads',
+    setHeaders: (res, path) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  });
+  
+  // Add headers for Firebase popup authentication (only for API routes)
+  app.use('/api', (req, res, next) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     next();
@@ -35,7 +41,7 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
       transform: true,
     }),
   );

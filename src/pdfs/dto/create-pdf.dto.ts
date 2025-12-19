@@ -32,6 +32,17 @@ export class CreatePdfDto {
   @IsString()
   description?: string;
 
+  @IsOptional()
+  @IsString()
+  fileUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  fileName?: string;
+
+  @IsOptional()
+  fileSize?: number;
+
   // Case Law Information
   @IsOptional()
   @IsString()
@@ -42,7 +53,17 @@ export class CreatePdfDto {
   caseNumber?: string;
 
   @IsOptional()
-  @ValidateNested()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested({ each: false })
   @Type(() => CourtDto)
   court?: CourtDto;
 

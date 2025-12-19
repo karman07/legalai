@@ -36,7 +36,7 @@ export class PdfsAdminController {
     }),
   )
   async create(
-    @Body() dto: CreatePdfDto,
+    @Body() dto: any,
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request,
   ) {
@@ -46,45 +46,30 @@ export class PdfsAdminController {
     const uploadedBy = (req as any)?.user?.id || (req as any)?.user?._id;
     const fileUrl = `/uploads/documents/${file.filename}`;
     
-    // Parse JSON strings from form-data
-    const parsedDto = { ...dto };
+    console.log('Received DTO:', dto);
+    console.log('Court data:', dto.court, typeof dto.court);
+    
+    // Ensure court is parsed if it's a string
+    const finalDto = { ...dto };
     if (typeof dto.court === 'string') {
       try {
-        parsedDto.court = JSON.parse(dto.court as any);
+        finalDto.court = JSON.parse(dto.court);
+        console.log('Parsed court:', finalDto.court);
       } catch (e) {
-        throw new BadRequestException('Invalid court JSON format');
-      }
-    }
-    if (typeof dto.judges === 'string') {
-      try {
-        parsedDto.judges = JSON.parse(dto.judges as any);
-      } catch (e) {
-        throw new BadRequestException('Invalid judges JSON format');
-      }
-    }
-    if (typeof dto.keywords === 'string') {
-      try {
-        parsedDto.keywords = JSON.parse(dto.keywords as any);
-      } catch (e) {
-        throw new BadRequestException('Invalid keywords JSON format');
-      }
-    }
-    if (typeof dto.year === 'string') {
-      parsedDto.year = parseInt(dto.year as any, 10);
-      if (isNaN(parsedDto.year)) {
-        throw new BadRequestException('Invalid year format');
+        console.error('Court parse error:', e);
       }
     }
     
-    return this.pdfsService.create(
-      {
-        ...parsedDto,
-        fileUrl,
-        fileName: file.originalname,
-        fileSize: file.size,
-      } as any,
-      uploadedBy,
-    );
+    const createData = {
+      ...finalDto,
+      fileUrl,
+      fileName: file.originalname,
+      fileSize: file.size,
+    };
+    
+    console.log('Final create data:', createData);
+    
+    return this.pdfsService.create(createData as any, uploadedBy);
   }
 
   @Get()
@@ -122,49 +107,37 @@ export class PdfsAdminController {
   )
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdatePdfDto,
+    @Body() dto: any,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // Parse JSON strings from form-data
-    const parsedDto = { ...dto };
+    console.log('Update DTO:', dto);
+    console.log('Court data:', dto.court, typeof dto.court);
+    
+    // Ensure court is parsed if it's a string
+    const finalDto = { ...dto };
     if (typeof dto.court === 'string') {
       try {
-        parsedDto.court = JSON.parse(dto.court as any);
+        finalDto.court = JSON.parse(dto.court);
+        console.log('Parsed court:', finalDto.court);
       } catch (e) {
-        throw new BadRequestException('Invalid court JSON format');
-      }
-    }
-    if (typeof dto.judges === 'string') {
-      try {
-        parsedDto.judges = JSON.parse(dto.judges as any);
-      } catch (e) {
-        throw new BadRequestException('Invalid judges JSON format');
-      }
-    }
-    if (typeof dto.keywords === 'string') {
-      try {
-        parsedDto.keywords = JSON.parse(dto.keywords as any);
-      } catch (e) {
-        throw new BadRequestException('Invalid keywords JSON format');
-      }
-    }
-    if (typeof dto.year === 'string') {
-      parsedDto.year = parseInt(dto.year as any, 10);
-      if (isNaN(parsedDto.year)) {
-        throw new BadRequestException('Invalid year format');
+        console.error('Court parse error:', e);
       }
     }
     
     if (file) {
       const fileUrl = `/uploads/documents/${file.filename}`;
-      return this.pdfsService.update(id, {
-        ...parsedDto,
+      const updateData = {
+        ...finalDto,
         fileUrl,
         fileName: file.originalname,
         fileSize: file.size,
-      });
+      };
+      console.log('Update with file data:', updateData);
+      return this.pdfsService.update(id, updateData);
     }
-    return this.pdfsService.update(id, parsedDto);
+    
+    console.log('Update data:', finalDto);
+    return this.pdfsService.update(id, finalDto);
   }
 
   @Delete(':id')

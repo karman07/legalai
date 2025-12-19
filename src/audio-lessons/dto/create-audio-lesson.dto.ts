@@ -1,6 +1,36 @@
-import { IsArray, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsArray, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, IsUrl, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { VALID_CATEGORY_IDS } from '../../common/enums/audio-lesson-category.enum';
+
+export class AudioSectionDto {
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsInt()
+  @Min(0)
+  startTime: number;
+
+  @IsInt()
+  @Min(0)
+  endTime: number;
+
+  @IsOptional()
+  @IsString()
+  hindiText?: string;
+
+  @IsOptional()
+  @IsString()
+  englishText?: string;
+
+  @IsOptional()
+  @IsString()
+  easyHindiText?: string;
+
+  @IsOptional()
+  @IsString()
+  easyEnglishText?: string;
+}
 
 export class CreateAudioLessonDto {
   @IsString()
@@ -31,6 +61,50 @@ export class CreateAudioLessonDto {
   @IsString({ each: true })
   tags?: string[];
 
+  // Audio URLs (if providing URLs instead of files)
+  @IsOptional()
+  @IsString()
+  englishAudioUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  hindiAudioUrl?: string;
+
+  // Admin-provided transcriptions
+  @IsOptional()
+  @IsString()
+  englishTranscription?: string;
+
+  @IsOptional()
+  @IsString()
+  hindiTranscription?: string;
+
+  @IsOptional()
+  @IsString()
+  easyEnglishTranscription?: string;
+
+  @IsOptional()
+  @IsString()
+  easyHindiTranscription?: string;
+
+  // Sections with timestamps and texts
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AudioSectionDto)
+  sections?: AudioSectionDto[];
+
+  // Legacy fields for backward compatibility
   @IsOptional()
   @IsString()
   language?: string;
