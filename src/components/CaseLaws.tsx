@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Scale, Search, Filter, Calendar, FileText, X, Download, Eye, Loader2, ChevronLeft, ChevronRight, Building2, File, Image } from 'lucide-react';
 import pdfService, { PDF } from '../services/pdfService';
+import CustomPDFViewer from './CustomPDFViewer';
 
 export default function CaseLaws() {
   const [pdfs, setPdfs] = useState<PDF[]>([]);
@@ -524,51 +525,13 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {/* Document Viewer Modal */}
+      {/* Custom PDF Viewer */}
       {selectedPDF && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold text-slate-900 truncate">{selectedPDF.caseTitle || selectedPDF.title}</h2>
-                  {selectedPDF.citation && (
-                    <p className="text-sm text-slate-600 font-mono">{selectedPDF.citation}</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 ml-4">
-                <a
-                  href={pdfService.getFileUrl(selectedPDF.fileUrl)}
-                  download={selectedPDF.fileName}
-                  className="p-2 bg-blue-100 hover:bg-blue-200 rounded-xl transition-colors"
-                  title="Download PDF"
-                >
-                  <Download className="w-5 h-5 text-blue-600" />
-                </a>
-                <button
-                  onClick={() => setSelectedPDF(null)}
-                  className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-                >
-                  <X className="w-5 h-5 text-slate-600" />
-                </button>
-              </div>
-            </div>
-
-            {/* PDF Viewer */}
-            <div className="flex-1 bg-slate-100">
-              <iframe
-                src={pdfService.getFileUrl(selectedPDF.fileUrl)}
-                className="w-full h-full border-0"
-                title={selectedPDF.caseTitle || selectedPDF.title}
-              />
-            </div>
-          </div>
-        </div>
+        <CustomPDFViewer
+          pdf={selectedPDF}
+          fileUrl={pdfService.getFileUrl(selectedPDF.fileUrl)}
+          onClose={() => setSelectedPDF(null)}
+        />
       )}
     </div>
   );

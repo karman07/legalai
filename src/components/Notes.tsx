@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { BookMarked, Plus, Search, Star, Tag, Edit2, Trash2, X, Save } from 'lucide-react';
+import { BookMarked, Plus, Search, Heart, Tag, Edit2, Trash2, X, Save, Bookmark } from 'lucide-react';
+import notesService, { Note as ApiNote } from '../services/notesService';
+import DeleteConfirmDialog from './DeleteConfirmDialog';
 
-type Note = {
-  id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  category: string | null;
-  tags: string[] | null;
-  is_favorite: boolean;
-  created_at: string;
-  updated_at: string;
-};
+type Note = ApiNote;
 
 export default function Notes() {
   const { user } = useAuth();
@@ -24,11 +16,13 @@ export default function Notes() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; noteId: string | null }>({ isOpen: false, noteId: null });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: '',
     tags: '',
   });
 
@@ -45,10 +39,11 @@ export default function Notes() {
 
     setLoading(true);
     try {
-      // TODO: Implement notes loading logic
-      setNotes([]);
+      const response = await notesService.getNotes();
+      setNotes(response.items || []);
     } catch (error) {
       console.error('Error loading notes:', error);
+      setNotes([]);
     } finally {
       setLoading(false);
     }
@@ -66,11 +61,11 @@ export default function Notes() {
     }
 
     if (selectedCategory) {
-      filtered = filtered.filter((note) => note.category === selectedCategory);
+      filtered = filtered.filter((note) => note.tags?.includes(selectedCategory));
     }
 
     if (showFavoritesOnly) {
-      filtered = filtered.filter((note) => note.is_favorite);
+      filtered = filtered.filter((note) => note.isFavourite);
     }
 
     setFilteredNotes(filtered);
@@ -86,10 +81,14 @@ export default function Notes() {
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 
-      // TODO: Implement note creation logic
-      console.log('Creating note:', { title: formData.title, content: formData.content });
+      await notesService.createNote({
+        title: formData.title,
+        content: formData.content,
+        reference: { type: 'pdf', id: 'general' },
+        tags: tagsArray,
+      });
 
-      setFormData({ title: '', content: '', category: '', tags: '' });
+      setFormData({ title: '', content: '', tags: '' });
       setIsCreating(false);
       loadNotes();
     } catch (error) {
@@ -107,36 +106,54 @@ export default function Notes() {
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 
-      // TODO: Implement note update logic
-      console.log('Updating note:', editingNote.id);
+      const updatedNote = await notesService.updateNote(editingNote._id, {
+        title: formData.title,
+        content: formData.content,
+        tags: tagsArray,
+      });
 
-      setFormData({ title: '', content: '', category: '', tags: '' });
+      setNotes((prev) => prev.map((n) => (n._id === editingNote._id ? updatedNote : n)));
+      setFormData({ title: '', content: '', tags: '' });
       setEditingNote(null);
-      loadNotes();
     } catch (error) {
       console.error('Error updating note:', error);
+      alert('Failed to update note. Please try again.');
     }
   };
 
-  const handleDeleteNote = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
+  const handleDeleteNote = async () => {
+    if (!deleteDialog.noteId) return;
 
+    setIsDeleting(true);
     try {
-      // TODO: Implement note deletion logic
-      console.log('Deleting note:', id);
-      loadNotes();
+      await notesService.deleteNote(deleteDialog.noteId);
+      setNotes((prev) => prev.filter((note) => note._id !== deleteDialog.noteId));
+      setDeleteDialog({ isOpen: false, noteId: null });
     } catch (error) {
       console.error('Error deleting note:', error);
+      alert('Failed to delete note. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const toggleFavorite = async (note: Note) => {
+    setNotes((prev) => prev.map((n) => (n._id === note._id ? { ...n, isFavourite: !n.isFavourite } : n)));
     try {
-      // TODO: Implement favorite toggle logic
-      console.log('Toggling favorite:', note.id);
-      loadNotes();
+      await notesService.toggleFavourite(note._id);
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      setNotes((prev) => prev.map((n) => (n._id === note._id ? { ...n, isFavourite: !n.isFavourite } : n)));
+      alert('Failed to update favorite.');
+    }
+  };
+
+  const toggleBookmark = async (note: Note) => {
+    setNotes((prev) => prev.map((n) => (n._id === note._id ? { ...n, isBookmarked: !n.isBookmarked } : n)));
+    try {
+      await notesService.toggleBookmark(note._id);
+    } catch (error) {
+      setNotes((prev) => prev.map((n) => (n._id === note._id ? { ...n, isBookmarked: !n.isBookmarked } : n)));
+      alert('Failed to update bookmark.');
     }
   };
 
@@ -145,18 +162,29 @@ export default function Notes() {
     setFormData({
       title: note.title,
       content: note.content,
-      category: note.category || '',
       tags: note.tags?.join(', ') || '',
+    });
+  };
+
+  const toggleExpanded = (noteId: string) => {
+    setExpandedNotes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(noteId)) {
+        newSet.delete(noteId);
+      } else {
+        newSet.add(noteId);
+      }
+      return newSet;
     });
   };
 
   const cancelEditing = () => {
     setEditingNote(null);
     setIsCreating(false);
-    setFormData({ title: '', content: '', category: '', tags: '' });
+    setFormData({ title: '', content: '', tags: '' });
   };
 
-  const categories = Array.from(new Set(notes.map((n) => n.category).filter(Boolean)));
+  const categories = Array.from(new Set(notes.flatMap((n) => n.tags || []).filter(Boolean)));
 
   return (
     <div>
@@ -213,7 +241,7 @@ export default function Notes() {
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+            <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
             <span>Favorites</span>
           </button>
         </div>
@@ -231,57 +259,87 @@ export default function Notes() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {filteredNotes.map((note) => (
             <div
-              key={note.id}
-              className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
+              key={note._id}
+              className="border border-slate-200 rounded-xl p-5 hover:shadow-lg transition-all bg-white group"
             >
               <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-slate-900 flex-1 line-clamp-1">{note.title}</h3>
-                <button
-                  onClick={() => toggleFavorite(note)}
-                  className="ml-2 p-1 hover:bg-slate-100 rounded transition-colors"
-                >
-                  <Star
-                    className={`w-5 h-5 ${
-                      note.is_favorite ? 'fill-amber-500 text-amber-500' : 'text-slate-400'
-                    }`}
-                  />
-                </button>
+                <h3 className="font-semibold text-slate-900 flex-1 line-clamp-1 text-lg">{note.title}</h3>
+                <div className="flex items-center space-x-1 ml-2">
+                  <button
+                    onClick={() => toggleBookmark(note)}
+                    className="p-1.5 hover:bg-amber-50 rounded-lg transition-colors"
+                    title={note.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                  >
+                    <Bookmark
+                      className={`w-5 h-5 transition-colors ${
+                        note.isBookmarked ? 'fill-amber-500 text-amber-500' : 'text-slate-400 group-hover:text-slate-600'
+                      }`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => toggleFavorite(note)}
+                    className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                    title={note.isFavourite ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    <Heart
+                      className={`w-5 h-5 transition-colors ${
+                        note.isFavourite ? 'fill-red-500 text-red-500' : 'text-slate-400 group-hover:text-slate-600'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
 
-              <p className="text-sm text-slate-600 mb-3 line-clamp-3 whitespace-pre-wrap">{note.content}</p>
-
-              <div className="flex flex-wrap gap-2 mb-3">
-                {note.category && (
-                  <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded">{note.category}</span>
+              <div className="mb-4">
+                <p className={`text-sm text-slate-600 whitespace-pre-wrap leading-relaxed ${
+                  expandedNotes.has(note._id) ? '' : 'line-clamp-3'
+                }`}>
+                  {note.content}
+                </p>
+                {note.content?.length > 150 && (
+                  <button
+                    onClick={() => toggleExpanded(note._id)}
+                    className="text-xs text-amber-600 hover:text-amber-700 font-medium mt-1"
+                  >
+                    {expandedNotes.has(note._id) ? 'Read less' : 'Read more'}
+                  </button>
                 )}
-                {note.tags &&
-                  note.tags.slice(0, 3).map((tag, idx) => (
-                    <span key={idx} className="flex items-center px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded">
+              </div>
+
+              {note.tags && note.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {note.tags.slice(0, 3).map((tag, idx) => (
+                    <span key={idx} className="flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 text-xs rounded-md font-medium">
                       <Tag className="w-3 h-3 mr-1" />
                       {tag}
                     </span>
                   ))}
-              </div>
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <span className="text-xs text-slate-500">
-                  {new Date(note.updated_at).toLocaleDateString('en-IN')}
-                </span>
-                <div className="flex items-center space-x-2">
+                {note.updatedAt && (
+                  <span className="text-xs text-slate-500 font-medium">
+                    {new Date(note.updatedAt).toLocaleDateString('en-IN')}
+                  </span>
+                )}
+                <div className="flex items-center space-x-1">
                   <button
                     onClick={() => startEditing(note)}
-                    className="p-1 hover:bg-slate-100 rounded transition-colors"
+                    className="p-2 hover:bg-blue-50 rounded-lg transition-colors group/edit"
+                    title="Edit note"
                   >
-                    <Edit2 className="w-4 h-4 text-slate-600" />
+                    <Edit2 className="w-4 h-4 text-slate-500 group-hover/edit:text-blue-600 transition-colors" />
                   </button>
                   <button
-                    onClick={() => handleDeleteNote(note.id)}
-                    className="p-1 hover:bg-red-50 rounded transition-colors"
+                    onClick={() => setDeleteDialog({ isOpen: true, noteId: note._id })}
+                    className="p-2 hover:bg-red-50 rounded-lg transition-colors group/delete"
+                    title="Delete note"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4 text-slate-500 group-hover/delete:text-red-600 transition-colors" />
                   </button>
                 </div>
               </div>
@@ -331,17 +389,6 @@ export default function Notes() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="e.g., Constitutional Law, Criminal Law"
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Tags</label>
                 <input
                   type="text"
@@ -373,6 +420,13 @@ export default function Notes() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, noteId: null })}
+        onConfirm={handleDeleteNote}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

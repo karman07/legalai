@@ -43,20 +43,37 @@ async function apiClient<T>(
 }
 
 // Audio Lessons API
+export interface AudioFile {
+  url: string;
+  fileName: string;
+  fileSize: number;
+  duration?: number;
+}
+
+export interface AudioSection {
+  title: string;
+  startTime: number;
+  endTime: number;
+  hindiText?: string;
+  englishText?: string;
+  easyHindiText?: string;
+  easyEnglishText?: string;
+}
+
 export interface AudioLesson {
   _id: string;
   title: string;
   description?: string;
-  audioUrl: string;
-  fileName: string;
-  fileSize: number;
+  englishAudio?: AudioFile;
+  hindiAudio?: AudioFile;
+  englishTranscription?: string;
+  hindiTranscription?: string;
+  easyEnglishTranscription?: string;
+  easyHindiTranscription?: string;
+  sections?: AudioSection[];
   category?: string;
-  tags: string[];
+  tags?: string[];
   isActive: boolean;
-  language?: string;
-  transcriptionStatus: 'pending' | 'processing' | 'completed' | 'failed';
-  transcript?: string;
-  transcriptionError?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,8 +87,13 @@ export interface AudioLessonsResponse {
 }
 
 export const audioLessonsAPI = {
-  getAudioLessons: async (page = 1, limit = 10): Promise<AudioLessonsResponse> => {
-    return apiClient<AudioLessonsResponse>(`/audio-lessons?page=${page}&limit=${limit}`);
+  getAudioLessons: async (page = 1, limit = 10, category?: string): Promise<AudioLessonsResponse> => {
+    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    if (category) params.append('category', category);
+    return apiClient<AudioLessonsResponse>(`/audio-lessons?${params}`);
+  },
+  getAudioLesson: async (id: string): Promise<AudioLesson> => {
+    return apiClient<AudioLesson>(`/audio-lessons/${id}`);
   },
 };
 

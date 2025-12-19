@@ -20,23 +20,13 @@ import {
   FastForward
 } from 'lucide-react';
 import quizService, { Quiz, QuizSubmitResponse } from '../services/quizService';
+import notesService, { Note } from '../services/notesService';
 import GenerateAIQuiz from './GenerateAIQuiz';
+import Dialog from './Dialog';
 
 type ViewState = 'list' | 'quiz' | 'result';
 
 export default function MCQQuiz() {
-  // UI color/style constants
-  const PRIMARY_BTN =
-    'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white';
-  const SUCCESS_BTN =
-    'bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white';
-  const NEUTRAL_CARD =
-    'bg-white rounded-2xl shadow-lg';
-  const HEADER_BG =
-    'bg-gradient-to-br from-amber-50 via-amber-100 to-slate-50';
-  const HEADER_BORDER = 'border-2 border-amber-200';
-  const HEADER_TITLE =
-    'text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent';
 
   // State management
   const [viewState, setViewState] = useState<ViewState>('list');
@@ -57,6 +47,14 @@ export default function MCQQuiz() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [activeSection, setActiveSection] = useState<'pyq' | 'mocktest' | 'ai' | null>(null);
+  const [questionNotes, setQuestionNotes] = useState<Record<number, Note | null>>({});
+  const [dialog, setDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'info' | 'confirm';
+    title?: string;
+    message: string;
+    onConfirm?: () => void;
+  }>({ isOpen: false, type: 'info', message: '' });
 
   // Load quizzes on mount
   useEffect(() => {
@@ -86,7 +84,6 @@ export default function MCQQuiz() {
     setLoading(true);
     setError('');
     try {
-      // Fetch full quiz details
       const fullQuiz = await quizService.getQuiz(quiz._id);
       setSelectedQuiz(fullQuiz);
       const len = fullQuiz.questions.length;
@@ -94,6 +91,17 @@ export default function MCQQuiz() {
       setSkipped(new Array(len).fill(false));
       setMarkedForReview(new Array(len).fill(false));
       setCurrentQuestion(0);
+      setQuestionNotes({});
+      // Load existing notes for this quiz
+      try {
+        const notes = await notesService.getNotesByReference('quiz', quiz._id);
+        const notesMap: Record<number, Note | null> = {};
+        notes.forEach(note => {
+          const qNum = note.reference.metadata?.question;
+          if (qNum !== undefined) notesMap[qNum] = note;
+        });
+        setQuestionNotes(notesMap);
+      } catch {}
       setViewState('quiz');
     } catch (err: any) {
       setError(err.message || 'Failed to load quiz');
@@ -449,86 +457,132 @@ export default function MCQQuiz() {
     const answeredCount = userAnswers.filter(a => a !== null).length;
 
     return (
-      <div className="max-w-5xl mx-0 lg:ml-4 lg:mr-0 p-4 lg:p-6 overflow-x-hidden">
-        {/* Header */}
-        <div className={`${HEADER_BG} ${HEADER_BORDER} rounded-2xl shadow-xl p-6 mb-6`}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className={`${HEADER_TITLE}`}>{selectedQuiz.title}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">
-                  {selectedQuiz.topic}
-                </span>
+      <div className="h-screen flex flex-col overflow-hidden">
+        {/* Compact Header */}
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4 shadow-lg flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-white">{selectedQuiz.title}</h2>
+              <span className="px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
+                {selectedQuiz.topic}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-white text-sm font-semibold">
+                {answeredCount}/{selectedQuiz.questions.length} Answered
+              </div>
+              <div className="w-32 bg-white/20 rounded-full h-2">
+                <div className="bg-white h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Progress</div>
-              <div className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-amber-600 bg-clip-text text-transparent">
-                {answeredCount}/{selectedQuiz.questions.length}
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-slate-200 rounded-full h-3 shadow-inner">
-            <div
-              className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 h-3 rounded-full transition-all duration-300 shadow-md"
-              style={{ width: `${progress}%` }}
-            />
           </div>
         </div>
 
-        {/* Two-column layout: left question, right navigator */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
-            {/* Question Card */}
-            <div className={`${NEUTRAL_CARD} p-8 animate-fade-in-up`}>
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold">{currentQuestion + 1}</span>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm text-slate-500 mb-2">
-                    Question {currentQuestion + 1} of {selectedQuiz.questions.length}
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800 leading-tight">
-                    {currentQ.text}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Options */}
-              <div className="space-y-3">
-                {currentQ.options.map((option, index) => {
-                  const isSelected = userAnswers[currentQuestion] === index;
-
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => selectAnswer(index)}
-                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? 'border-amber-500 bg-amber-50 shadow-md'
-                          : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                            isSelected
-                              ? 'border-amber-500 bg-amber-500'
-                              : 'border-slate-300'
-                          }`}
-                        >
-                          {isSelected && (
-                            <div className="w-2 h-2 bg-white rounded-full" />
-                          )}
-                        </div>
-                        <span className="font-medium text-slate-700">{option}</span>
+        {/* Main Content Area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left: Question */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-3xl mx-auto">
+              {/* Question Card */}
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+                <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold">{currentQuestion + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-slate-500 mb-2">
+                        Question {currentQuestion + 1} of {selectedQuiz.questions.length}
                       </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-800 leading-tight">
+                        {currentQ.text}
+                      </h3>
+                    </div>
+                  </div>
+                  {questionNotes[currentQuestion] ? (
+                    <button
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const noteToDelete = questionNotes[currentQuestion];
+                        const questionIndex = currentQuestion;
+                        try {
+                          await notesService.deleteNote(noteToDelete!._id);
+                          setQuestionNotes(prev => ({ ...prev, [questionIndex]: null }));
+                        } catch (err) {
+                          console.error('Delete error:', err);
+                        }
+                      }}
+                      className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border border-red-200 flex-shrink-0 cursor-pointer touch-manipulation"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">Delete from Notes</span>
+                      <span className="sm:hidden">Delete Note</span>
                     </button>
-                  );
-                })}
+                  ) : (
+                    <button
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const questionIndex = currentQuestion;
+                        try {
+                          const note = await notesService.createNote({
+                            title: `Q${questionIndex + 1}: ${selectedQuiz.title}`,
+                            content: `${currentQ.text}\n\nOptions:\n${currentQ.options.map((opt, i) => `${i + 1}. ${opt}`).join('\n')}`,
+                            reference: { 
+                              type: 'quiz', 
+                              id: selectedQuiz._id || 'general',
+                              metadata: { question: questionIndex }
+                            },
+                            tags: [selectedQuiz.topic]
+                          });
+                          setQuestionNotes(prev => ({ ...prev, [questionIndex]: note }));
+                        } catch (err) {
+                          console.error('Add note error:', err);
+                        }
+                      }}
+                      className="w-full sm:w-auto px-4 py-2 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 text-amber-700 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border border-amber-200 flex-shrink-0 cursor-pointer touch-manipulation"
+                    >
+                      <BookMarked className="w-4 h-4" />
+                      <span className="hidden sm:inline">Add to Notes</span>
+                      <span className="sm:hidden">Add Note</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Options */}
+                <div className="space-y-3">
+                  {currentQ.options.map((option, index) => {
+                    const isSelected = userAnswers[currentQuestion] === index;
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => selectAnswer(index)}
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? 'border-amber-500 bg-amber-50 shadow-md'
+                            : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                              isSelected
+                                ? 'border-amber-500 bg-amber-500'
+                                : 'border-slate-300'
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="w-2 h-2 bg-white rounded-full" />
+                            )}
+                          </div>
+                          <span className="font-medium text-slate-700">{option}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Error Message */}
@@ -538,97 +592,108 @@ export default function MCQQuiz() {
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
-            </div>
 
-            {/* Navigation */}
-            <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div className="flex gap-3 flex-1">
-                <button
-                  onClick={previousQuestion}
-                  disabled={currentQuestion === 0}
-                  className="flex-1 sm:flex-none px-6 py-3 bg-white border-2 border-slate-200 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Previous
-                </button>
+              {/* Navigation */}
+              <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex gap-2 sm:gap-3">
+                  <button
+                    onClick={previousQuestion}
+                    disabled={currentQuestion === 0}
+                    className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-white border-2 border-slate-200 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
+                  >
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
+                  </button>
 
-                <button
-                  onClick={skipCurrent}
-                  className="flex-1 sm:flex-none px-6 py-3 bg-white border-2 border-amber-300 rounded-xl text-amber-700 font-semibold hover:bg-amber-50 hover:border-amber-400 transition-all inline-flex items-center justify-center gap-2"
-                >
-                  <FastForward className="w-5 h-5" />
-                  Skip
-                </button>
+                  <button
+                    onClick={toggleMarkForReview}
+                    className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 border-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${markedForReview[currentQuestion] ? 'border-indigo-400 text-indigo-700 bg-indigo-50' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                  >
+                    <Flag className="w-4 h-4" />
+                    <span className="hidden sm:inline">{markedForReview[currentQuestion] ? 'Marked' : 'Mark'}</span>
+                  </button>
 
-                
+                  <button
+                    onClick={skipCurrent}
+                    className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-white border-2 border-amber-300 rounded-xl text-amber-700 font-semibold hover:bg-amber-50 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+                  >
+                    <FastForward className="w-4 h-4" />
+                    <span className="hidden sm:inline">Skip</span>
+                  </button>
+                </div>
+
+                {currentQuestion < selectedQuiz.questions.length - 1 ? (
+                  <button
+                    onClick={nextQuestion}
+                    className="w-full sm:w-auto sm:ml-auto px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                  >
+                    Next
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={submitQuiz}
+                    disabled={loading}
+                    className="w-full sm:w-auto sm:ml-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        Submit Quiz
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-
-              {currentQuestion < selectedQuiz.questions.length - 1 ? (
-                <button
-                  onClick={nextQuestion}
-                  className={`w-full sm:w-auto px-8 py-3 ${PRIMARY_BTN} font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2`}
-                >
-                  Next
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              ) : (
-                <button
-                  onClick={submitQuiz}
-                  disabled={loading}
-                  className={`w-full sm:w-auto px-8 py-3 ${SUCCESS_BTN} font-bold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-5 h-5" />
-                      Submit Quiz
-                    </>
-                  )}
-                </button>
-              )}
-
-              <button
-                onClick={toggleMarkForReview}
-                className={`w-full sm:w-auto px-6 py-3 bg-white border-2 rounded-xl font-semibold transition-all inline-flex items-center justify-center gap-2 ${markedForReview[currentQuestion] ? 'border-indigo-400 text-indigo-700 bg-indigo-50' : 'border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'}`}
-              >
-                <Flag className="w-5 h-5" />
-                {markedForReview[currentQuestion] ? 'Marked for Review' : 'Mark for Review'}
-              </button>
             </div>
           </div>
 
-          {/* Right: Question Navigator */}
-          <aside className={`${NEUTRAL_CARD} p-6 lg:sticky lg:top-6 max-h-[70vh] overflow-auto rounded-2xl`}>
-            <h4 className="text-sm font-semibold text-slate-700 mb-3">Question Navigator</h4>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200"><CheckCircle className="w-3 h-3" /> Answered</span>
-              <span className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200"><FastForward className="w-3 h-3" /> Skipped</span>
-              <span className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200"><Flag className="w-3 h-3" /> Review</span>
-        
+          {/* Right: Fixed Question Navigator - Hidden on mobile */}
+          <aside className="hidden lg:flex w-80 bg-white border-l border-slate-200 flex-col">
+            <div className="p-4 border-b border-slate-200">
+              <h4 className="text-sm font-bold text-slate-800 mb-3">Question Navigator</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-6 h-6 rounded-lg bg-emerald-100 border border-emerald-300" />
+                  <span className="text-slate-600">Answered</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-6 h-6 rounded-lg bg-amber-100 border border-amber-300" />
+                  <span className="text-slate-600">Skipped</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-6 h-6 rounded-lg bg-indigo-100 border border-indigo-300" />
+                  <span className="text-slate-600">Marked</span>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-3 gap-2">
-              {selectedQuiz.questions.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentQuestion(index)}
-                  className={`aspect-square rounded-lg font-semibold text-sm transition-all ${
-                    index === currentQuestion
-                      ? 'bg-amber-500 text-white shadow-md'
-                      : markedForReview[index]
-                      ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                      : userAnswers[index] !== null
-                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                      : skipped[index]
-                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-5 gap-2">
+                {selectedQuiz.questions.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentQuestion(index)}
+                    className={`aspect-square rounded-lg font-bold text-sm transition-all border-2 ${
+                      index === currentQuestion
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-md scale-110'
+                        : markedForReview[index]
+                        ? 'bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-indigo-200'
+                        : userAnswers[index] !== null
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200'
+                        : skipped[index]
+                        ? 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
             </div>
           </aside>
         </div>
@@ -813,5 +878,16 @@ export default function MCQQuiz() {
     );
   }
 
-  return null;
+  return (
+    <>
+      <Dialog
+        isOpen={dialog.isOpen}
+        onClose={() => setDialog({ ...dialog, isOpen: false })}
+        type={dialog.type}
+        title={dialog.title}
+        message={dialog.message}
+        onConfirm={dialog.onConfirm}
+      />
+    </>
+  );
 }
