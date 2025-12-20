@@ -4,7 +4,8 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { mediaService } from '../../services/mediaService';
-import type { Category } from '../../types/media';
+import type { Category, AudioSection } from '../../types/media';
+import { SectionEditor } from '../../components/audio/SectionEditor';
 
 interface AudioUploadModalProps {
   onClose: () => void;
@@ -25,8 +26,14 @@ export const AudioUploadModal = ({ onClose, onSuccess, categories }: AudioUpload
     easyHindiTranscription: '',
     englishAudioUrl: '',
     hindiAudioUrl: '',
-    sections: '',
   });
+  const [sections, setSections] = useState<AudioSection[]>([]);
+  const [sectionAudioFiles, setSectionAudioFiles] = useState<Map<string, File>>(new Map());
+
+  const handleSectionAudioFile = (sectionIndex: number, audioType: string, file: File) => {
+    const key = `section_${sectionIndex}_${audioType}`;
+    setSectionAudioFiles(prev => new Map(prev).set(key, file));
+  };
   const [englishAudioFile, setEnglishAudioFile] = useState<File | null>(null);
   const [hindiAudioFile, setHindiAudioFile] = useState<File | null>(null);
 
@@ -50,7 +57,12 @@ export const AudioUploadModal = ({ onClose, onSuccess, categories }: AudioUpload
       if (formData.easyHindiTranscription) data.append('easyHindiTranscription', formData.easyHindiTranscription);
       if (formData.englishAudioUrl) data.append('englishAudioUrl', formData.englishAudioUrl);
       if (formData.hindiAudioUrl) data.append('hindiAudioUrl', formData.hindiAudioUrl);
-      if (formData.sections) data.append('sections', formData.sections);
+      if (sections.length > 0) data.append('sections', JSON.stringify(sections));
+      
+      // Append section audio files
+      sectionAudioFiles.forEach((file, key) => {
+        data.append(key, file);
+      });
       if (englishAudioFile) data.append('englishAudio', englishAudioFile);
       if (hindiAudioFile) data.append('hindiAudio', hindiAudioFile);
 
@@ -105,7 +117,7 @@ export const AudioUploadModal = ({ onClose, onSuccess, categories }: AudioUpload
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">English Audio File</label>
-                <input type="file" accept="audio/*" onChange={(e) => setEnglishAudioFile(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" />
+                <input type="file" accept="audio/*" onChange={(e) => setEnglishAudioFile(e.target.files?.[0] || null)} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">English Audio URL</label>
@@ -113,7 +125,7 @@ export const AudioUploadModal = ({ onClose, onSuccess, categories }: AudioUpload
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Hindi Audio File</label>
-                <input type="file" accept="audio/*" onChange={(e) => setHindiAudioFile(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900" />
+                <input type="file" accept="audio/*" onChange={(e) => setHindiAudioFile(e.target.files?.[0] || null)} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 dark:file:bg-orange-900 dark:file:text-orange-300" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Hindi Audio URL</label>
@@ -145,8 +157,7 @@ export const AudioUploadModal = ({ onClose, onSuccess, categories }: AudioUpload
           </div>
 
           <div className="border-t pt-4">
-            <h3 className="font-semibold mb-3">Sections (JSON Array)</h3>
-            <textarea value={formData.sections} onChange={(e) => setFormData(prev => ({ ...prev, sections: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 font-mono text-sm" rows={4} placeholder='[{"title":"Intro","startTime":0,"endTime":30,"englishText":"...","hindiText":"..."}]' />
+            <SectionEditor sections={sections} onChange={setSections} onAudioFileChange={handleSectionAudioFile} />
           </div>
 
           <div className="flex gap-3 pt-4">

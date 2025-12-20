@@ -81,7 +81,7 @@ export const PDFUploadModal = ({ onClose, onSuccess }: { onClose: () => void; on
               type="file"
               accept=".pdf"
               onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900"
+              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100 dark:file:bg-red-900 dark:file:text-red-300"
               required
             />
             <p className="text-xs text-gray-500 mt-1">Max 100MB</p>
