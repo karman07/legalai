@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors, BadRequestException } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors, BadRequestException, UsePipes, ValidationPipe } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs/promises';
@@ -20,12 +20,9 @@ export class AudioLessonsAdminController {
   constructor(private readonly audioLessonsService: AudioLessonsService) {}
 
   @Post()
+  @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: false }))
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'englishAudio', maxCount: 1 },
-      { name: 'hindiAudio', maxCount: 1 },
-      { name: 'file', maxCount: 1 }, // Legacy support
-    ], {
+    AnyFilesInterceptor({
       storage: diskStorage({
         destination: './uploads/audio',
         filename: (req, file, cb) => {
@@ -34,6 +31,7 @@ export class AudioLessonsAdminController {
           let prefix = 'audio';
           if (file.fieldname === 'englishAudio') prefix = 'english';
           else if (file.fieldname === 'hindiAudio') prefix = 'hindi';
+          else if (file.fieldname.includes('section_')) prefix = file.fieldname.replace(/[^a-zA-Z0-9]/g, '-');
           cb(null, `${prefix}-${uniqueSuffix}${ext}`);
         },
       }),
@@ -54,13 +52,14 @@ export class AudioLessonsAdminController {
     }),
   )
   async create(
-    @Body() dto: CreateAudioLessonDto,
-    @UploadedFiles() files: { englishAudio?: Express.Multer.File[], hindiAudio?: Express.Multer.File[], file?: Express.Multer.File[] },
+    @Body() dto: any,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() req: Request,
   ) {
-    const englishAudioFile = files?.englishAudio?.[0];
-    const hindiAudioFile = files?.hindiAudio?.[0];
-    const legacyAudioFile = files?.file?.[0]; // Legacy support
+    // Find main audio files
+    const englishAudioFile = files?.find(f => f.fieldname === 'englishAudio');
+    const hindiAudioFile = files?.find(f => f.fieldname === 'hindiAudio');
+    const legacyAudioFile = files?.find(f => f.fieldname === 'file');
     
     // Validate that at least one audio source is provided
     if (!englishAudioFile && !hindiAudioFile && !legacyAudioFile && !dto.englishAudioUrl && !dto.hindiAudioUrl) {
@@ -84,6 +83,50 @@ export class AudioLessonsAdminController {
       } catch (e) {
         throw new BadRequestException('Invalid sections JSON format');
       }
+    }
+    
+    // Process section audio files
+    if (parsedDto.sections && Array.isArray(parsedDto.sections)) {
+      parsedDto.sections = parsedDto.sections.map((section: any, index: number) => {
+        const sectionFiles = {
+          englishAudio: files?.find(f => f.fieldname === `section_${index}_englishAudio`),
+          hindiAudio: files?.find(f => f.fieldname === `section_${index}_hindiAudio`),
+          easyEnglishAudio: files?.find(f => f.fieldname === `section_${index}_easyEnglishAudio`),
+          easyHindiAudio: files?.find(f => f.fieldname === `section_${index}_easyHindiAudio`),
+        };
+        
+        // Add audio file metadata to section
+        if (sectionFiles.englishAudio) {
+          section.englishAudio = {
+            url: `/uploads/audio/${sectionFiles.englishAudio.filename}`,
+            fileName: sectionFiles.englishAudio.originalname,
+            fileSize: sectionFiles.englishAudio.size,
+          };
+        }
+        if (sectionFiles.hindiAudio) {
+          section.hindiAudio = {
+            url: `/uploads/audio/${sectionFiles.hindiAudio.filename}`,
+            fileName: sectionFiles.hindiAudio.originalname,
+            fileSize: sectionFiles.hindiAudio.size,
+          };
+        }
+        if (sectionFiles.easyEnglishAudio) {
+          section.easyEnglishAudio = {
+            url: `/uploads/audio/${sectionFiles.easyEnglishAudio.filename}`,
+            fileName: sectionFiles.easyEnglishAudio.originalname,
+            fileSize: sectionFiles.easyEnglishAudio.size,
+          };
+        }
+        if (sectionFiles.easyHindiAudio) {
+          section.easyHindiAudio = {
+            url: `/uploads/audio/${sectionFiles.easyHindiAudio.filename}`,
+            fileName: sectionFiles.easyHindiAudio.originalname,
+            fileSize: sectionFiles.easyHindiAudio.size,
+          };
+        }
+        
+        return section;
+      });
     }
     
     // Legacy support - convert old format to new
@@ -145,12 +188,9 @@ export class AudioLessonsAdminController {
   }
 
   @Put(':id')
+  @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: false }))
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'englishAudio', maxCount: 1 },
-      { name: 'hindiAudio', maxCount: 1 },
-      { name: 'file', maxCount: 1 }, // Legacy support
-    ], {
+    AnyFilesInterceptor({
       storage: diskStorage({
         destination: './uploads/audio',
         filename: (req, file, cb) => {
@@ -159,6 +199,7 @@ export class AudioLessonsAdminController {
           let prefix = 'audio';
           if (file.fieldname === 'englishAudio') prefix = 'english';
           else if (file.fieldname === 'hindiAudio') prefix = 'hindi';
+          else if (file.fieldname.includes('section_')) prefix = file.fieldname.replace(/[^a-zA-Z0-9]/g, '-');
           cb(null, `${prefix}-${uniqueSuffix}${ext}`);
         },
       }),
@@ -180,12 +221,12 @@ export class AudioLessonsAdminController {
   )
   async update(
     @Param('id') id: string,
-    @Body() dto: UpdateAudioLessonDto,
-    @UploadedFiles() files: { englishAudio?: Express.Multer.File[], hindiAudio?: Express.Multer.File[], file?: Express.Multer.File[] },
+    @Body() dto: any,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    const englishAudioFile = files?.englishAudio?.[0];
-    const hindiAudioFile = files?.hindiAudio?.[0];
-    const legacyAudioFile = files?.file?.[0];
+    const englishAudioFile = files?.find(f => f.fieldname === 'englishAudio');
+    const hindiAudioFile = files?.find(f => f.fieldname === 'hindiAudio');
+    const legacyAudioFile = files?.find(f => f.fieldname === 'file');
     
     // Parse JSON arrays from form-data
     const parsedDto = { ...dto };
@@ -202,6 +243,50 @@ export class AudioLessonsAdminController {
       } catch (e) {
         throw new BadRequestException('Invalid sections JSON format');
       }
+    }
+    
+    // Process section audio files
+    if (parsedDto.sections && Array.isArray(parsedDto.sections)) {
+      parsedDto.sections = parsedDto.sections.map((section: any, index: number) => {
+        const sectionFiles = {
+          englishAudio: files?.find(f => f.fieldname === `section_${index}_englishAudio`),
+          hindiAudio: files?.find(f => f.fieldname === `section_${index}_hindiAudio`),
+          easyEnglishAudio: files?.find(f => f.fieldname === `section_${index}_easyEnglishAudio`),
+          easyHindiAudio: files?.find(f => f.fieldname === `section_${index}_easyHindiAudio`),
+        };
+        
+        // Add audio file metadata to section if files are uploaded
+        if (sectionFiles.englishAudio) {
+          section.englishAudio = {
+            url: `/uploads/audio/${sectionFiles.englishAudio.filename}`,
+            fileName: sectionFiles.englishAudio.originalname,
+            fileSize: sectionFiles.englishAudio.size,
+          };
+        }
+        if (sectionFiles.hindiAudio) {
+          section.hindiAudio = {
+            url: `/uploads/audio/${sectionFiles.hindiAudio.filename}`,
+            fileName: sectionFiles.hindiAudio.originalname,
+            fileSize: sectionFiles.hindiAudio.size,
+          };
+        }
+        if (sectionFiles.easyEnglishAudio) {
+          section.easyEnglishAudio = {
+            url: `/uploads/audio/${sectionFiles.easyEnglishAudio.filename}`,
+            fileName: sectionFiles.easyEnglishAudio.originalname,
+            fileSize: sectionFiles.easyEnglishAudio.size,
+          };
+        }
+        if (sectionFiles.easyHindiAudio) {
+          section.easyHindiAudio = {
+            url: `/uploads/audio/${sectionFiles.easyHindiAudio.filename}`,
+            fileName: sectionFiles.easyHindiAudio.originalname,
+            fileSize: sectionFiles.easyHindiAudio.size,
+          };
+        }
+        
+        return section;
+      });
     }
     
     // Legacy support

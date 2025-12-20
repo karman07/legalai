@@ -41,6 +41,19 @@ export class AudioSection {
 
   @Prop()
   easyEnglishText?: string;
+
+  // Audio files for each text variant
+  @Prop({ type: AudioFile })
+  hindiAudio?: AudioFile;
+
+  @Prop({ type: AudioFile })
+  englishAudio?: AudioFile;
+
+  @Prop({ type: AudioFile })
+  easyHindiAudio?: AudioFile;
+
+  @Prop({ type: AudioFile })
+  easyEnglishAudio?: AudioFile;
 }
 
 @Schema({ timestamps: true })

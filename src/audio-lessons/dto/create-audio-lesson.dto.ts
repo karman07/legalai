@@ -30,6 +30,19 @@ export class AudioSectionDto {
   @IsOptional()
   @IsString()
   easyEnglishText?: string;
+
+  // Audio files for each text variant
+  @IsOptional()
+  hindiAudio?: any;
+
+  @IsOptional()
+  englishAudio?: any;
+
+  @IsOptional()
+  easyHindiAudio?: any;
+
+  @IsOptional()
+  easyEnglishAudio?: any;
 }
 
 export class CreateAudioLessonDto {
