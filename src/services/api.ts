@@ -58,6 +58,10 @@ export interface AudioSection {
   englishText?: string;
   easyHindiText?: string;
   easyEnglishText?: string;
+  hindiAudio?: AudioFile;
+  englishAudio?: AudioFile;
+  easyHindiAudio?: AudioFile;
+  easyEnglishAudio?: AudioFile;
 }
 
 export interface AudioLesson {

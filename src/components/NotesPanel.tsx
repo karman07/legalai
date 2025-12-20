@@ -145,7 +145,7 @@ export default function NotesPanel({ referenceType, referenceId, currentContext,
   };
 
   return (
-    <div className="w-full md:w-80 bg-white md:border-l border-slate-200 flex flex-col h-full">
+    <div className="w-full md:w-80 bg-white md:border-l border-slate-200 flex flex-col h-full md:ml-auto">
       {/* Header */}
       <div className="p-3 sm:p-4 border-b border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50">
         <div className="flex items-center justify-between mb-3">
