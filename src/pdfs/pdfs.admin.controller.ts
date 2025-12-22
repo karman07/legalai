@@ -62,9 +62,7 @@ export class PdfsAdminController {
     
     const createData = {
       ...finalDto,
-      fileUrl,
-      fileName: file.originalname,
-      fileSize: file.size,
+      file: file.filename,
     };
     
     console.log('Final create data:', createData);
@@ -125,12 +123,9 @@ export class PdfsAdminController {
     }
     
     if (file) {
-      const fileUrl = `/uploads/documents/${file.filename}`;
       const updateData = {
         ...finalDto,
-        fileUrl,
-        fileName: file.originalname,
-        fileSize: file.size,
+        file: file.filename,
       };
       console.log('Update with file data:', updateData);
       return this.pdfsService.update(id, updateData);

@@ -20,15 +20,9 @@ export class AudioFile {
 }
 
 @Schema({ _id: false })
-export class AudioSection {
+export class AudioSubsection {
   @Prop({ required: true })
   title: string;
-
-  @Prop({ required: true })
-  startTime: number; // in seconds
-
-  @Prop({ required: true })
-  endTime: number; // in seconds
 
   @Prop()
   hindiText?: string;
@@ -56,35 +50,62 @@ export class AudioSection {
   easyEnglishAudio?: AudioFile;
 }
 
+@Schema({ _id: false })
+export class AudioSection {
+  @Prop({ required: true })
+  title: string;
+
+  @Prop()
+  hindiText?: string;
+
+  @Prop()
+  englishText?: string;
+
+  @Prop()
+  easyHindiText?: string;
+
+  @Prop()
+  easyEnglishText?: string;
+
+  // Audio files for each text variant
+  @Prop({ type: AudioFile })
+  hindiAudio?: AudioFile;
+
+  @Prop({ type: AudioFile })
+  englishAudio?: AudioFile;
+
+  @Prop({ type: AudioFile })
+  easyHindiAudio?: AudioFile;
+
+  @Prop({ type: AudioFile })
+  easyEnglishAudio?: AudioFile;
+
+  // Subsections within this section
+  @Prop({ type: [AudioSubsection] })
+  subsections?: AudioSubsection[];
+
+  @Prop({ default: 0 })
+  totalSubsections: number; // Auto-calculated count
+}
+
 @Schema({ timestamps: true })
 export class AudioLesson {
   @Prop({ required: true })
   title: string;
 
   @Prop()
-  description?: string;
-
-  // Audio Files
-  @Prop({ type: AudioFile })
-  englishAudio?: AudioFile;
-
-  @Prop({ type: AudioFile })
-  hindiAudio?: AudioFile;
-
-  // Admin-provided transcriptions
-  @Prop()
-  englishTranscription?: string;
+  headTitle?: string; // Main heading for the lesson
 
   @Prop()
-  hindiTranscription?: string;
+  description?: string; // Only description at lesson level
 
-  @Prop()
-  easyEnglishTranscription?: string;
+  @Prop({ default: 0 })
+  totalSections: number; // Auto-calculated count of sections
 
-  @Prop()
-  easyHindiTranscription?: string;
+  @Prop({ default: 0 })
+  totalSubsections: number; // Auto-calculated total count of all subsections
 
-  // Sections with timestamps and texts
+  // Sections with their own audio and subsections
   @Prop({ type: [AudioSection] })
   sections?: AudioSection[];
 

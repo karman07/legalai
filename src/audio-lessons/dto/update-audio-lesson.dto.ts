@@ -10,6 +10,10 @@ export class UpdateAudioLessonDto {
 
   @IsOptional()
   @IsString()
+  headTitle?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()

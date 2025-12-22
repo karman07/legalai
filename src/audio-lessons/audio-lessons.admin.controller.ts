@@ -56,15 +56,12 @@ export class AudioLessonsAdminController {
     @UploadedFiles() files: Express.Multer.File[],
     @Req() req: Request,
   ) {
-    // Find main audio files
+    // Find main audio files (legacy support only)
     const englishAudioFile = files?.find(f => f.fieldname === 'englishAudio');
     const hindiAudioFile = files?.find(f => f.fieldname === 'hindiAudio');
     const legacyAudioFile = files?.find(f => f.fieldname === 'file');
     
-    // Validate that at least one audio source is provided
-    if (!englishAudioFile && !hindiAudioFile && !legacyAudioFile && !dto.englishAudioUrl && !dto.hindiAudioUrl) {
-      throw new BadRequestException('At least one audio file or URL is required');
-    }
+    // No validation required - audio files are optional at lesson level
     
     const uploadedBy = (req as any)?.user?.id || (req as any)?.user?._id;
     
@@ -123,6 +120,50 @@ export class AudioLessonsAdminController {
             fileName: sectionFiles.easyHindiAudio.originalname,
             fileSize: sectionFiles.easyHindiAudio.size,
           };
+        }
+        
+        // Process subsection audio files
+        if (section.subsections && Array.isArray(section.subsections)) {
+          section.subsections = section.subsections.map((subsection: any, subIndex: number) => {
+            const subsectionFiles = {
+              englishAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_englishAudio`),
+              hindiAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_hindiAudio`),
+              easyEnglishAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_easyEnglishAudio`),
+              easyHindiAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_easyHindiAudio`),
+            };
+            
+            // Add audio file metadata to subsection
+            if (subsectionFiles.englishAudio) {
+              subsection.englishAudio = {
+                url: `/uploads/audio/${subsectionFiles.englishAudio.filename}`,
+                fileName: subsectionFiles.englishAudio.originalname,
+                fileSize: subsectionFiles.englishAudio.size,
+              };
+            }
+            if (subsectionFiles.hindiAudio) {
+              subsection.hindiAudio = {
+                url: `/uploads/audio/${subsectionFiles.hindiAudio.filename}`,
+                fileName: subsectionFiles.hindiAudio.originalname,
+                fileSize: subsectionFiles.hindiAudio.size,
+              };
+            }
+            if (subsectionFiles.easyEnglishAudio) {
+              subsection.easyEnglishAudio = {
+                url: `/uploads/audio/${subsectionFiles.easyEnglishAudio.filename}`,
+                fileName: subsectionFiles.easyEnglishAudio.originalname,
+                fileSize: subsectionFiles.easyEnglishAudio.size,
+              };
+            }
+            if (subsectionFiles.easyHindiAudio) {
+              subsection.easyHindiAudio = {
+                url: `/uploads/audio/${subsectionFiles.easyHindiAudio.filename}`,
+                fileName: subsectionFiles.easyHindiAudio.originalname,
+                fileSize: subsectionFiles.easyHindiAudio.size,
+              };
+            }
+            
+            return subsection;
+          });
         }
         
         return section;
@@ -283,6 +324,50 @@ export class AudioLessonsAdminController {
             fileName: sectionFiles.easyHindiAudio.originalname,
             fileSize: sectionFiles.easyHindiAudio.size,
           };
+        }
+        
+        // Process subsection audio files
+        if (section.subsections && Array.isArray(section.subsections)) {
+          section.subsections = section.subsections.map((subsection: any, subIndex: number) => {
+            const subsectionFiles = {
+              englishAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_englishAudio`),
+              hindiAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_hindiAudio`),
+              easyEnglishAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_easyEnglishAudio`),
+              easyHindiAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_easyHindiAudio`),
+            };
+            
+            // Add audio file metadata to subsection if files are uploaded
+            if (subsectionFiles.englishAudio) {
+              subsection.englishAudio = {
+                url: `/uploads/audio/${subsectionFiles.englishAudio.filename}`,
+                fileName: subsectionFiles.englishAudio.originalname,
+                fileSize: subsectionFiles.englishAudio.size,
+              };
+            }
+            if (subsectionFiles.hindiAudio) {
+              subsection.hindiAudio = {
+                url: `/uploads/audio/${subsectionFiles.hindiAudio.filename}`,
+                fileName: subsectionFiles.hindiAudio.originalname,
+                fileSize: subsectionFiles.hindiAudio.size,
+              };
+            }
+            if (subsectionFiles.easyEnglishAudio) {
+              subsection.easyEnglishAudio = {
+                url: `/uploads/audio/${subsectionFiles.easyEnglishAudio.filename}`,
+                fileName: subsectionFiles.easyEnglishAudio.originalname,
+                fileSize: subsectionFiles.easyEnglishAudio.size,
+              };
+            }
+            if (subsectionFiles.easyHindiAudio) {
+              subsection.easyHindiAudio = {
+                url: `/uploads/audio/${subsectionFiles.easyHindiAudio.filename}`,
+                fileName: subsectionFiles.easyHindiAudio.originalname,
+                fileSize: subsectionFiles.easyHindiAudio.size,
+              };
+            }
+            
+            return subsection;
+          });
         }
         
         return section;

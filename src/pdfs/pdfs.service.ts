@@ -52,8 +52,14 @@ export class PdfsService {
       this.pdfModel.countDocuments(filter),
     ]);
 
+    // Transform items to include full file URL
+    const transformedItems = items.map(item => ({
+      ...item,
+      fileUrl: item.file ? `/uploads/documents/${item.file}` : null
+    }));
+
     return {
-      items,
+      items: transformedItems,
       total,
       page: validatedPage,
       limit: validatedLimit,
@@ -80,7 +86,6 @@ export class PdfsService {
     
     const searchFilter = {
       ...filters,
-      isActive: true,
       $text: { $search: query }
     };
 
@@ -97,8 +102,14 @@ export class PdfsService {
       this.pdfModel.countDocuments(searchFilter),
     ]);
 
+    // Transform items to include full file URL
+    const transformedItems = items.map(item => ({
+      ...item,
+      fileUrl: item.file ? `/uploads/documents/${item.file}` : null
+    }));
+
     return {
-      items,
+      items: transformedItems,
       total,
       page: validatedPage,
       limit: validatedLimit,
@@ -141,7 +152,7 @@ export class PdfsService {
   }
 
   async getCategories() {
-    const categories = await this.pdfModel.distinct('category', { isActive: true });
+    const categories = await this.pdfModel.distinct('category');
     return categories.filter(Boolean).sort(); // Remove null/undefined and sort
   }
 
@@ -160,16 +171,41 @@ export class PdfsService {
       $set: { lastViewed: new Date() }
     }).exec().catch(() => {});
     
-    return pdf;
+    // Transform to include full file URL
+    return {
+      ...pdf,
+      fileUrl: pdf.file ? `/uploads/documents/${pdf.file}` : null
+    };
   }
 
   async update(id: string, updateDto: UpdatePdfDto) {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid PDF id');
     }
+    
+    // Get existing PDF to check for old file
+    const existingPdf = await this.pdfModel.findById(id);
+    if (!existingPdf) throw new NotFoundException('PDF not found');
+    
+    // If updating with new file, delete old file
+    if (updateDto.file && existingPdf.file && updateDto.file !== existingPdf.file) {
+      await this.deleteFile(existingPdf.file);
+    }
+    
     const updated = await this.pdfModel.findByIdAndUpdate(id, updateDto, { new: true });
-    if (!updated) throw new NotFoundException('PDF not found');
     return updated;
+  }
+
+  private async deleteFile(filePath: string): Promise<void> {
+    try {
+      if (filePath) {
+        const fullPath = path.join(process.cwd(), filePath.replace(/^\//, ''));
+        await fs.unlink(fullPath);
+        console.log(`Deleted file: ${fullPath}`);
+      }
+    } catch (error) {
+      console.error(`Failed to delete file ${filePath}:`, error.message);
+    }
   }
 
   async remove(id: string) {
@@ -180,18 +216,7 @@ export class PdfsService {
     if (!res) throw new NotFoundException('PDF not found');
     
     // Delete the physical file from server
-    try {
-      if (res.fileUrl) {
-        // Convert URL path to absolute file path
-        // Assuming fileUrl is like '/uploads/pdfs/filename.pdf'
-        const filePath = path.join(process.cwd(), res.fileUrl.replace(/^\//, ''));
-        await fs.unlink(filePath);
-        console.log(`Deleted file: ${filePath}`);
-      }
-    } catch (error) {
-      console.error(`Failed to delete file for PDF ${id}:`, error.message);
-      // Don't throw error - DB record is already deleted
-    }
+    await this.deleteFile(res.file);
     
     return { message: 'PDF deleted successfully', id };
   }

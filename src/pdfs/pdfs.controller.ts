@@ -17,7 +17,7 @@ export class PdfsController {
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: string,
   ) {
-    const filters: any = { isActive: true };
+    const filters: any = {};
 
     if (category) filters.category = category;
     if (year) filters.year = parseInt(year);
@@ -92,7 +92,7 @@ export class PdfsController {
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
-      filters: { category, isActive: true },
+      filters: { category },
     });
   }
 
@@ -105,7 +105,7 @@ export class PdfsController {
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
-      filters: { 'court.level': level, isActive: true },
+      filters: { 'court.level': level },
     });
   }
 
@@ -118,7 +118,7 @@ export class PdfsController {
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
-      filters: { year: parseInt(year), isActive: true },
+      filters: { year: parseInt(year) },
     });
   }
 

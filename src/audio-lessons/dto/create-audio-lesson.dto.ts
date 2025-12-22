@@ -2,18 +2,44 @@ import { IsArray, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, IsUrl, Val
 import { Transform, Type } from 'class-transformer';
 import { VALID_CATEGORY_IDS } from '../../common/enums/audio-lesson-category.enum';
 
-export class AudioSectionDto {
+export class AudioSubsectionDto {
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @IsInt()
-  @Min(0)
-  startTime: number;
+  @IsOptional()
+  @IsString()
+  hindiText?: string;
 
-  @IsInt()
-  @Min(0)
-  endTime: number;
+  @IsOptional()
+  @IsString()
+  englishText?: string;
+
+  @IsOptional()
+  @IsString()
+  easyHindiText?: string;
+
+  @IsOptional()
+  @IsString()
+  easyEnglishText?: string;
+
+  @IsOptional()
+  hindiAudio?: any;
+
+  @IsOptional()
+  englishAudio?: any;
+
+  @IsOptional()
+  easyHindiAudio?: any;
+
+  @IsOptional()
+  easyEnglishAudio?: any;
+}
+
+export class AudioSectionDto {
+  @IsString()
+  @IsNotEmpty()
+  title: string;
 
   @IsOptional()
   @IsString()
@@ -43,12 +69,23 @@ export class AudioSectionDto {
 
   @IsOptional()
   easyEnglishAudio?: any;
+
+  // Subsections
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AudioSubsectionDto)
+  subsections?: AudioSubsectionDto[];
 }
 
 export class CreateAudioLessonDto {
   @IsString()
   @IsNotEmpty()
   title: string;
+
+  @IsOptional()
+  @IsString()
+  headTitle?: string;
 
   @IsOptional()
   @IsString()

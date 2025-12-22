@@ -17,16 +17,26 @@ export class AudioLessonsService {
   ) {}
 
   async create(createDto: CreateAudioLessonDto, uploadedBy?: string, files?: { englishAudio?: Express.Multer.File; hindiAudio?: Express.Multer.File }) {
+    // Process sections and calculate subsection counts
+    const processedSections = createDto.sections?.map(section => ({
+      ...section,
+      totalSubsections: section.subsections ? section.subsections.length : 0
+    }));
+
+    // Calculate total subsections across all sections
+    const totalSubsections = processedSections?.reduce(
+      (sum, section) => sum + (section.totalSubsections || 0), 0
+    ) || 0;
+
     const lessonData: any = {
       title: createDto.title,
+      headTitle: createDto.headTitle,
       description: createDto.description,
       category: createDto.category,
       tags: createDto.tags,
-      sections: createDto.sections,
-      englishTranscription: createDto.englishTranscription,
-      hindiTranscription: createDto.hindiTranscription,
-      easyEnglishTranscription: createDto.easyEnglishTranscription,
-      easyHindiTranscription: createDto.easyHindiTranscription,
+      sections: processedSections,
+      totalSections: processedSections ? processedSections.length : 0,
+      totalSubsections,
       uploadedBy: uploadedBy ? new Types.ObjectId(uploadedBy) : undefined,
     };
 
@@ -101,33 +111,52 @@ export class AudioLessonsService {
       throw new NotFoundException('Invalid audio lesson id');
     }
 
+    // Get existing lesson to check for old files
+    const existingLesson = await this.audioLessonModel.findById(id);
+    if (!existingLesson) throw new NotFoundException('Audio lesson not found');
+
     const updateData: any = { ...updateDto };
 
-    // Handle English Audio update
-    if (files?.englishAudio) {
-      updateData.englishAudio = {
-        url: `/uploads/audio/${files.englishAudio.filename}`,
-        fileName: files.englishAudio.originalname,
-        fileSize: files.englishAudio.size,
-      };
-    } else if (updateDto.englishAudioUrl) {
-      updateData.englishAudio = await this.downloadAndStoreAudio(updateDto.englishAudioUrl, 'english');
+    // Auto-calculate totalSections and subsection counts if sections are being updated
+    if (updateDto.sections) {
+      updateData.sections = updateDto.sections.map(section => ({
+        ...section,
+        totalSubsections: section.subsections ? section.subsections.length : 0
+      }));
+      updateData.totalSections = updateDto.sections.length;
+      updateData.totalSubsections = updateData.sections.reduce(
+        (sum, section) => sum + (section.totalSubsections || 0), 0
+      );
     }
 
-    // Handle Hindi Audio update
-    if (files?.hindiAudio) {
-      updateData.hindiAudio = {
-        url: `/uploads/audio/${files.hindiAudio.filename}`,
-        fileName: files.hindiAudio.originalname,
-        fileSize: files.hindiAudio.size,
-      };
-    } else if (updateDto.hindiAudioUrl) {
-      updateData.hindiAudio = await this.downloadAndStoreAudio(updateDto.hindiAudioUrl, 'hindi');
+    // Handle section audio file updates
+    if (updateData.sections && Array.isArray(updateData.sections)) {
+      // Delete old section audio files that are being replaced
+      if (existingLesson.sections) {
+        for (let i = 0; i < existingLesson.sections.length; i++) {
+          const existingSection = existingLesson.sections[i];
+          const newSection = updateData.sections[i];
+          
+          if (newSection) {
+            // Check each audio type and delete if being replaced
+            if (newSection.englishAudio && existingSection.englishAudio?.url) {
+              await this.deleteFile(existingSection.englishAudio.url);
+            }
+            if (newSection.hindiAudio && existingSection.hindiAudio?.url) {
+              await this.deleteFile(existingSection.hindiAudio.url);
+            }
+            if (newSection.easyEnglishAudio && existingSection.easyEnglishAudio?.url) {
+              await this.deleteFile(existingSection.easyEnglishAudio.url);
+            }
+            if (newSection.easyHindiAudio && existingSection.easyHindiAudio?.url) {
+              await this.deleteFile(existingSection.easyHindiAudio.url);
+            }
+          }
+        }
+      }
     }
 
     const updated = await this.audioLessonModel.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updated) throw new NotFoundException('Audio lesson not found');
-
     return updated;
   }
 
@@ -138,25 +167,64 @@ export class AudioLessonsService {
     const res = await this.audioLessonModel.findByIdAndDelete(id);
     if (!res) throw new NotFoundException('Audio lesson not found');
     
-    // Delete physical audio files from server
-    try {
-      if (res.englishAudio?.url) {
-        const filePath = path.join(process.cwd(), res.englishAudio.url.replace(/^\//, ''));
-        await fs.unlink(filePath);
-      }
-      if (res.hindiAudio?.url) {
-        const filePath = path.join(process.cwd(), res.hindiAudio.url.replace(/^\//, ''));
-        await fs.unlink(filePath);
-      }
-      if (res.audioUrl) {
-        const filePath = path.join(process.cwd(), res.audioUrl.replace(/^\//, ''));
-        await fs.unlink(filePath);
-      }
-    } catch (error) {
-      console.error(`Failed to delete files for audio lesson ${id}:`, error.message);
-    }
+    // Delete all physical audio files from server
+    await this.deleteAllLessonFiles(res);
     
     return { message: 'Audio lesson deleted successfully', id };
+  }
+
+  private async deleteFile(fileUrl: string): Promise<void> {
+    try {
+      if (fileUrl) {
+        const filePath = path.join(process.cwd(), fileUrl.replace(/^\//, ''));
+        await fs.unlink(filePath);
+        console.log(`Deleted file: ${filePath}`);
+      }
+    } catch (error) {
+      console.error(`Failed to delete file ${fileUrl}:`, error.message);
+    }
+  }
+
+  private async deleteAllLessonFiles(lesson: AudioLessonDocument): Promise<void> {
+    try {
+      // Delete section audio files
+      if (lesson.sections) {
+        for (const section of lesson.sections) {
+          if (section.englishAudio?.url) {
+            await this.deleteFile(section.englishAudio.url);
+          }
+          if (section.hindiAudio?.url) {
+            await this.deleteFile(section.hindiAudio.url);
+          }
+          if (section.easyEnglishAudio?.url) {
+            await this.deleteFile(section.easyEnglishAudio.url);
+          }
+          if (section.easyHindiAudio?.url) {
+            await this.deleteFile(section.easyHindiAudio.url);
+          }
+          
+          // Delete subsection audio files
+          if (section.subsections) {
+            for (const subsection of section.subsections) {
+              if (subsection.englishAudio?.url) {
+                await this.deleteFile(subsection.englishAudio.url);
+              }
+              if (subsection.hindiAudio?.url) {
+                await this.deleteFile(subsection.hindiAudio.url);
+              }
+              if (subsection.easyEnglishAudio?.url) {
+                await this.deleteFile(subsection.easyEnglishAudio.url);
+              }
+              if (subsection.easyHindiAudio?.url) {
+                await this.deleteFile(subsection.easyHindiAudio.url);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to delete files for audio lesson ${lesson._id}:`, error.message);
+    }
   }
 
   async getCategories() {

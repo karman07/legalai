@@ -1,119 +1,39 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 
 export type PdfDocument = HydratedDocument<Pdf>;
 
-@Schema({ _id: false })
-export class Court {
-  @Prop()
-  id?: string;
-
-  @Prop({ trim: true })
-  name?: string;
-
-  @Prop({ enum: ['supreme', 'high', 'district'] })
-  level?: 'supreme' | 'high' | 'district';
-
-  @Prop({ trim: true })
-  state?: string;
-
-  @Prop()
-  created_at?: Date;
-}
-
-const CourtSchema = SchemaFactory.createForClass(Court);
-
 @Schema({ timestamps: true })
 export class Pdf {
-  @Prop({ required: true, trim: true })
-  title: string;
+  @Prop({ trim: true })
+  diary_no?: string;
 
   @Prop({ trim: true })
-  description?: string;
-
-  @Prop({ required: true })
-  fileUrl: string;
-
-  @Prop({ required: true })
-  fileName: string;
-
-  @Prop()
-  fileSize?: number;
-
-  @Prop({ type: Types.ObjectId, ref: 'User', index: true })
-  uploadedBy?: Types.ObjectId;
-
-  @Prop({ default: true, index: true })
-  isActive: boolean;
-
-  // Case Law Information
-  @Prop({ trim: true, index: true })
-  caseTitle?: string;
-
-  @Prop({ trim: true, index: true })
-  caseNumber?: string;
-
-  @Prop({ type: CourtSchema })
-  court?: Court;
-
-  @Prop()
-  judgmentDate?: Date;
-
-  @Prop()
-  year?: number;
+  case_no?: string;
 
   @Prop({ trim: true })
-  citation?: string;
-
-  @Prop({ type: [String] })
-  judges?: string[];
+  pet?: string;
 
   @Prop({ trim: true })
-  summary?: string;
+  pet_adv?: string;
 
-  @Prop({ select: false })
-  fullText?: string;
+  @Prop({ trim: true })
+  res_adv?: string;
 
-  @Prop({ type: [String], index: true })
-  keywords?: string[];
+  @Prop({ trim: true })
+  bench?: string;
 
-  @Prop({ trim: true, index: true })
-  category?: string;
+  @Prop({ trim: true })
+  judgement_by?: string;
 
-  @Prop({ default: 0, index: true })
-  viewCount?: number;
+  @Prop()
+  judgment_dates?: Date;
 
-  @Prop({ index: true })
-  lastViewed?: Date;
+  @Prop({ trim: true })
+  link?: string;
 
-  @Prop({ default: 0 })
-  downloadCount?: number;
+  @Prop({ trim: true })
+  file?: string;
 }
 
 export const PdfSchema = SchemaFactory.createForClass(Pdf);
-
-// Compound indexes for better query performance
-PdfSchema.index({ isActive: 1, category: 1 });
-PdfSchema.index({ isActive: 1, year: 1 });
-PdfSchema.index({ isActive: 1, 'court.level': 1 });
-PdfSchema.index({ isActive: 1, createdAt: -1 });
-PdfSchema.index({ isActive: 1, viewCount: -1 });
-PdfSchema.index({ category: 1, year: 1 });
-PdfSchema.index({ 'court.level': 1, year: 1 });
-
-// Text search index
-PdfSchema.index({
-  title: 'text',
-  description: 'text',
-  caseTitle: 'text',
-  summary: 'text',
-  keywords: 'text'
-}, {
-  weights: {
-    title: 10,
-    caseTitle: 8,
-    keywords: 6,
-    description: 4,
-    summary: 2
-  }
-});
