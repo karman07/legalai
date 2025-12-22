@@ -499,55 +499,6 @@ export default function MCQQuiz() {
                       </h3>
                     </div>
                   </div>
-                  {questionNotes[currentQuestion] ? (
-                    <button
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const noteToDelete = questionNotes[currentQuestion];
-                        const questionIndex = currentQuestion;
-                        try {
-                          await notesService.deleteNote(noteToDelete!._id);
-                          setQuestionNotes(prev => ({ ...prev, [questionIndex]: null }));
-                        } catch (err) {
-                          console.error('Delete error:', err);
-                        }
-                      }}
-                      className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border border-red-200 flex-shrink-0 cursor-pointer touch-manipulation"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      <span className="hidden sm:inline">Delete from Notes</span>
-                      <span className="sm:hidden">Delete Note</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const questionIndex = currentQuestion;
-                        try {
-                          const note = await notesService.createNote({
-                            title: `Q${questionIndex + 1}: ${selectedQuiz.title}`,
-                            content: `${currentQ.text}\n\nOptions:\n${currentQ.options.map((opt, i) => `${i + 1}. ${opt}`).join('\n')}`,
-                            reference: { 
-                              type: 'quiz', 
-                              id: selectedQuiz._id || 'general',
-                              metadata: { question: questionIndex }
-                            },
-                            tags: [selectedQuiz.topic]
-                          });
-                          setQuestionNotes(prev => ({ ...prev, [questionIndex]: note }));
-                        } catch (err) {
-                          console.error('Add note error:', err);
-                        }
-                      }}
-                      className="w-full sm:w-auto px-4 py-2 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 text-amber-700 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 border border-amber-200 flex-shrink-0 cursor-pointer touch-manipulation"
-                    >
-                      <BookMarked className="w-4 h-4" />
-                      <span className="hidden sm:inline">Add to Notes</span>
-                      <span className="sm:hidden">Add Note</span>
-                    </button>
-                  )}
                 </div>
 
                 {/* Options */}
@@ -845,6 +796,50 @@ export default function MCQQuiz() {
                         <p className="text-sm text-slate-700 leading-relaxed">{detail.explanation}</p>
                       </div>
                     )}
+
+                    {/* Add to Notes Button */}
+                    <div className="mt-4">
+                      {questionNotes[index] ? (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await notesService.deleteNote(questionNotes[index]!._id);
+                              setQuestionNotes(prev => ({ ...prev, [index]: null }));
+                            } catch (err) {
+                              console.error('Delete error:', err);
+                            }
+                          }}
+                          className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-red-200"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          Remove from Notes
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const note = await notesService.createNote({
+                                title: `Q${index + 1}: ${selectedQuiz.title}`,
+                                content: `${detail.question}\n\nYour answer: ${selectedQuiz.questions[index].options[detail.selectedIndex]}\nCorrect answer: ${selectedQuiz.questions[index].options[detail.correctIndex]}${detail.explanation ? `\n\nExplanation: ${detail.explanation}` : ''}`,
+                                reference: { 
+                                  type: 'quiz', 
+                                  id: selectedQuiz._id || 'general',
+                                  metadata: { question: index }
+                                },
+                                tags: [selectedQuiz.topic]
+                              });
+                              setQuestionNotes(prev => ({ ...prev, [index]: note }));
+                            } catch (err) {
+                              console.error('Add note error:', err);
+                            }
+                          }}
+                          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-amber-200"
+                        >
+                          <BookMarked className="w-4 h-4" />
+                          Add to Notes
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

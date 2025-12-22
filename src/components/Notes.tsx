@@ -294,19 +294,17 @@ export default function Notes() {
               </div>
 
               <div className="mb-4">
-                <p className={`text-sm text-slate-600 whitespace-pre-wrap leading-relaxed ${
+                <div className={`text-sm text-slate-600 whitespace-pre-wrap leading-relaxed break-words ${
                   expandedNotes.has(note._id) ? '' : 'line-clamp-3'
                 }`}>
                   {note.content}
-                </p>
-                {note.content?.length > 150 && (
-                  <button
-                    onClick={() => toggleExpanded(note._id)}
-                    className="text-xs text-amber-600 hover:text-amber-700 font-medium mt-1"
-                  >
-                    {expandedNotes.has(note._id) ? 'Read less' : 'Read more'}
-                  </button>
-                )}
+                </div>
+                <button
+                  onClick={() => toggleExpanded(note._id)}
+                  className="text-xs text-amber-600 hover:text-amber-700 font-medium mt-2 inline-block"
+                >
+                  {expandedNotes.has(note._id) ? 'Read less' : 'Read more'}
+                </button>
               </div>
 
               {note.tags && note.tags.length > 0 && (

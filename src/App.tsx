@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
 import DashboardPage from './pages/DashboardPage';
@@ -13,7 +13,6 @@ import AudioPage from './pages/AudioPage';
 import LibraryPage from './pages/LibraryPage';
 import AnswersPage from './pages/AnswersPage';
 import AudioPlayer from './components/AudioPlayer';
-import { useAuth } from './contexts/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();

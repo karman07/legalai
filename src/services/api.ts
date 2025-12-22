@@ -50,10 +50,8 @@ export interface AudioFile {
   duration?: number;
 }
 
-export interface AudioSection {
+export interface AudioSubsection {
   title: string;
-  startTime: number;
-  endTime: number;
   hindiText?: string;
   englishText?: string;
   easyHindiText?: string;
@@ -64,16 +62,27 @@ export interface AudioSection {
   easyEnglishAudio?: AudioFile;
 }
 
+export interface AudioSection {
+  title: string;
+  totalSubsections?: number;
+  hindiText?: string;
+  englishText?: string;
+  easyHindiText?: string;
+  easyEnglishText?: string;
+  hindiAudio?: AudioFile;
+  englishAudio?: AudioFile;
+  easyHindiAudio?: AudioFile;
+  easyEnglishAudio?: AudioFile;
+  subsections?: AudioSubsection[];
+}
+
 export interface AudioLesson {
   _id: string;
   title: string;
+  headTitle?: string;
   description?: string;
-  englishAudio?: AudioFile;
-  hindiAudio?: AudioFile;
-  englishTranscription?: string;
-  hindiTranscription?: string;
-  easyEnglishTranscription?: string;
-  easyHindiTranscription?: string;
+  totalSections?: number;
+  totalSubsections?: number;
   sections?: AudioSection[];
   category?: string;
   tags?: string[];
