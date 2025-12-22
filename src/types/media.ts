@@ -5,7 +5,7 @@ export interface AudioFile {
   duration?: number;
 }
 
-export interface AudioSection {
+export interface AudioSubsection {
   title: string;
   startTime: number;
   endTime: number;
@@ -19,19 +19,32 @@ export interface AudioSection {
   easyEnglishAudio?: AudioFile;
 }
 
+export interface AudioSection {
+  title: string;
+  startTime: number;
+  endTime: number;
+  hindiText?: string;
+  englishText?: string;
+  easyHindiText?: string;
+  easyEnglishText?: string;
+  hindiAudio?: AudioFile;
+  englishAudio?: AudioFile;
+  easyHindiAudio?: AudioFile;
+  easyEnglishAudio?: AudioFile;
+  subsections?: AudioSubsection[];
+  totalSubsections?: number;
+}
+
 export interface AudioLesson {
   _id: string;
   title: string;
+  headTitle?: string;
   description?: string;
   category: string;
   tags?: string[];
-  englishAudio?: AudioFile;
-  hindiAudio?: AudioFile;
-  englishTranscription?: string;
-  hindiTranscription?: string;
-  easyEnglishTranscription?: string;
-  easyHindiTranscription?: string;
   sections?: AudioSection[];
+  totalSections?: number;
+  totalSubsections?: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -39,24 +52,16 @@ export interface AudioLesson {
 
 export interface PDF {
   _id: string;
-  title: string;
-  description?: string;
-  category?: string;
-  caseTitle?: string;
-  caseNumber?: string;
-  year?: number;
-  court?: {
-    id: string;
-    name: string;
-    level: string;
-  };
-  keywords?: string[];
-  judges?: string[];
-  summary?: string;
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  isActive: boolean;
+  diary_no?: string;
+  case_no?: string;
+  pet?: string;
+  pet_adv?: string;
+  res_adv?: string;
+  bench?: string;
+  judgement_by?: string;
+  judgment_dates?: Date;
+  link?: string;
+  file?: string;
   createdAt: string;
   updatedAt: string;
 }

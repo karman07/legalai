@@ -48,10 +48,14 @@ export const PDFManager = () => {
     } catch (e) {}
   };
 
-  const filteredPDFs = pdfs.filter((p) =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.caseTitle?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPDFs = pdfs.filter((p) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (p.case_no?.toLowerCase().includes(searchLower)) ||
+      (p.pet?.toLowerCase().includes(searchLower)) ||
+      (p.diary_no?.toLowerCase().includes(searchLower))
+    );
+  });
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -104,79 +108,47 @@ export const PDFManager = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                            {pdf.title}
+                            {pdf.case_no || 'Untitled'}
                           </h3>
                           <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                            {pdf.category && <span>{pdf.category}</span>}
-                            {pdf.year && <span>• {pdf.year}</span>}
-                            <span>• {formatFileSize(pdf.fileSize)}</span>
+                            {pdf.diary_no && <span>Diary: {pdf.diary_no}</span>}
+                            {pdf.pet && <span>• {pdf.pet}</span>}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {pdf.isActive ? (
-                            <span className="px-3 py-1 text-xs font-medium rounded-full border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1 text-xs font-medium rounded-full border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400">
-                              Inactive
-                            </span>
-                          )}
                         </div>
                       </div>
 
-                      {pdf.caseTitle && (
-                        <div className="border-l-4 border-blue-500 pl-4">
-                          <p className="font-medium text-gray-900 dark:text-white">{pdf.caseTitle}</p>
-                          {pdf.caseNumber && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{pdf.caseNumber}</p>
+                      {(pdf.pet_adv || pdf.res_adv || pdf.bench || pdf.judgement_by) && (
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          {pdf.pet_adv && (
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Petitioner Adv:</span>
+                              <span className="text-gray-600 dark:text-gray-400 ml-2">{pdf.pet_adv}</span>
+                            </div>
                           )}
-                        </div>
-                      )}
-
-                      {pdf.description && (
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {pdf.description}
-                        </p>
-                      )}
-
-                      {pdf.summary && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                          {pdf.summary}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        {pdf.court && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Court:</span>
-                            <span className="text-gray-600 dark:text-gray-400">{pdf.court.name}</span>
-                          </div>
-                        )}
-                        {pdf.judges && pdf.judges.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Judges:</span>
-                            <span className="text-gray-600 dark:text-gray-400">{pdf.judges.join(', ')}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {pdf.keywords && pdf.keywords.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {pdf.keywords.map((kw, idx) => (
-                            <span
-                              key={idx}
-                              className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
-                            >
-                              {kw}
-                            </span>
-                          ))}
+                          {pdf.res_adv && (
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Respondent Adv:</span>
+                              <span className="text-gray-600 dark:text-gray-400 ml-2">{pdf.res_adv}</span>
+                            </div>
+                          )}
+                          {pdf.bench && (
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Bench:</span>
+                              <span className="text-gray-600 dark:text-gray-400 ml-2">{pdf.bench}</span>
+                            </div>
+                          )}
+                          {pdf.judgement_by && (
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Judgment By:</span>
+                              <span className="text-gray-600 dark:text-gray-400 ml-2">{pdf.judgement_by}</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <Button variant="outline" size="sm" onClick={() => window.open(pdf.fileUrl, '_blank')} className="gap-2">
+                      <Button variant="outline" size="sm" onClick={() => window.open(pdf.link || pdf.file, '_blank')} className="gap-2">
                         <Eye className="w-4 h-4" /> View
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => setEditingPDF(pdf)} className="gap-2">

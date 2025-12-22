@@ -2,18 +2,33 @@ import { Plus, Trash2, Upload } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import type { AudioSection } from '../../types/media';
+import { SubsectionEditor } from './SubsectionEditor';
+import { useState } from 'react';
 
 interface SectionEditorProps {
   sections: AudioSection[];
   onChange: (sections: AudioSection[]) => void;
   onAudioFileChange?: (sectionIndex: number, audioType: string, file: File) => void;
+  onSubsectionAudioFileChange?: (sectionIndex: number, subsectionIndex: number, audioType: string, file: File) => void;
 }
 
-export const SectionEditor = ({ sections, onChange, onAudioFileChange }: SectionEditorProps) => {
+export const SectionEditor = ({ sections, onChange, onAudioFileChange, onSubsectionAudioFileChange }: SectionEditorProps) => {
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
+
+  const toggleSection = (index: number) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedSections(newExpanded);
+  };
+
   const addSection = () => {
     const lastSection = sections[sections.length - 1];
     const startTime = lastSection ? lastSection.endTime : 0;
-    onChange([...sections, { title: '', startTime, endTime: startTime }]);
+    onChange([...sections, { title: '', startTime, endTime: startTime, subsections: [] }]);
   };
 
   const removeSection = (index: number) => {
@@ -24,7 +39,6 @@ export const SectionEditor = ({ sections, onChange, onAudioFileChange }: Section
     const updated = [...sections];
     updated[index] = { ...updated[index], [field]: value };
     
-    // Auto-update next section's startTime when endTime changes
     if (field === 'endTime' && updated[index + 1]) {
       updated[index + 1].startTime = value;
     }
@@ -38,6 +52,18 @@ export const SectionEditor = ({ sections, onChange, onAudioFileChange }: Section
     }
   };
 
+  const updateSubsections = (sectionIndex: number, subsections: any[]) => {
+    const updated = [...sections];
+    updated[sectionIndex] = { ...updated[sectionIndex], subsections };
+    onChange(updated);
+  };
+
+  const handleSubsectionAudioFile = (sectionIndex: number, subsectionIndex: number, audioType: string, file: File) => {
+    if (onSubsectionAudioFileChange) {
+      onSubsectionAudioFileChange(sectionIndex, subsectionIndex, audioType, file);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -47,16 +73,52 @@ export const SectionEditor = ({ sections, onChange, onAudioFileChange }: Section
         </Button>
       </div>
 
+      {sections.length === 0 && (
+        <div className="p-8 text-center border-2 border-dashed rounded-lg bg-muted/30">
+          <p className="text-muted-foreground mb-3">No sections added yet</p>
+          <Button type="button" onClick={addSection} size="sm">
+            <Plus className="w-4 h-4 mr-2" /> Add Your First Section
+          </Button>
+        </div>
+      )}
+
       {sections.map((section, idx) => (
         <div key={idx} className="p-4 border rounded-lg space-y-3 bg-gray-50 dark:bg-gray-800/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm">Section {idx + 1}</span>
               <span className="text-xs text-gray-500">({section.startTime}s - {section.endTime}s)</span>
+              {section.subsections && section.subsections.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+                  {section.subsections.length} subsections
+                </span>
+              )}
             </div>
-            <Button type="button" onClick={() => removeSection(idx)} size="sm" variant="outline" className="text-red-600">
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                type="button" 
+                onClick={() => {
+                  if (!section.subsections || section.subsections.length === 0) {
+                    updateSubsections(idx, [{ title: '', startTime: 0, endTime: 0 }]);
+                    setExpandedSections(new Set(expandedSections).add(idx));
+                  } else {
+                    toggleSection(idx);
+                  }
+                }} 
+                size="sm" 
+                variant="outline" 
+                className="h-8 text-xs"
+              >
+                {section.subsections && section.subsections.length > 0 ? (
+                  expandedSections.has(idx) ? '▼ Hide' : '▶ Show'
+                ) : (
+                  <><Plus className="w-3 h-3 mr-1" /> Add Subsection</>
+                )}
+              </Button>
+              <Button type="button" onClick={() => removeSection(idx)} size="sm" variant="outline" className="text-red-600">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
 
           <Input placeholder="Section Title" value={section.title} onChange={(e) => updateSection(idx, 'title', e.target.value)} />
@@ -94,6 +156,15 @@ export const SectionEditor = ({ sections, onChange, onAudioFileChange }: Section
               <input type="file" accept="audio/*" onChange={(e) => handleFileChange(idx, 'easyHindiAudio', e.target.files?.[0] || null)} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 dark:file:bg-purple-900 dark:file:text-purple-300" />
             </div>
           </div>
+
+          {expandedSections.has(idx) && (
+            <SubsectionEditor
+              sectionIndex={idx}
+              subsections={section.subsections || []}
+              onChange={(subsections) => updateSubsections(idx, subsections)}
+              onAudioFileChange={(subIdx, audioType, file) => handleSubsectionAudioFile(idx, subIdx, audioType, file)}
+            />
+          )}
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Upload, Edit, Trash2, Play, Search } from 'lucide-react';
+import { Upload, Edit, Trash2, Search } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -66,12 +66,12 @@ export const AudioManager = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'N/A';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
+  // const formatFileSize = (bytes?: number) => {
+  //   if (!bytes) return 'N/A';
+  //   if (bytes < 1024) return bytes + ' B';
+  //   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  //   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  // };
 
   return (
     <>
@@ -120,14 +120,20 @@ export const AudioManager = () => {
                     <div className="flex-1 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
+                          {audio.headTitle && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                              {audio.headTitle}
+                            </div>
+                          )}
                           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                             {audio.title}
                           </h3>
                           <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                             <span>{audio.category}</span>
-                            {audio.englishAudio && <span>• EN: {formatFileSize(audio.englishAudio.fileSize)}</span>}
-                            {audio.hindiAudio && <span>• HI: {formatFileSize(audio.hindiAudio.fileSize)}</span>}
-                            {audio.sections && <span>• {audio.sections.length} sections</span>}
+                            {audio.totalSections && <span>• {audio.totalSections} sections</span>}
+                            {audio.totalSubsections && audio.totalSubsections > 0 && (
+                              <span>• {audio.totalSubsections} subsections</span>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -151,11 +157,9 @@ export const AudioManager = () => {
 
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Transcriptions:</span>
-                          {audio.englishTranscription && <span className="px-2 py-1 text-xs rounded border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400">EN</span>}
-                          {audio.hindiTranscription && <span className="px-2 py-1 text-xs rounded border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400">HI</span>}
-                          {audio.easyEnglishTranscription && <span className="px-2 py-1 text-xs rounded border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400">Easy EN</span>}
-                          {audio.easyHindiTranscription && <span className="px-2 py-1 text-xs rounded border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400">Easy HI</span>}
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Content:</span>
+                          {audio.totalSections && <span className="px-2 py-1 text-xs rounded border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400">{audio.totalSections} Sections</span>}
+                          {audio.totalSubsections && audio.totalSubsections > 0 && <span className="px-2 py-1 text-xs rounded border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400">{audio.totalSubsections} Subsections</span>}
                         </div>
                       </div>
 
@@ -174,16 +178,6 @@ export const AudioManager = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      {audio.englishAudio && (
-                        <Button variant="outline" size="sm" onClick={() => window.open(audio.englishAudio!.url, '_blank')} className="gap-2">
-                          <Play className="w-4 h-4" /> EN
-                        </Button>
-                      )}
-                      {audio.hindiAudio && (
-                        <Button variant="outline" size="sm" onClick={() => window.open(audio.hindiAudio!.url, '_blank')} className="gap-2">
-                          <Play className="w-4 h-4" /> HI
-                        </Button>
-                      )}
                       <Button variant="outline" size="sm" onClick={() => setEditingAudio(audio)} className="gap-2">
                         <Edit className="w-4 h-4" /> Edit
                       </Button>
