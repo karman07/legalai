@@ -300,8 +300,20 @@ export default function AudioPlayer() {
         </div>
       </div>
 
-      {showNotes && (
-        <div className="fixed inset-0 z-50 md:absolute md:right-0 md:top-0 md:bottom-0 md:w-96">
+      {/* Notes Panel Overlay */}
+      <div className={`fixed inset-0 z-50 transition-all duration-300 ${showNotes ? 'visible' : 'invisible'}`}>
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 md:hidden ${
+            showNotes ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setShowNotes(false)}
+        />
+        
+        {/* Notes Panel */}
+        <div className={`absolute right-0 top-0 bottom-0 w-full md:w-96 transform transition-transform duration-300 ease-out ${
+          showNotes ? 'translate-x-0' : 'translate-x-full'
+        }`}>
           <NotesPanel
             referenceType="audio"
             referenceId={lesson._id}
@@ -309,7 +321,7 @@ export default function AudioPlayer() {
             onClose={() => setShowNotes(false)}
           />
         </div>
-      )}
+      </div>
     </div>
   );
 }
