@@ -3,21 +3,30 @@ import { AiService } from './ai.service';
 import { GenerateQuizDto } from './dto/generate-quiz.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ScoreAiQuizDto } from './dto/score-ai-quiz.dto';
+import { QuizzesService } from '../quizzes/quizzes.service';
 
 @Controller('ai/quizzes')
 @UseGuards(JwtAuthGuard)
 export class AiController {
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly quizzesService: QuizzesService,
+  ) {}
 
   @Post('generate')
   async generate(@Body() dto: GenerateQuizDto) {
     const questions = await this.aiService.generateQuiz(dto.topic, dto.count);
-    return {
+    const quizData = {
       title: `${dto.topic} - AI Generated`,
       topic: dto.topic,
       type: 'mocktest' as const,
-      isPublished: false,
+      isPublished: true,
       questions,
+    };
+    const savedQuiz = await this.quizzesService.create(quizData);
+    return {
+      id: savedQuiz._id,
+      ...savedQuiz.toObject(),
     };
   }
 
