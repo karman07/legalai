@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input } from '../ui/input';
 import { Select } from '../ui/select';
-import { CreateQuizPayload } from '../../types';
+import { CreateQuizPayload, QuizType } from '../../types';
 
 interface QuizFormFieldsProps {
   formData: Omit<CreateQuizPayload, 'questions'> & { questions: any[] };
@@ -35,24 +35,11 @@ export const QuizFormFields: React.FC<QuizFormFieldsProps> = ({ formData, onChan
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Branch</label>
-          <Select value={formData.branch || ''} onChange={(e) => onChange('branch', e.target.value)}>
-            <option value="">Select Branch</option>
-            <option value="CSE-A">CSE-A</option>
-            <option value="CSE-B">CSE-B</option>
-            <option value="Electrical">Electrical</option>
-            <option value="Mechanical">Mechanical</option>
-            <option value="Civil">Civil</option>
-            <option value="Architectural">Architecture</option>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Course</label>
-          <Select value={formData.course || ''} onChange={(e) => onChange('course', e.target.value)}>
-            <option value="">Select Course</option>
-            <option value="CSE-A">CSE-A</option>
-            <option value="CSE-B">CSE-B</option>
+          <label className="text-sm font-medium">Type *</label>
+          <Select value={formData.type || ''} onChange={(e) => onChange('type', e.target.value as QuizType)}>
+            <option value="">Select Type</option>
+            <option value="pyq">Previous Year Questions (PYQ)</option>
+            <option value="mocktest">Mock Test</option>
           </Select>
         </div>
       </div>

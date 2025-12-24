@@ -113,6 +113,8 @@ export interface PaginationState {
 }
 
 // Quiz Types
+export type QuizType = 'pyq' | 'mocktest';
+
 export interface QuizQuestion {
   text: string;
   options: string[];
@@ -124,11 +126,11 @@ export interface Quiz {
   _id: string;
   title: string;
   topic: string;
+  type: QuizType;
   description?: string;
-  branch?: string;
-  course?: string;
   isPublished: boolean;
   questions: QuizQuestion[];
+  createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -136,9 +138,8 @@ export interface Quiz {
 export interface CreateQuizPayload {
   title: string;
   topic: string;
+  type: QuizType;
   description?: string;
-  branch?: string;
-  course?: string;
   isPublished?: boolean;
   questions: QuizQuestion[];
 }
@@ -146,9 +147,8 @@ export interface CreateQuizPayload {
 export interface UpdateQuizPayload {
   title?: string;
   topic?: string;
+  type?: QuizType;
   description?: string;
-  branch?: string;
-  course?: string;
   isPublished?: boolean;
   questions?: QuizQuestion[];
 }

@@ -3,8 +3,9 @@ import { ArrowLeft, Plus, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Select } from '../../components/ui/select';
 import { QuestionEditor } from '../../components/quiz/QuestionEditor';
-import type { Quiz, QuizQuestion, CreateQuizPayload } from '../../types';
+import type { Quiz, QuizQuestion, CreateQuizPayload, QuizType } from '../../types';
 import { quizService } from '../../services/quizService';
 import { toast } from 'sonner';
 
@@ -18,17 +19,16 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
   const [formData, setFormData] = useState<CreateQuizPayload>({
     title: quiz?.title || '',
     topic: quiz?.topic || '',
+    type: quiz?.type || 'pyq',
     description: quiz?.description || '',
-    branch: quiz?.branch || '',
-    course: quiz?.course || '',
     isPublished: quiz?.isPublished || false,
     questions: quiz?.questions || []
   });
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!formData.title.trim() || !formData.topic.trim()) {
-      toast.error('Title and topic are required');
+    if (!formData.title.trim() || !formData.topic.trim() || !formData.type) {
+      toast.error('Title, topic, and type are required');
       return;
     }
     if (formData.questions.length === 0) {
@@ -98,6 +98,13 @@ export const QuizForm: React.FC<QuizFormProps> = ({ quiz, onBack, onSave }) => {
           <div>
             <label className="block text-sm font-medium mb-2">Topic *</label>
             <Input value={formData.topic} onChange={(e) => setFormData({ ...formData, topic: e.target.value })} placeholder="e.g., Constitutional Law" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Type *</label>
+            <Select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as QuizType })}>
+              <option value="pyq">Previous Year Questions (PYQ)</option>
+              <option value="mocktest">Mock Test</option>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Description</label>

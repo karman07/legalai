@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select } from '../../components/ui/select';
 import { quizService } from '../../services/quizService';
-import type { Quiz, PaginationState } from '../../types';
+import type { Quiz, PaginationState, QuizType } from '../../types';
 import { PAGINATION } from '../../constants/app';
 import { toast } from 'sonner';
 
@@ -22,8 +22,7 @@ export const QuizList: React.FC<QuizListProps> = ({ onEdit, onCreate, onView }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [topicFilter, setTopicFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [branchFilter, setBranchFilter] = useState('');
-  const [sectionFilter, setSectionFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState<QuizType | ''>('');
 
   const fetchQuizzes = async (page = pagination.page, limit = pagination.limit) => {
     setLoading(true);
@@ -62,21 +61,16 @@ export const QuizList: React.FC<QuizListProps> = ({ onEdit, onCreate, onView }) 
     } catch (e) {}
   };
 
-  const handleBranchChange = (value: string) => {
-    setBranchFilter(value);
-    // Reset section filter if branch is not CSE-A or CSE-B
-    if (value !== 'CSE-A' && value !== 'CSE-B') {
-      setSectionFilter('');
-    }
-  };
-
   const filteredQuizzes = quizzes.filter(q => {
     const matchesSearch = q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       q.topic.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBranch = !branchFilter || q.branch === branchFilter;
-    const matchesSection = !sectionFilter || q.course === sectionFilter;
-    return matchesSearch && matchesBranch && matchesSection;
+    const matchesType = !typeFilter || q.type === typeFilter;
+    return matchesSearch && matchesType;
   });
+
+  const getTypeLabel = (type: QuizType) => {
+    return type === 'pyq' ? 'PYQ' : 'Mock Test';
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -108,28 +102,16 @@ export const QuizList: React.FC<QuizListProps> = ({ onEdit, onCreate, onView }) 
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-            <Select value={branchFilter} onChange={(e) => handleBranchChange(e.target.value)}>
-              <option value="">All Branches</option>
-              <option value="CSE-A">CSE-A</option>
-              <option value="CSE-B">CSE-B</option>
-              <option value="Electrical">Electrical</option>
-              <option value="Mechanical">Mechanical</option>
-              <option value="Civil">Civil</option>
-              <option value="Architectural">Architecture</option>
+            <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as QuizType | '')}>
+              <option value="">All Types</option>
+              <option value="pyq">Previous Year Questions</option>
+              <option value="mocktest">Mock Test</option>
             </Select>
-            
-            {(branchFilter === 'CSE-A' || branchFilter === 'CSE-B') && (
-              <Select value={sectionFilter} onChange={(e) => setSectionFilter(e.target.value)}>
-                <option value="">All Sections</option>
-                <option value="CSE-A">CSE-A</option>
-                <option value="CSE-B">CSE-B</option>
-              </Select>
-            )}
           </div>
           
           <div className="flex gap-2 mt-4">
             <Button variant="outline" onClick={() => fetchQuizzes(1, pagination.limit)}>Apply Filters</Button>
-            <Button variant="ghost" onClick={() => { setSearchTerm(''); setTopicFilter(''); setStatusFilter(''); setBranchFilter(''); setSectionFilter(''); }}>Clear</Button>
+            <Button variant="ghost" onClick={() => { setSearchTerm(''); setTopicFilter(''); setStatusFilter(''); setTypeFilter(''); }}>Clear</Button>
           </div>
         </CardContent>
       </Card>
@@ -152,7 +134,12 @@ export const QuizList: React.FC<QuizListProps> = ({ onEdit, onCreate, onView }) 
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg text-gray-900 dark:text-white line-clamp-1">{quiz.title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{quiz.topic}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{quiz.topic}</p>
+                      <span className="px-2 py-1 text-xs rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400">
+                        {getTypeLabel(quiz.type)}
+                      </span>
+                    </div>
                   </div>
                   {quiz.isPublished ? (
                     <span className="px-2 py-1 text-xs rounded bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400">Published</span>
