@@ -46,9 +46,12 @@ export default function CaseLaws() {
         page,
         limit: 12,
       });
+      console.log('PDF Response:', response);
+      console.log('PDF Items:', response.items);
       setPdfs(response.items);
       setTotalPages(response.totalPages);
     } catch (err: any) {
+      console.error('Load PDFs Error:', err);
       setError(err.message || 'Failed to load case laws');
     } finally {
       setLoading(false);

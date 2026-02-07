@@ -96,8 +96,19 @@ class PDFService {
    * Get full file URL for viewing
    */
   getFileUrl(fileUrl: string): string {
+    if (!fileUrl) return '';
+    // If it's already a full URL, return as is
+    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+      return fileUrl;
+    }
+    // Remove leading slash if present
     const cleanUrl = fileUrl.startsWith('/') ? fileUrl.substring(1) : fileUrl;
-    return `${API_BASE_URL.replace('/api', '')}/${cleanUrl}`;
+    // Remove only the trailing /api from API_BASE_URL
+    // e.g., https://api.legalpadhai.ai/api -> https://api.legalpadhai.ai
+    const baseUrl = API_BASE_URL.endsWith('/api') 
+      ? API_BASE_URL.slice(0, -4) 
+      : API_BASE_URL;
+    return `${baseUrl}/${cleanUrl}`;
   }
 }
 
