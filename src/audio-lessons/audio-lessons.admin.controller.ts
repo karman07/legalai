@@ -48,7 +48,7 @@ export class AudioLessonsAdminController {
           cb(new BadRequestException('Only audio files are allowed'), false);
         }
       },
-      limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max
+      limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5GB max
     }),
   )
   async create(
@@ -228,6 +228,140 @@ export class AudioLessonsAdminController {
     return this.audioLessonsService.updateSections(id, body.sections);
   }
 
+  @Post(':id/append-sections')
+  @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: false }))
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: diskStorage({
+        destination: './uploads/audio',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const prefix = file.fieldname.replace(/[^a-zA-Z0-9]/g, '-');
+          cb(null, `${prefix}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        const allowedMimes = [
+          'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
+          'audio/x-wav', 'audio/mp4', 'audio/m4a', 'audio/x-m4a',
+          'audio/aac', 'audio/ogg', 'audio/webm', 'audio/flac',
+        ];
+        if (allowedMimes.includes(file.mimetype) || file.originalname.match(/\.(mp3|wav|m4a|aac|ogg|webm|flac|opus)$/i)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only audio files are allowed'), false);
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 * 1024 },
+    }),
+  )
+  async appendSections(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    // Parse sections
+    const parsedDto = { ...dto };
+    if (typeof dto.sections === 'string') {
+      try {
+        parsedDto.sections = JSON.parse(dto.sections as any);
+      } catch (e) {
+        throw new BadRequestException('Invalid sections JSON format');
+      }
+    }
+
+    if (!parsedDto.sections || !Array.isArray(parsedDto.sections)) {
+      throw new BadRequestException('sections array is required');
+    }
+
+    // Process audio files for new sections (indices 0-based for THIS batch)
+    parsedDto.sections = parsedDto.sections.map((section: any, index: number) => {
+      const sectionFiles = {
+        englishAudio: files?.find(f => f.fieldname === `section_${index}_englishAudio`),
+        hindiAudio: files?.find(f => f.fieldname === `section_${index}_hindiAudio`),
+        easyEnglishAudio: files?.find(f => f.fieldname === `section_${index}_easyEnglishAudio`),
+        easyHindiAudio: files?.find(f => f.fieldname === `section_${index}_easyHindiAudio`),
+      };
+
+      if (sectionFiles.englishAudio) {
+        section.englishAudio = {
+          url: `/uploads/audio/${sectionFiles.englishAudio.filename}`,
+          fileName: sectionFiles.englishAudio.originalname,
+          fileSize: sectionFiles.englishAudio.size,
+        };
+      }
+      if (sectionFiles.hindiAudio) {
+        section.hindiAudio = {
+          url: `/uploads/audio/${sectionFiles.hindiAudio.filename}`,
+          fileName: sectionFiles.hindiAudio.originalname,
+          fileSize: sectionFiles.hindiAudio.size,
+        };
+      }
+      if (sectionFiles.easyEnglishAudio) {
+        section.easyEnglishAudio = {
+          url: `/uploads/audio/${sectionFiles.easyEnglishAudio.filename}`,
+          fileName: sectionFiles.easyEnglishAudio.originalname,
+          fileSize: sectionFiles.easyEnglishAudio.size,
+        };
+      }
+      if (sectionFiles.easyHindiAudio) {
+        section.easyHindiAudio = {
+          url: `/uploads/audio/${sectionFiles.easyHindiAudio.filename}`,
+          fileName: sectionFiles.easyHindiAudio.originalname,
+          fileSize: sectionFiles.easyHindiAudio.size,
+        };
+      }
+
+      // Process subsections
+      if (section.subsections && Array.isArray(section.subsections)) {
+        section.subsections = section.subsections.map((subsection: any, subIndex: number) => {
+          const subsectionFiles = {
+            englishAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_englishAudio`),
+            hindiAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_hindiAudio`),
+            easyEnglishAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_easyEnglishAudio`),
+            easyHindiAudio: files?.find(f => f.fieldname === `section_${index}_subsection_${subIndex}_easyHindiAudio`),
+          };
+
+          if (subsectionFiles.englishAudio) {
+            subsection.englishAudio = {
+              url: `/uploads/audio/${subsectionFiles.englishAudio.filename}`,
+              fileName: subsectionFiles.englishAudio.originalname,
+              fileSize: subsectionFiles.englishAudio.size,
+            };
+          }
+          if (subsectionFiles.hindiAudio) {
+            subsection.hindiAudio = {
+              url: `/uploads/audio/${subsectionFiles.hindiAudio.filename}`,
+              fileName: subsectionFiles.hindiAudio.originalname,
+              fileSize: subsectionFiles.hindiAudio.size,
+            };
+          }
+          if (subsectionFiles.easyEnglishAudio) {
+            subsection.easyEnglishAudio = {
+              url: `/uploads/audio/${subsectionFiles.easyEnglishAudio.filename}`,
+              fileName: subsectionFiles.easyEnglishAudio.originalname,
+              fileSize: subsectionFiles.easyEnglishAudio.size,
+            };
+          }
+          if (subsectionFiles.easyHindiAudio) {
+            subsection.easyHindiAudio = {
+              url: `/uploads/audio/${subsectionFiles.easyHindiAudio.filename}`,
+              fileName: subsectionFiles.easyHindiAudio.originalname,
+              fileSize: subsectionFiles.easyHindiAudio.size,
+            };
+          }
+
+          return subsection;
+        });
+      }
+
+      return section;
+    });
+
+    return this.audioLessonsService.appendSections(id, parsedDto.sections);
+  }
+
   @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: false }))
   @UseInterceptors(
@@ -257,7 +391,7 @@ export class AudioLessonsAdminController {
           cb(new BadRequestException('Only audio files are allowed'), false);
         }
       },
-      limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max
+      limits: { fileSize: 5 * 1024 * 1024 * 1024 }, // 5GB max
     }),
   )
   async update(

@@ -4,12 +4,17 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
   // Get config service
   const configService = app.get(ConfigService);
+  
+  // Increase payload size limits for large audio uploads (5GB)
+  app.use(bodyParser.json({ limit: '5gb' }));
+  app.use(bodyParser.urlencoded({ limit: '5gb', extended: true }));
   
   // Enable CORS for all origins
   app.enableCors({

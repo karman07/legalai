@@ -303,4 +303,48 @@ export class AudioLessonsService {
     
     return updated;
   }
+
+  async appendSections(lessonId: string, newSections: any[]) {
+    if (!lessonId || !Types.ObjectId.isValid(lessonId)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+
+    // Fetch current lesson
+    const lesson = await this.audioLessonModel.findById(lessonId);
+    if (!lesson) {
+      throw new NotFoundException('Audio lesson not found');
+    }
+
+    // Process new sections with subsection counts
+    const processedNewSections = newSections.map(section => ({
+      ...section,
+      totalSubsections: section.subsections ? section.subsections.length : 0
+    }));
+
+    // Append to existing sections
+    const allSections = [...(lesson.sections || []), ...processedNewSections];
+
+    // Calculate totals
+    const totalSections = allSections.length;
+    const totalSubsections = allSections.reduce(
+      (sum, section: any) => sum + (section.totalSubsections || 0), 0
+    );
+
+    // Update lesson
+    const updated = await this.audioLessonModel.findByIdAndUpdate(
+      lessonId,
+      { 
+        sections: allSections,
+        totalSections,
+        totalSubsections
+      },
+      { new: true }
+    );
+
+    return {
+      ...updated.toObject(),
+      addedSections: processedNewSections.length,
+      totalSections,
+    };
+  }
 }
