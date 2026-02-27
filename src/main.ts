@@ -12,9 +12,9 @@ async function bootstrap() {
   // Get config service
   const configService = app.get(ConfigService);
   
-  // Increase payload size limits for large audio uploads (5GB)
-  app.use(bodyParser.json({ limit: '5gb' }));
-  app.use(bodyParser.urlencoded({ limit: '5gb', extended: true }));
+  // Increase payload size limits for large file uploads (10GB to support 6-7GB PDFs)
+  app.use(bodyParser.json({ limit: '10gb' }));
+  app.use(bodyParser.urlencoded({ limit: '10gb', extended: true }));
   
   // Enable CORS for all origins
   app.enableCors({
@@ -55,7 +55,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   
   const port = configService.get('PORT') || 3000;
-  await app.listen(port);
+  
+  // Configure server for large file uploads
+  const server = await app.listen(port);
+  server.setTimeout(1800000); // 30 minutes timeout for large uploads
   
   console.log(`Application is running on: http://localhost:${port}`);
   console.log(`API endpoints available at: http://localhost:${port}/api`);
