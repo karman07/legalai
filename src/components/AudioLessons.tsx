@@ -43,7 +43,7 @@ export default function AudioLessons() {
   };
 
   const categories = ['all', ...Array.from(new Set(audioLessons.map(l => l.category).filter(Boolean)))];
-  
+
   const filteredAndSortedLessons = audioLessons
     .filter(l =>
       searchQuery === '' ||
@@ -102,40 +102,37 @@ export default function AudioLessons() {
                   className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                 />
               </div>
-              
+
               {/* View Toggle */}
               <div className="flex items-center gap-2">
                 <div className="flex bg-slate-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-md transition-all ${
-                      viewMode === 'grid'
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`p-2 rounded-md transition-all ${viewMode === 'grid'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                      }`}
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-all ${
-                      viewMode === 'list'
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`p-2 rounded-md transition-all ${viewMode === 'list'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                      }`}
                   >
                     <List className="w-4 h-4" />
                   </button>
                 </div>
-                
+
                 {/* Filters Toggle */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`p-2 rounded-lg border transition-all ${
-                    showFilters
-                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 text-amber-600'
-                      : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-amber-300'
-                  }`}
+                  className={`p-2 rounded-lg border transition-all ${showFilters
+                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 text-amber-600'
+                    : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-amber-300'
+                    }`}
                 >
                   <Filter className="w-4 h-4" />
                 </button>
@@ -155,11 +152,10 @@ export default function AudioLessons() {
                           <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat ?? 'all')}
-                            className={`px-4 py-2 font-medium transition-all rounded-lg whitespace-nowrap text-sm shadow-sm ${
-                              selectedCategory === cat
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md transform hover:scale-105'
-                                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-300 hover:border-amber-300'
-                            }`}
+                            className={`px-4 py-2 font-medium transition-all rounded-lg whitespace-nowrap text-sm shadow-sm ${selectedCategory === cat
+                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md transform hover:scale-105'
+                              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-300 hover:border-amber-300'
+                              }`}
                           >
                             {cat === 'all' ? 'All Categories' : cat}
                           </button>
@@ -167,7 +163,7 @@ export default function AudioLessons() {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Sort */}
                   <div className="sm:w-48">
                     <label className="block text-sm font-medium text-slate-700 mb-2">Sort by</label>
@@ -197,11 +193,10 @@ export default function AudioLessons() {
         )}
 
         {/* Lessons Grid/List */}
-        <div className={`${
-          viewMode === 'grid'
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-            : 'space-y-4'
-        }`}>
+        <div className={`${viewMode === 'grid'
+          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+          : 'space-y-4'
+          }`}>
           {filteredAndSortedLessons.map((lesson) => (
             <LessonCard
               key={lesson._id}
@@ -239,11 +234,10 @@ export default function AudioLessons() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`w-10 h-10 text-sm font-medium rounded-lg transition-all ${
-                      page === pageNum
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md transform hover:scale-105'
-                        : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-amber-300'
-                    }`}
+                    className={`w-10 h-10 text-sm font-medium rounded-lg transition-all ${page === pageNum
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md transform hover:scale-105'
+                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-amber-300'
+                      }`}
                   >
                     {pageNum}
                   </button>

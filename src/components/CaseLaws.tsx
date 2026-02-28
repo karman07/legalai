@@ -167,7 +167,7 @@ export default function CaseLaws() {
             const FileIcon = getFileIcon(fileName);
             const fileType = getFileType(fileName);
             const fileUrlToUse = pdf.fileUrl || `/uploads/${pdf.file}`;
-            
+
             return (
               <div
                 key={pdf._id}
@@ -309,7 +309,7 @@ export default function CaseLaws() {
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-slate-500" />
                           <span className="font-medium">
-                            {new Date(pdf.createdAt).toLocaleDateString('en-IN', { 
+                            {new Date(pdf.createdAt).toLocaleDateString('en-IN', {
                               day: 'numeric',
                               month: 'short',
                               year: 'numeric'
