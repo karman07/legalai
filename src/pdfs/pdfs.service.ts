@@ -11,7 +11,7 @@ import * as path from 'path';
 export class PdfsService {
   constructor(
     @InjectModel(Pdf.name) private readonly pdfModel: Model<PdfDocument>,
-  ) {}
+  ) { }
 
   async create(createDto: CreatePdfDto, uploadedBy?: string) {
     const doc = new this.pdfModel({
@@ -21,24 +21,24 @@ export class PdfsService {
     return await doc.save();
   }
 
-  async findAll(params: { 
-    page?: number; 
-    limit?: number; 
-    isActive?: boolean; 
+  async findAll(params: {
+    page?: number;
+    limit?: number;
+    isActive?: boolean;
     filters?: Record<string, any>;
     sort?: Record<string, 1 | -1>;
   }) {
-    const { 
-      page = 1, 
-      limit = 20, 
-      isActive, 
-      filters = {}, 
+    const {
+      page = 1,
+      limit = 20,
+      isActive,
+      filters = {},
       sort = { createdAt: -1 }
     } = params;
-    
+
     const validatedPage = Math.max(1, page);
     const validatedLimit = Math.min(Math.max(1, limit), 100);
-    
+
     const filter: Record<string, any> = { ...filters };
     if (typeof isActive === 'boolean') filter.isActive = isActive;
 
@@ -76,26 +76,35 @@ export class PdfsService {
     filters?: Record<string, any>;
   }) {
     const { query, page = 1, limit = 20, filters = {} } = params;
-    
+
     if (!query || query.trim().length < 2) {
       return { items: [], total: 0, page, limit, totalPages: 0, hasNext: false, hasPrev: false };
     }
 
     const validatedPage = Math.max(1, page);
     const validatedLimit = Math.min(Math.max(1, limit), 100);
-    
+
+    const searchRegex = new RegExp(query, 'i');
     const searchFilter = {
       ...filters,
-      $text: { $search: query }
+      $or: [
+        { title: searchRegex },
+        { pet: searchRegex },
+        { pet_adv: searchRegex },
+        { res_adv: searchRegex },
+        { case_no: searchRegex },
+        { diary_no: searchRegex },
+        { bench: searchRegex },
+        { judgement_by: searchRegex },
+        { category: searchRegex },
+      ],
     };
 
     const [items, total] = await Promise.all([
       this.pdfModel
-        .find(searchFilter, { 
-          score: { $meta: 'textScore' },
-          fullText: 0
-        })
-        .sort({ score: { $meta: 'textScore' }, createdAt: -1 })
+        .find(searchFilter)
+        .select('-fullText')
+        .sort({ createdAt: -1 })
         .skip((validatedPage - 1) * validatedLimit)
         .limit(validatedLimit)
         .lean(),
@@ -160,17 +169,17 @@ export class PdfsService {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid PDF id');
     }
-    
+
     const select = includeFullText ? {} : { fullText: 0 };
     const pdf = await this.pdfModel.findById(id, select).lean();
     if (!pdf) throw new NotFoundException('PDF not found');
-    
+
     // Increment view count
     this.pdfModel.findByIdAndUpdate(id, {
       $inc: { viewCount: 1 },
       $set: { lastViewed: new Date() }
-    }).exec().catch(() => {});
-    
+    }).exec().catch(() => { });
+
     // Transform to include full file URL
     return {
       ...pdf,
@@ -182,16 +191,16 @@ export class PdfsService {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid PDF id');
     }
-    
+
     // Get existing PDF to check for old file
     const existingPdf = await this.pdfModel.findById(id);
     if (!existingPdf) throw new NotFoundException('PDF not found');
-    
+
     // If updating with new file, delete old file
     if (updateDto.file && existingPdf.file && updateDto.file !== existingPdf.file) {
       await this.deleteFile(existingPdf.file);
     }
-    
+
     const updated = await this.pdfModel.findByIdAndUpdate(id, updateDto, { new: true });
     return updated;
   }
@@ -214,10 +223,10 @@ export class PdfsService {
     }
     const res = await this.pdfModel.findByIdAndDelete(id);
     if (!res) throw new NotFoundException('PDF not found');
-    
+
     // Delete the physical file from server
     await this.deleteFile(res.file);
-    
+
     return { message: 'PDF deleted successfully', id };
   }
 }

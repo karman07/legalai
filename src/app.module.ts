@@ -13,6 +13,7 @@ import { PdfsModule } from './pdfs/pdfs.module';
 import { AudioLessonsModule } from './audio-lessons/audio-lessons.module';
 import { NotesModule } from './notes/notes.module';
 import { AnswerCheckModule } from './answer-check/answer-check.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { AnswerCheckModule } from './answer-check/answer-check.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     // MongoDB Connection
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -31,7 +32,7 @@ import { AnswerCheckModule } from './answer-check/answer-check.module';
       }),
       inject: [ConfigService],
     }),
-    
+
     // Feature Modules
     AuthModule,
     AdminModule,
@@ -43,8 +44,9 @@ import { AnswerCheckModule } from './answer-check/answer-check.module';
     AudioLessonsModule,
     NotesModule,
     AnswerCheckModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

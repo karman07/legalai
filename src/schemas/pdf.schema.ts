@@ -5,6 +5,9 @@ export type PdfDocument = HydratedDocument<Pdf>;
 
 @Schema({ timestamps: true })
 export class Pdf {
+  @Prop({ required: true, trim: true })
+  title: string;
+
   @Prop({ trim: true })
   diary_no?: string;
 
@@ -34,6 +37,12 @@ export class Pdf {
 
   @Prop({ trim: true })
   file?: string;
+
+  @Prop({ trim: true })
+  category?: string;
+
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const PdfSchema = SchemaFactory.createForClass(Pdf);

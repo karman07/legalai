@@ -50,6 +50,9 @@ server.setTimeout(1800000); // 30 minutes timeout
 - **Response:** Detailed success/failure report for each file
 - **Compatible:** Can be called multiple times without issues
 
+**Alternative Endpoint Available:**
+- `/api/admin/pdfs/bulk-upload` - Same functionality with additional file type validation (PDF, DOC, DOCX only) and enhanced batch tracking. Both endpoints work identically and support the same features.
+
 **Key Features:**
 - Processes files in batches for optimal memory usage
 - Individual file failures don't stop the entire upload  
@@ -75,6 +78,102 @@ server.setTimeout(1800000); // 30 minutes timeout
 **Rate Limiting:** Can be called multiple times - each call is independent
 
 ---
+
+## Complete API Schema
+
+### Endpoint Specification
+
+```yaml
+POST /api/admin/pdfs
+Content-Type: multipart/form-data
+Authorization: Bearer {admin_jwt_token}
+
+Parameters:
+  files: 
+    type: file[]
+    required: true
+    min_files: 1
+    max_files: 10000
+    max_size_per_file: 7GB
+    supported_types: all formats (PDF, DOC, DOCX, etc.)
+    field_name: "files" (use same field name for multiple files)
+  
+  # Metadata Fields (all optional)
+  diary_no: 
+    type: string
+    example: "12345/2026"
+    
+  case_no:
+    type: string  
+    example: "CRL-2026-001"
+    
+  pet:
+    type: string
+    example: "John Doe vs State"
+    
+  pet_adv:
+    type: string
+    example: "Advocate Smith"
+    
+  res_adv:
+    type: string
+    example: "Advocate Johnson"
+    
+  bench:
+    type: string
+    example: "Division Bench - 3"
+    
+  judgement_by:
+    type: string
+    example: "Justice Kumar"
+    
+  judgment_dates:
+    type: string
+    format: ISO 8601 date
+    example: "2026-02-27"
+    
+  link:
+    type: string
+    format: url
+    example: "https://example.com/case/12345"
+    
+  title:
+    type: string
+    description: Base title for all documents
+    example: "Supreme Court Case 2026"
+    
+  titles:
+    type: array
+    items: string
+    description: Individual titles per file (JSON array)
+    example: ["Case 1", "Case 2", "Case 3"]
+    
+  court:
+    type: string
+    format: JSON object
+    example: '{"name":"Supreme Court","state":"Federal"}'
+
+Response:
+  status: 200 | 400 | 401 | 413 | 500
+  body:
+    message: string
+    totalFiles: number
+    successful: number  
+    failed: number
+    results: array of success objects
+    errors: array of error objects (if any failures)
+    
+Success Object Schema:
+  success: true
+  filename: string
+  documentId: string  
+  data: complete document object with all metadata
+  
+Error Object Schema:
+  success: false
+  filename: string
+  error: string (error description)
+```
 
 ### Request Schema
 
@@ -806,7 +905,7 @@ uploadBulkPDFs();
 
 1. **Create New Request**
    - Method: `POST`
-   - URL: `http://localhost:3000/api/admin/pdfs/bulk-upload`
+   - URL: `http://localhost:3000/api/admin/pdfs`
 
 2. **Authorization**
    - Type: Bearer Token
@@ -819,10 +918,17 @@ uploadBulkPDFs();
      - `files` (type: File) - Select second PDF  
      - `files` (type: File) - Select third PDF
      - ... (add up to 10,000 files)
-   - Add metadata fields:
+   - Add metadata fields (all optional):
+     - `diary_no` (type: Text)
+     - `case_no` (type: Text)
+     - `pet` (type: Text)
+     - `pet_adv` (type: Text)
+     - `res_adv` (type: Text)
+     - `bench` (type: Text)
+     - `judgement_by` (type: Text)
+     - `judgment_dates` (type: Text) - ISO date format
+     - `link` (type: Text)
      - `title` (type: Text) - Base title for all documents
-     - `subject` (type: Text) - Subject category
-     - `court` (type: Text) - JSON string
      - `titles` (type: Text - optional) - JSON array of individual titles
 
 4. **Settings (Important for Large Uploads)**
@@ -857,28 +963,33 @@ uploadBulkPDFs();
           "src": "/path/to/file3.pdf"
         },
         {
-          "key": "title",
-          "value": "Bulk Legal Cases 2026",
+          "key": "diary_no",
+          "value": "12345/2026",
           "type": "text"
         },
         {
-          "key": "subject",
-          "value": "Legal Studies",
+          "key": "case_no",
+          "value": "CRL-2026-001",
           "type": "text"
         },
         {
-          "key": "court",
-          "value": "{\"name\":\"Supreme Court\",\"state\":\"Federal\"}",
+          "key": "bench",
+          "value": "Supreme Court Bench 1",
+          "type": "text"
+        },
+        {
+          "key": "judgment_dates",
+          "value": "2026-02-27",
           "type": "text"
         }
       ]
     },
     "url": {
-      "raw": "http://localhost:3000/api/admin/pdfs/bulk-upload",
+      "raw": "http://localhost:3000/api/admin/pdfs",
       "protocol": "http",
       "host": ["localhost"],
       "port": "3000",
-      "path": ["api", "admin", "pdfs", "bulk-upload"]
+      "path": ["api", "admin", "pdfs"]
     }
   },
   "response": []
@@ -891,6 +1002,7 @@ uploadBulkPDFs();
 2. **Monitor Progress:** Watch the terminal/console for real-time upload progress
 3. **Check Response:** Verify the success/failure counts in the response
 4. **File Selection:** Use Postman's "Select Multiple Files" option for easier selection
+5. **Calling Multiple Times:** You can save the request and run it multiple times - each call creates new documents
 5. **Pre-request Script:** Use to generate dynamic metadata if needed
 
 ---
@@ -1165,8 +1277,10 @@ If issues occur, revert these changes:
    - Remove `server.setTimeout()`
 
 2. In `src/pdfs/pdfs.admin.controller.ts`:
+   - Change `FilesInterceptor` back to `FileInterceptor`
+   - Change `files` back to `file`
+   - Change file limit from 10000 back to 1
    - Change `7 * 1024 * 1024 * 1024` back to `100 * 1024 * 1024`
-   - Remove the `bulk-upload` endpoint if not needed
 
 ---
 
@@ -1227,13 +1341,48 @@ For issues or questions:
 
 ## Summary
 
-Your backend is now configured to handle PDF uploads up to **7GB** in size with:
-- ✅ Increased body parser limits (10GB)
-- ✅ Extended server timeout (30 minutes)
-- ✅ Updated existing endpoints (7GB support)
-- ✅ New dedicated bulk upload endpoint
-- ✅ Enhanced error handling and logging
-- ✅ File type validation
-- ✅ Large file tracking
+Your backend is now configured to handle **thousands of PDF uploads in a single request**, with each file supporting up to **7GB**:
 
-**Ready to use!** Start uploading your large PDF files to `/api/admin/pdfs/bulk-upload`
+### What Changed
+- ✅ Increased body parser limits (10GB)
+- ✅ Extended server timeout (30 minutes)  
+- ✅ Multiple file upload support (up to 10,000 files per request)
+- ✅ Enhanced error handling and logging
+- ✅ Batch processing for optimal performance
+- ✅ Large file tracking and metadata
+- ✅ Individual file error resilience
+- ✅ Comprehensive success/failure reporting
+
+### Main Endpoint
+**POST `/api/admin/pdfs`**
+- Accepts 1 to 10,000 files per request
+- Each file can be up to 7GB
+- Field name: `files` (plural)
+- Returns detailed status for each file
+- Can be called multiple times
+
+**Alternative Endpoint (optional):**
+**POST `/api/admin/pdfs/bulk-upload`**
+- Same features as main endpoint
+- Additional PDF/DOC/DOCX validation
+- Enhanced batch tracking with timestamps
+
+### Quick Start
+
+```bash
+# Upload single file
+curl -X POST "http://localhost:3000/api/admin/pdfs" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "files=@document.pdf" \
+  -F "case_no=CRL-2026-001"
+
+# Upload multiple files
+curl -X POST "http://localhost:3000/api/admin/pdfs" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "files=@doc1.pdf" \
+  -F "files=@doc2.pdf" \
+  -F "files=@doc3.pdf" \
+  -F "case_no=BATCH-001"
+```
+
+**Ready to use!** Start uploading your PDF files to `/api/admin/pdfs`

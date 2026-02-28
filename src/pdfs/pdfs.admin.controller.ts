@@ -92,7 +92,7 @@ export class PdfsAdminController {
         results.push({
           success: true,
           filename: file.originalname,
-          documentId: result._id || result.id,
+          documentId: result._id,
           data: result
         });
         
@@ -289,7 +289,7 @@ export class PdfsAdminController {
             index: globalIndex + 1,
             filename: file.originalname,
             size: file.size,
-            documentId: result._id || result.id,
+            documentId: result._id,
             data: result
           };
         } catch (error) {
