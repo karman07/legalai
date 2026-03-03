@@ -1,0 +1,58 @@
+{
+    "info": {
+        "_postman_id": "legalpadhai-rag-api-collection",
+        "name": "LegalPadhai RAG API",
+        "description": "Postman collection for the LegalPadhai RAG Service",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:8080/health",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "health"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Chat Query",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"query\": \"What is the punishment for theft under Indian law?\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/chat",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "8080",
+                    "path": [
+                        "chat"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ]
+}

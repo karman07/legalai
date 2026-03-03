@@ -15,7 +15,7 @@ import { Request } from 'express';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 export class PdfsAdminController {
-  constructor(private readonly pdfsService: PdfsService) {}
+  constructor(private readonly pdfsService: PdfsService) { }
 
   @Post()
   @UseInterceptors(
@@ -32,7 +32,7 @@ export class PdfsAdminController {
         // Accept all file types
         cb(null, true);
       },
-      limits: { 
+      limits: {
         fileSize: 7 * 1024 * 1024 * 1024, // 7GB max per file
         files: 10000 // Maximum 10,000 files
       },
@@ -46,22 +46,22 @@ export class PdfsAdminController {
     if (!files || files.length === 0) {
       throw new BadRequestException('At least one file is required');
     }
-    
+
     const uploadedBy = (req as any)?.user?.id || (req as any)?.user?._id;
-    
+
     console.log(`Received ${files.length} file(s) for upload`);
     console.log('Received DTO:', dto);
-    
+
     // Process multiple files
     const results = [];
     const errors = [];
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
         // Parse dto for each file
         const finalDto = { ...dto };
-        
+
         // Handle court data parsing
         if (typeof dto.court === 'string') {
           try {
@@ -70,7 +70,7 @@ export class PdfsAdminController {
             console.error('Court parse error:', e);
           }
         }
-        
+
         // If title contains array or multiple titles, use the index
         let fileTitle = finalDto.title;
         if (finalDto.titles && Array.isArray(finalDto.titles) && finalDto.titles[i]) {
@@ -78,7 +78,7 @@ export class PdfsAdminController {
         } else if (files.length > 1) {
           fileTitle = `${finalDto.title || 'Document'} (${i + 1})`;
         }
-        
+
         const createData = {
           ...finalDto,
           title: fileTitle,
@@ -87,7 +87,7 @@ export class PdfsAdminController {
           fileSize: file.size,
           mimeType: file.mimetype,
         };
-        
+
         const result = await this.pdfsService.create(createData as any, uploadedBy);
         results.push({
           success: true,
@@ -95,7 +95,7 @@ export class PdfsAdminController {
           documentId: result._id,
           data: result
         });
-        
+
         console.log(`✓ File ${i + 1}/${files.length} uploaded: ${file.originalname}`);
       } catch (error) {
         console.error(`✗ File ${i + 1}/${files.length} failed: ${file.originalname}`, error);
@@ -106,7 +106,7 @@ export class PdfsAdminController {
         });
       }
     }
-    
+
     return {
       message: `Processed ${files.length} file(s)`,
       totalFiles: files.length,
@@ -157,7 +157,7 @@ export class PdfsAdminController {
   ) {
     console.log('Update DTO:', dto);
     console.log('Court data:', dto.court, typeof dto.court);
-    
+
     // Ensure court is parsed if it's a string
     const finalDto = { ...dto };
     if (typeof dto.court === 'string') {
@@ -168,7 +168,7 @@ export class PdfsAdminController {
         console.error('Court parse error:', e);
       }
     }
-    
+
     if (file) {
       const updateData = {
         ...finalDto,
@@ -177,7 +177,7 @@ export class PdfsAdminController {
       console.log('Update with file data:', updateData);
       return this.pdfsService.update(id, updateData);
     }
-    
+
     console.log('Update data:', finalDto);
     return this.pdfsService.update(id, finalDto);
   }
@@ -212,7 +212,7 @@ export class PdfsAdminController {
           cb(new BadRequestException('Only PDF and document files are allowed for bulk upload'), false);
         }
       },
-      limits: { 
+      limits: {
         fileSize: 7 * 1024 * 1024 * 1024, // 7GB max per file
         files: 10000 // Maximum 10,000 files per request
       },
@@ -226,33 +226,33 @@ export class PdfsAdminController {
     if (!files || files.length === 0) {
       throw new BadRequestException('At least one file is required for bulk upload');
     }
-    
+
     const uploadedBy = (req as any)?.user?.id || (req as any)?.user?._id;
     const startTime = Date.now();
-    
+
     console.log(`\n🚀 Bulk upload initiated:`);
     console.log(`   Files: ${files.length}`);
     console.log(`   Total size: ${(files.reduce((sum, f) => sum + f.size, 0) / (1024 * 1024 * 1024)).toFixed(2)} GB`);
     console.log(`   Uploaded by: ${uploadedBy}\n`);
-    
+
     // Process files in batches for better performance
     const results = [];
     const errors = [];
     const batchSize = 100; // Process 100 files at a time
-    
+
     for (let batchStart = 0; batchStart < files.length; batchStart += batchSize) {
       const batchEnd = Math.min(batchStart + batchSize, files.length);
       const batch = files.slice(batchStart, batchEnd);
-      
+
       console.log(`Processing batch: ${batchStart + 1}-${batchEnd} of ${files.length}`);
-      
+
       // Process batch in parallel
       const batchPromises = batch.map(async (file, localIndex) => {
         const globalIndex = batchStart + localIndex;
         try {
           // Parse dto for each file
           const finalDto = { ...dto };
-          
+
           // Handle court data parsing
           if (typeof dto.court === 'string') {
             try {
@@ -261,7 +261,7 @@ export class PdfsAdminController {
               console.error('Court parse error:', e);
             }
           }
-          
+
           // Handle multiple titles if provided as array
           let fileTitle = finalDto.title || file.originalname;
           if (finalDto.titles && Array.isArray(finalDto.titles) && finalDto.titles[globalIndex]) {
@@ -269,7 +269,7 @@ export class PdfsAdminController {
           } else if (files.length > 1 && finalDto.title) {
             fileTitle = `${finalDto.title} (${globalIndex + 1})`;
           }
-          
+
           const createData = {
             ...finalDto,
             title: fileTitle,
@@ -281,9 +281,9 @@ export class PdfsAdminController {
             uploadBatch: startTime, // Group files from same upload
             batchIndex: globalIndex + 1,
           };
-          
+
           const result = await this.pdfsService.create(createData as any, uploadedBy);
-          
+
           return {
             success: true,
             index: globalIndex + 1,
@@ -303,9 +303,9 @@ export class PdfsAdminController {
           };
         }
       });
-      
+
       const batchResults = await Promise.all(batchPromises);
-      
+
       // Separate successes and failures
       batchResults.forEach(result => {
         if (result.success) {
@@ -317,14 +317,14 @@ export class PdfsAdminController {
         }
       });
     }
-    
+
     const endTime = Date.now();
     const duration = ((endTime - startTime) / 1000).toFixed(2);
-    
+
     console.log(`\n✅ Bulk upload completed in ${duration}s`);
     console.log(`   Successful: ${results.length}/${files.length}`);
     console.log(`   Failed: ${errors.length}/${files.length}\n`);
-    
+
     return {
       message: `Bulk upload completed: ${results.length} succeeded, ${errors.length} failed`,
       totalFiles: files.length,
@@ -335,5 +335,10 @@ export class PdfsAdminController {
       results: results,
       errors: errors.length > 0 ? errors : undefined
     };
+  }
+
+  @Post('run-cleanup')
+  async runCleanup() {
+    return this.pdfsService.runCleanup();
   }
 }

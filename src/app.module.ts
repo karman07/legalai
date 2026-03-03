@@ -14,6 +14,7 @@ import { AudioLessonsModule } from './audio-lessons/audio-lessons.module';
 import { NotesModule } from './notes/notes.module';
 import { AnswerCheckModule } from './answer-check/answer-check.module';
 import { SearchModule } from './search/search.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { SearchModule } from './search/search.module';
     NotesModule,
     AnswerCheckModule,
     SearchModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

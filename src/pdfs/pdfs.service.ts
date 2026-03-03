@@ -14,8 +14,9 @@ export class PdfsService {
   ) { }
 
   async create(createDto: CreatePdfDto, uploadedBy?: string) {
+    const cleanedDto = this.cleanPdfData(createDto);
     const doc = new this.pdfModel({
-      ...createDto,
+      ...cleanedDto,
       uploadedBy: uploadedBy ? new Types.ObjectId(uploadedBy) : undefined,
     });
     return await doc.save();
@@ -201,8 +202,64 @@ export class PdfsService {
       await this.deleteFile(existingPdf.file);
     }
 
-    const updated = await this.pdfModel.findByIdAndUpdate(id, updateDto, { new: true });
+    const cleanedDto = this.cleanPdfData(updateDto);
+    const updated = await this.pdfModel.findByIdAndUpdate(id, cleanedDto, { new: true });
     return updated;
+  }
+
+  private cleanValue(value: any): string {
+    if (value === null || value === undefined) return 'Information Not Available';
+    const str = String(value).trim();
+    const invalidValues = ['nan', 'null', 'undefined', '- 0', 'n/a', 'none', '-0', '0'];
+    if (str === '' || invalidValues.includes(str.toLowerCase())) {
+      return 'Information Not Available';
+    }
+    return str;
+  }
+
+  private cleanPdfData(data: any): any {
+    const fieldsToClean = [
+      'diary_no', 'case_no', 'pet', 'pet_adv', 'res_adv', 'bench', 'judgement_by', 'category'
+    ];
+
+    const cleanedData = { ...data };
+    fieldsToClean.forEach(field => {
+      // Only clean if the field exists or if we want to ensure it has a dummy value
+      cleanedData[field] = this.cleanValue(cleanedData[field]);
+    });
+    return cleanedData;
+  }
+
+  async runCleanup() {
+    const pdfs = await this.pdfModel.find();
+    let updatedCount = 0;
+
+    for (const pdf of pdfs) {
+      const pdfObj = pdf.toObject();
+      const cleanedData = this.cleanPdfData(pdfObj);
+
+      let hasChanged = false;
+      const fieldsToCheck = [
+        'diary_no', 'case_no', 'pet', 'pet_adv', 'res_adv', 'bench', 'judgement_by', 'category'
+      ];
+
+      for (const field of fieldsToCheck) {
+        if (pdf[field] !== cleanedData[field]) {
+          hasChanged = true;
+          break;
+        }
+      }
+
+      if (hasChanged) {
+        await this.pdfModel.findByIdAndUpdate(pdf._id, { $set: cleanedData });
+        updatedCount++;
+      }
+    }
+
+    return {
+      message: `Cleanup completed. Processed ${pdfs.length} documents.`,
+      updatedCount
+    };
   }
 
   private async deleteFile(filePath: string): Promise<void> {
