@@ -1,6 +1,6 @@
 import apiClient from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai/api';
 
 export interface Court {
   id: string;
@@ -83,9 +83,9 @@ class PDFService {
     });
   }
 
-/**
-   * Get available case numbers
-   */
+  /**
+     * Get available case numbers
+     */
   async getCaseNumbers(): Promise<{ caseNumbers: string[] }> {
     return apiClient<{ caseNumbers: string[] }>('/pdfs/case-numbers', {
       method: 'GET',
@@ -105,8 +105,8 @@ class PDFService {
     const cleanUrl = fileUrl.startsWith('/') ? fileUrl.substring(1) : fileUrl;
     // Remove only the trailing /api from API_BASE_URL
     // e.g., https://api.legalpadhai.ai/api -> https://api.legalpadhai.ai
-    const baseUrl = API_BASE_URL.endsWith('/api') 
-      ? API_BASE_URL.slice(0, -4) 
+    const baseUrl = API_BASE_URL.endsWith('/api')
+      ? API_BASE_URL.slice(0, -4)
       : API_BASE_URL;
     return `${baseUrl}/${cleanUrl}`;
   }

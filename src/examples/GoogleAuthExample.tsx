@@ -35,10 +35,10 @@
 const initializeApp = (config: any) => ({});
 const getAuth = (app: any) => ({});
 const signInWithPopup = async (auth: any, provider: any) => ({ user: { getIdToken: async () => '' } });
-const GoogleAuthProvider = class {};
-const useAuth = () => ({ googleSignIn: async (token: string) => {} });
-const useNavigate = () => (path: string) => {};
-const useState = (initial: any) => [initial, (v: any) => {}];
+const GoogleAuthProvider = class { };
+const useAuth = () => ({ googleSignIn: async (token: string) => { } });
+const useNavigate = () => (path: string) => { };
+const useState = (initial: any) => [initial, (v: any) => { }];
 
 // Firebase configuration (use environment variables in production)
 const firebaseConfig = {
@@ -166,7 +166,7 @@ export default function GoogleAuthExample() {
  * ENVIRONMENT VARIABLES (.env):
  * 
  * # Backend API
- * VITE_API_URL=http://localhost:3000/api
+ * VITE_API_URL=https://api.legalpadhai.ai/api
  * 
  * # Firebase Configuration
  * VITE_FIREBASE_API_KEY=AIzaSy...

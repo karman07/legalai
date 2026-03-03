@@ -39,10 +39,10 @@ export default function AudioPlayer() {
 
   useEffect(() => {
     if (!lesson || viewMode !== 'player') return;
-    
+
     let audioFile;
     const section = lesson.sections?.[currentSectionIndex];
-    
+
     if (!section) return;
 
     if (currentSubsectionIndex >= 0 && section.subsections?.[currentSubsectionIndex]) {
@@ -55,12 +55,12 @@ export default function AudioPlayer() {
         ? (selectedLanguage === 'english' ? section.easyEnglishAudio : section.easyHindiAudio)
         : (selectedLanguage === 'english' ? section.englishAudio : section.hindiAudio);
     }
-    
+
     if (audioFile?.url) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai/api';
       // Remove only the trailing /api from the base URL
-      const baseUrl = apiBaseUrl.endsWith('/api') 
-        ? apiBaseUrl.slice(0, -4) 
+      const baseUrl = apiBaseUrl.endsWith('/api')
+        ? apiBaseUrl.slice(0, -4)
         : apiBaseUrl;
       setAudioUrl(`${baseUrl}${audioFile.url}`);
       setIsPlaying(false);
@@ -180,7 +180,7 @@ export default function AudioPlayer() {
   const handleNextSection = () => {
     if (!lesson?.sections) return;
     const currentSection = lesson.sections[currentSectionIndex];
-    
+
     if (currentSection?.subsections && currentSubsectionIndex < currentSection.subsections.length - 1) {
       setCurrentSubsectionIndex(currentSubsectionIndex + 1);
     } else if (currentSectionIndex < lesson.sections.length - 1) {
@@ -282,23 +282,21 @@ export default function AudioPlayer() {
                   <div className={`w-2 h-2 rounded-full ${selectedLanguage === 'english' ? 'bg-blue-500' : 'bg-green-500'}`} />
                   <span className="text-xs font-medium text-slate-600 capitalize">{selectedLanguage}</span>
                 </div>
-                <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                  textMode === 'easy' 
-                    ? 'bg-amber-100 text-amber-700' 
+                <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${textMode === 'easy'
+                    ? 'bg-amber-100 text-amber-700'
                     : 'bg-slate-100 text-slate-700'
-                }`}>
+                  }`}>
                   {textMode === 'easy' ? 'Easy Mode' : 'Standard'}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={toggleBookmark} 
-                className={`p-2 rounded-lg transition-all ${
-                  isBookmarked 
-                    ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' 
+              <button
+                onClick={toggleBookmark}
+                className={`p-2 rounded-lg transition-all ${isBookmarked
+                    ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
                     : 'hover:bg-slate-100 text-slate-600'
-                }`}
+                  }`}
               >
                 <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
               </button>
@@ -320,7 +318,7 @@ export default function AudioPlayer() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-6">
-                  {currentSubsectionIndex >= 0 
+                  {currentSubsectionIndex >= 0
                     ? currentSection.subsections?.[currentSubsectionIndex]?.title
                     : currentSection.title}
                 </h2>
@@ -335,10 +333,10 @@ export default function AudioPlayer() {
                 <div className="p-6 bg-slate-50 rounded-xl">
                   <p className="text-base leading-relaxed text-slate-900 whitespace-pre-wrap">
                     {(() => {
-                      const content = currentSubsectionIndex >= 0 
+                      const content = currentSubsectionIndex >= 0
                         ? currentSection.subsections?.[currentSubsectionIndex]
                         : currentSection;
-                      
+
                       if (textMode === 'government') {
                         return (selectedLanguage === 'english' ? content?.englishText : content?.hindiText) || 'No transcription available';
                       } else {
@@ -378,8 +376,8 @@ export default function AudioPlayer() {
               <SkipBack className="w-5 h-5 text-slate-700 group-hover:text-amber-600" />
             </button>
             {currentSubsectionIndex === -1 && currentSection?.subsections && currentSection.subsections.length > 0 && (
-              <button 
-                onClick={() => setCurrentSubsectionIndex(0)} 
+              <button
+                onClick={() => setCurrentSubsectionIndex(0)}
                 className="p-3 hover:bg-slate-100 rounded-full transition-all group"
                 title="Go to first subsection"
               >
@@ -412,8 +410,8 @@ export default function AudioPlayer() {
             {/* Volume Control */}
             <div className="flex items-center gap-3">
               <button onClick={toggleMute} className="p-2 hover:bg-slate-100 rounded-lg transition-all">
-                {isMuted || volume === 0 ? 
-                  <VolumeX className="w-5 h-5 text-slate-700" /> : 
+                {isMuted || volume === 0 ?
+                  <VolumeX className="w-5 h-5 text-slate-700" /> :
                   <Volume2 className="w-5 h-5 text-slate-700" />
                 }
               </button>
@@ -435,8 +433,8 @@ export default function AudioPlayer() {
 
             {/* Settings */}
             <div className="relative">
-              <button 
-                onClick={() => setShowSettings(!showSettings)} 
+              <button
+                onClick={() => setShowSettings(!showSettings)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-all"
               >
                 <Settings className="w-5 h-5 text-slate-700" />
@@ -449,11 +447,10 @@ export default function AudioPlayer() {
                       <button
                         key={speed}
                         onClick={() => handleSpeedChange(speed as PlaybackSpeed)}
-                        className={`px-2 py-1 text-xs rounded transition-all ${
-                          playbackSpeed === speed
+                        className={`px-2 py-1 text-xs rounded transition-all ${playbackSpeed === speed
                             ? 'bg-amber-500 text-white'
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
+                          }`}
                       >
                         {speed}x
                       </button>
@@ -469,17 +466,15 @@ export default function AudioPlayer() {
       {/* Notes Panel Overlay */}
       <div className={`fixed inset-0 z-50 transition-all duration-300 ${showNotes ? 'visible' : 'invisible'}`}>
         {/* Backdrop */}
-        <div 
-          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 md:hidden ${
-            showNotes ? 'opacity-100' : 'opacity-0'
-          }`}
+        <div
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-300 md:hidden ${showNotes ? 'opacity-100' : 'opacity-0'
+            }`}
           onClick={() => setShowNotes(false)}
         />
-        
+
         {/* Notes Panel */}
-        <div className={`absolute right-0 top-0 bottom-0 w-full md:w-96 transform transition-transform duration-300 ease-out ${
-          showNotes ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+        <div className={`absolute right-0 top-0 bottom-0 w-full md:w-96 transform transition-transform duration-300 ease-out ${showNotes ? 'translate-x-0' : 'translate-x-full'
+          }`}>
           <NotesPanel
             referenceType="audio"
             referenceId={lesson._id}

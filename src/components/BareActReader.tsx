@@ -70,24 +70,24 @@ export default function BareActReader() {
       if (!audioRef.current) {
         audioRef.current = new Audio();
       }
-      
+
       const audio = audioRef.current;
-      const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace('/api', '');
+      const baseURL = (import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai').replace('/api', '');
       const sanitizedUrl = `${baseURL}${selectedLesson.audioUrl.replace(/[^a-zA-Z0-9-_./]/g, '')}`;
       audio.src = sanitizedUrl;
-      
+
       const handleMetadata = () => {
         if (!isNaN(audio.duration) && isFinite(audio.duration)) {
           setDuration(Math.floor(audio.duration));
         }
       };
-      
+
       const handleTimeUpdate = () => {
         if (!isNaN(audio.currentTime) && isFinite(audio.currentTime)) {
           setCurrentTime(Math.floor(audio.currentTime));
         }
       };
-      
+
       const handleEnded = () => {
         setIsPlaying(false);
         setCurrentTime(0);
@@ -149,7 +149,7 @@ export default function BareActReader() {
       setError(null);
       const data = await api<{ items: AudioLesson[]; total: number; page: number; limit: number; totalPages: number }>(`/audio-lessons/category/${category}`);
       setAudioLessons(data.items || []);
-      
+
       if (data.items && data.items.length > 0) {
         setSelectedLesson(data.items[0]);
         setDuration(data.items[0].duration || 0);
@@ -271,11 +271,11 @@ export default function BareActReader() {
               {/* Animated gradient background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <div className="absolute inset-0 bg-white opacity-95 group-hover:opacity-90 transition-opacity duration-500"></div>
-              
+
               {/* Decorative elements */}
               <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
               <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-gradient-to-tr from-orange-400/20 to-rose-400/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-700"></div>
-              
+
               <div className="relative z-10">
                 {/* Header with icon and badges */}
                 <div className="flex items-start justify-between mb-6">
@@ -306,7 +306,7 @@ export default function BareActReader() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Content */}
                 <div className="space-y-3">
                   <h3 className="text-2xl font-bold text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-amber-600 group-hover:to-orange-600 transition-all duration-300 leading-tight">
@@ -316,7 +316,7 @@ export default function BareActReader() {
                     {act.description}
                   </p>
                 </div>
-                
+
                 {/* Action indicator */}
                 <div className="mt-6 flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-400 group-hover:text-amber-600 transition-colors">
@@ -403,11 +403,10 @@ export default function BareActReader() {
                 <button
                   key={lesson._id}
                   onClick={() => handleLessonSelect(lesson)}
-                  className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-300 ${
-                    selectedLesson?._id === lesson._id
+                  className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-300 ${selectedLesson?._id === lesson._id
                       ? 'border-amber-400 bg-white shadow-lg'
                       : 'border-slate-200 hover:border-amber-300 bg-white hover:shadow-md'
-                  }`}
+                    }`}
                 >
                   <h4 className="font-semibold text-slate-900 mb-2">{lesson.title}</h4>
                   <p className="text-sm text-slate-600 mb-3">{lesson.description}</p>
@@ -433,22 +432,20 @@ export default function BareActReader() {
                   <div className="flex border-2 border-slate-200 rounded-xl p-1">
                     <button
                       onClick={() => setViewMode('government')}
-                      className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-                        viewMode === 'government'
+                      className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${viewMode === 'government'
                           ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                           : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                        }`}
                     >
                       <FileText className="w-4 h-4 inline mr-2" />
                       Government
                     </button>
                     <button
                       onClick={() => setViewMode('easy')}
-                      className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-                        viewMode === 'easy'
+                      className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${viewMode === 'easy'
                           ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
                           : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                        }`}
                     >
                       <Languages className="w-4 h-4 inline mr-2" />
                       Simplified

@@ -19,7 +19,7 @@ export interface SendMessageResponse {
 }
 
 // Use absolute URL to bypass proxy issues during development
-const CHAT_API_URL = 'http://localhost:3000/chat';
+const CHAT_API_URL = 'https://api.legalpadhai.ai/chat';
 
 class ChatService {
     private getHeaders() {
