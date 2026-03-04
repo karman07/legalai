@@ -2,7 +2,7 @@
 
 ## 📍 Base URL
 ```
-https://api.legalpadhai.ai/api
+http://localhost:3000/api
 ```
 
 ## 🔐 Authentication Routes
@@ -255,7 +255,7 @@ src/
 ## 🛠️ Environment (.env)
 
 ```env
-VITE_API_URL=https://api.legalpadhai.ai/api
+VITE_API_URL=http://localhost:3000/api
 
 # Optional: For Google Sign-In
 VITE_FIREBASE_API_KEY=...

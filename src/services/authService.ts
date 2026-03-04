@@ -33,7 +33,7 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface GoogleSignInRequest {
+export interface FirebaseSignInRequest {
   idToken: string;
 }
 
@@ -90,12 +90,22 @@ class AuthService {
   }
 
   /**
-   * Sign in with Google (via Firebase ID token)
+   * Unified Firebase Sign-In (bridging ANY Firebase login to backend)
    */
-  async googleSignIn(data: GoogleSignInRequest): Promise<AuthResponse> {
-    return apiClient<AuthResponse>('/auth/google-signin', {
+  async firebaseSignIn(data: FirebaseSignInRequest): Promise<AuthResponse> {
+    return apiClient<AuthResponse>('/auth/firebase-signin', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Trigger themed LegalAI HTML reset email
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return apiClient<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
     });
   }
 
@@ -106,6 +116,27 @@ class AuthService {
   async getProfile(): Promise<UserProfile> {
     return apiClient<UserProfile>('/auth/profile', {
       method: 'GET',
+    });
+  }
+
+  /**
+   * Reset user password (verification-based, no current password required)
+   * Providing idToken will deep-bind the account to Firebase
+   */
+  async resetPassword(email: string, newPassword: string, idToken?: string): Promise<{ message: string }> {
+    return apiClient<{ message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, newPassword, idToken }),
+    });
+  }
+
+  /**
+   * Sync email verification status from Firebase to backend
+   */
+  async verifyEmail(email: string): Promise<{ isVerified: boolean; message: string }> {
+    return apiClient<{ isVerified: boolean; message: string }>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
     });
   }
 

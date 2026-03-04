@@ -72,7 +72,7 @@ export default function BareActReader() {
       }
 
       const audio = audioRef.current;
-      const baseURL = (import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai').replace('/api', '');
+      const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace('/api', '');
       const sanitizedUrl = `${baseURL}${selectedLesson.audioUrl.replace(/[^a-zA-Z0-9-_./]/g, '')}`;
       audio.src = sanitizedUrl;
 
@@ -404,8 +404,8 @@ export default function BareActReader() {
                   key={lesson._id}
                   onClick={() => handleLessonSelect(lesson)}
                   className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-300 ${selectedLesson?._id === lesson._id
-                      ? 'border-amber-400 bg-white shadow-lg'
-                      : 'border-slate-200 hover:border-amber-300 bg-white hover:shadow-md'
+                    ? 'border-amber-400 bg-white shadow-lg'
+                    : 'border-slate-200 hover:border-amber-300 bg-white hover:shadow-md'
                     }`}
                 >
                   <h4 className="font-semibold text-slate-900 mb-2">{lesson.title}</h4>
@@ -433,8 +433,8 @@ export default function BareActReader() {
                     <button
                       onClick={() => setViewMode('government')}
                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${viewMode === 'government'
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                          : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                        : 'text-slate-600 hover:text-slate-900'
                         }`}
                     >
                       <FileText className="w-4 h-4 inline mr-2" />
@@ -443,8 +443,8 @@ export default function BareActReader() {
                     <button
                       onClick={() => setViewMode('easy')}
                       className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${viewMode === 'easy'
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
-                          : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md'
+                        : 'text-slate-600 hover:text-slate-900'
                         }`}
                     >
                       <Languages className="w-4 h-4 inline mr-2" />

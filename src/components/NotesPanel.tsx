@@ -233,26 +233,23 @@ export default function NotesPanel({ referenceType, referenceId, currentContext,
                 <div className="flex gap-1">
                   <button
                     onClick={() => handleToggleFavourite(note._id)}
-                    className={`p-1.5 rounded hover:bg-white/50 active:bg-white/70 transition-all touch-manipulation ${
-                      note.isFavourite ? 'text-red-500' : 'text-slate-400'
-                    }`}
+                    className={`p-1.5 rounded hover:bg-white/50 active:bg-white/70 transition-all touch-manipulation ${note.isFavourite ? 'text-red-500' : 'text-slate-400'
+                      }`}
                   >
                     <Heart className="w-4 h-4" fill={note.isFavourite ? 'currentColor' : 'none'} />
                   </button>
                   <button
                     onClick={() => handleToggleBookmark(note._id)}
-                    className={`p-1.5 rounded hover:bg-white/50 active:bg-white/70 transition-all touch-manipulation ${
-                      note.isBookmarked ? 'text-amber-500' : 'text-slate-400'
-                    }`}
+                    className={`p-1.5 rounded hover:bg-white/50 active:bg-white/70 transition-all touch-manipulation ${note.isBookmarked ? 'text-amber-500' : 'text-slate-400'
+                      }`}
                   >
                     <Bookmark className="w-4 h-4" fill={note.isBookmarked ? 'currentColor' : 'none'} />
                   </button>
                 </div>
               </div>
               <div className="mb-3">
-                <p className={`text-sm text-slate-700 leading-relaxed ${
-                  expandedNotes.has(note._id) ? '' : 'line-clamp-3'
-                }`}>
+                <p className={`text-sm text-slate-700 leading-relaxed ${expandedNotes.has(note._id) ? '' : 'line-clamp-3'
+                  }`}>
                   {note.content}
                 </p>
                 {note.content.length > 100 && (
@@ -287,6 +284,8 @@ export default function NotesPanel({ referenceType, referenceId, currentContext,
         isOpen={deleteDialog.isOpen}
         onClose={() => setDeleteDialog({ isOpen: false, noteId: null })}
         onConfirm={handleDeleteNote}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
         isDeleting={isDeleting}
       />
     </div>

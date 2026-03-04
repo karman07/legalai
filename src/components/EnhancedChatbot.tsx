@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageSquare, Send, Brain, Loader2, Plus, ChevronRight, Clock, User, Bot, AlertCircle } from 'lucide-react';
+import { MessageSquare, Send, Brain, Loader2, Plus, ChevronRight, Clock, User, Bot, AlertCircle, Edit2, Trash2, Check, X } from 'lucide-react';
 import chatService, { type Conversation, type ChatMessage } from '../services/chatService';
+import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 type ChatbotProps = {
   type: 'general' | 'legal_expert';
@@ -29,6 +30,18 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    type: 'conversation' | 'message';
+    itemId: string | null;
+  }>({
+    isOpen: false,
+    type: 'conversation',
+    itemId: null,
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,7 +86,7 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
       const result = await chatService.sendMessage(userMessage, currentSession.id);
 
       const newMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: Date.now().toString(), // Temporarily use timestamp for local state
         message: userMessage,
         response: result.response,
         created_at: new Date().toISOString(),
@@ -110,6 +123,7 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
   };
 
   const handleLoadConversation = async (session: Conversation) => {
+    if (editingSessionId === session._id) return;
     if (currentSession.id === session._id) return;
 
     setError(null);
@@ -131,8 +145,73 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
     } catch (error) {
       console.error('Error loading conversation history:', error);
       setError('Failed to load messages.');
+    }
+  };
+
+  const handleRename = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!editingTitle.trim()) {
+      setEditingSessionId(null);
+      return;
+    }
+
+    try {
+      await chatService.renameConversation(id, editingTitle.trim());
+      setSavedSessions(prev =>
+        prev.map(s => (s._id === id ? { ...s, title: editingTitle.trim() } : s))
+      );
+      if (currentSession.id === id) {
+        setCurrentSession(prev => ({ ...prev, title: editingTitle.trim() }));
+      }
+    } catch (error) {
+      console.error('Rename error:', error);
+      setError('Failed to rename conversation.');
     } finally {
-      // Removed setLoadingMessages
+      setEditingSessionId(null);
+    }
+  };
+
+  const handleDeleteConversation = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setDeleteDialog({
+      isOpen: true,
+      type: 'conversation',
+      itemId: id,
+    });
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    setDeleteDialog({
+      isOpen: true,
+      type: 'message',
+      itemId: messageId,
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteDialog.itemId) return;
+
+    setIsDeleting(true);
+    try {
+      if (deleteDialog.type === 'conversation') {
+        await chatService.deleteConversation(deleteDialog.itemId);
+        setSavedSessions((prev) => prev.filter((s) => s._id !== deleteDialog.itemId));
+        if (currentSession.id === deleteDialog.itemId) {
+          handleNewChat();
+        }
+      } else {
+        await chatService.deleteMessage(deleteDialog.itemId);
+        setCurrentSession((prev) => ({
+          ...prev,
+          messages: prev.messages.filter((m) => m.id !== deleteDialog.itemId),
+        }));
+      }
+      setDeleteDialog({ ...deleteDialog, isOpen: false, itemId: null });
+    } catch (error) {
+      console.error('Delete error:', error);
+      setError(`Failed to delete ${deleteDialog.type}.`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -189,9 +268,47 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
                       <MessageSquare className={`w-4 h-4 ${currentSession.id === session._id ? 'text-amber-700' : 'text-slate-400'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-700 truncate leading-tight">
-                        {session.title}
-                      </p>
+                      {editingSessionId === session._id ? (
+                        <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
+                          <input
+                            autoFocus
+                            type="text"
+                            value={editingTitle}
+                            onChange={e => setEditingTitle(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleRename(e as any, session._id);
+                              if (e.key === 'Escape') setEditingSessionId(null);
+                            }}
+                            className="w-full text-sm font-semibold text-slate-700 bg-white border border-amber-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                          <button onClick={e => handleRename(e, session._id)} className="p-1 text-green-600 hover:bg-green-50 rounded"><Check className="w-3 h-3" /></button>
+                          <button onClick={() => setEditingSessionId(null)} className="p-1 text-red-600 hover:bg-red-50 rounded"><X className="w-3 h-3" /></button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold text-slate-700 truncate leading-tight pr-10">
+                            {session.title}
+                          </p>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center space-x-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingSessionId(session._id);
+                                setEditingTitle(session.title);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteConversation(e, session._id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </>
+                      )}
                       <p className="text-xs text-slate-400 mt-1 flex items-center capitalize">
                         {new Date(session.updatedAt || session.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </p>
@@ -282,13 +399,19 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
                 <div key={msg.id || idx} className="space-y-6">
                   {/* User Message */}
                   <div className="flex justify-end pr-2">
-                    <div className="flex flex-row-reverse items-start max-w-[85%]">
+                    <div className="flex flex-row-reverse items-start max-w-[85%] group">
                       <div className="hidden sm:flex ml-3 mt-1 bg-amber-100 rounded-lg p-1.5 h-8 w-8 items-center justify-center flex-shrink-0">
                         <User className="w-5 h-5 text-amber-600" />
                       </div>
-                      <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl rounded-tr-none px-5 py-3.5 shadow-md">
+                      <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl rounded-tr-none px-5 py-3.5 shadow-md relative">
                         <p className="text-[15px] leading-relaxed font-medium">{msg.message}</p>
                         <p className="text-[10px] text-amber-100 mt-1.5 opacity-80 text-right">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="absolute -left-10 top-2 p-1.5 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -385,6 +508,18 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
           </div>
         </div>
       </div>
+      <DeleteConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ ...deleteDialog, isOpen: false, itemId: null })}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        title={deleteDialog.type === 'conversation' ? 'Delete Conversation' : 'Delete Message'}
+        message={
+          deleteDialog.type === 'conversation'
+            ? 'Are you sure you want to delete this entire conversation? All messages will be permanently removed.'
+            : 'Are you sure you want to delete this message? This action cannot be undone.'
+        }
+      />
     </div>
   );
 }

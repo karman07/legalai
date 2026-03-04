@@ -235,11 +235,10 @@ export default function Notes() {
 
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              showFavoritesOnly
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${showFavoritesOnly
                 ? 'bg-amber-500 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
+              }`}
           >
             <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
             <span>Favorites</span>
@@ -274,9 +273,8 @@ export default function Notes() {
                     title={note.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
                   >
                     <Bookmark
-                      className={`w-5 h-5 transition-colors ${
-                        note.isBookmarked ? 'fill-amber-500 text-amber-500' : 'text-slate-400 group-hover:text-slate-600'
-                      }`}
+                      className={`w-5 h-5 transition-colors ${note.isBookmarked ? 'fill-amber-500 text-amber-500' : 'text-slate-400 group-hover:text-slate-600'
+                        }`}
                     />
                   </button>
                   <button
@@ -285,18 +283,16 @@ export default function Notes() {
                     title={note.isFavourite ? 'Remove from favorites' : 'Add to favorites'}
                   >
                     <Heart
-                      className={`w-5 h-5 transition-colors ${
-                        note.isFavourite ? 'fill-red-500 text-red-500' : 'text-slate-400 group-hover:text-slate-600'
-                      }`}
+                      className={`w-5 h-5 transition-colors ${note.isFavourite ? 'fill-red-500 text-red-500' : 'text-slate-400 group-hover:text-slate-600'
+                        }`}
                     />
                   </button>
                 </div>
               </div>
 
               <div className="mb-4">
-                <div className={`text-sm text-slate-600 whitespace-pre-wrap leading-relaxed break-words ${
-                  expandedNotes.has(note._id) ? '' : 'line-clamp-3'
-                }`}>
+                <div className={`text-sm text-slate-600 whitespace-pre-wrap leading-relaxed break-words ${expandedNotes.has(note._id) ? '' : 'line-clamp-3'
+                  }`}>
                   {note.content}
                 </div>
                 <button
@@ -423,6 +419,8 @@ export default function Notes() {
         isOpen={deleteDialog.isOpen}
         onClose={() => setDeleteDialog({ isOpen: false, noteId: null })}
         onConfirm={handleDeleteNote}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
         isDeleting={isDeleting}
       />
     </div>

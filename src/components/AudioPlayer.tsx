@@ -57,7 +57,7 @@ export default function AudioPlayer() {
     }
 
     if (audioFile?.url) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai/api';
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
       // Remove only the trailing /api from the base URL
       const baseUrl = apiBaseUrl.endsWith('/api')
         ? apiBaseUrl.slice(0, -4)
@@ -283,8 +283,8 @@ export default function AudioPlayer() {
                   <span className="text-xs font-medium text-slate-600 capitalize">{selectedLanguage}</span>
                 </div>
                 <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${textMode === 'easy'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-slate-100 text-slate-700'
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-slate-100 text-slate-700'
                   }`}>
                   {textMode === 'easy' ? 'Easy Mode' : 'Standard'}
                 </div>
@@ -294,8 +294,8 @@ export default function AudioPlayer() {
               <button
                 onClick={toggleBookmark}
                 className={`p-2 rounded-lg transition-all ${isBookmarked
-                    ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
-                    : 'hover:bg-slate-100 text-slate-600'
+                  ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+                  : 'hover:bg-slate-100 text-slate-600'
                   }`}
               >
                 <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -448,8 +448,8 @@ export default function AudioPlayer() {
                         key={speed}
                         onClick={() => handleSpeedChange(speed as PlaybackSpeed)}
                         className={`px-2 py-1 text-xs rounded transition-all ${playbackSpeed === speed
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                           }`}
                       >
                         {speed}x

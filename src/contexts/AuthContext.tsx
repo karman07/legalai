@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import authService, { UserProfile, RegisterRequest } from '../services/authService';
+import { sendEmailVerification, signInWithEmailAndPassword, verifyPasswordResetCode } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 type AuthContextType = {
   user: UserProfile | null;
@@ -16,8 +18,11 @@ type AuthContextType = {
   ) => Promise<{ requiresLogin: boolean; message: string }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  googleSignIn: (idToken: string) => Promise<void>;
+  firebaseSignIn: (idToken: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  sendVerificationEmail: (email: string, password: string) => Promise<void>;
+  sendPasswordResetLink: (email: string) => Promise<void>;
+  verifyResetCode: (code: string) => Promise<string>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,26 +64,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const registerData: RegisterRequest = registrationType === 'institute'
         ? {
-            name: fullName,
-            email,
-            password,
-            registrationType: 'institute',
-            instituteId: instituteId || '',
-            instituteName,
-            phoneNumber,
-            address,
-          }
+          name: fullName,
+          email,
+          password,
+          registrationType: 'institute',
+          instituteId: instituteId || '',
+          instituteName,
+          phoneNumber,
+          address,
+        }
         : {
-            name: fullName,
-            email,
-            password,
-            registrationType: 'personal',
-            phoneNumber,
-            address,
-          };
+          name: fullName,
+          email,
+          password,
+          registrationType: 'personal',
+          phoneNumber,
+          address,
+        };
 
       // Register returns message and userId, user must login separately
       const response = await authService.register(registerData);
+
+      // Send verification email via Firebase
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (userCredential.user) {
+          await sendEmailVerification(userCredential.user);
+          await auth.signOut(); // Sign out from Firebase until they verify and login normally
+        }
+      } catch (fbError) {
+        console.error('Failed to send initial verification email:', fbError);
+        // We don't throw here to avoid failing registration if only email fails
+      }
+
       return { requiresLogin: true, message: response.message };
     } catch (error: any) {
       console.error('Sign up error:', error);
@@ -103,15 +121,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const googleSignIn = async (idToken: string) => {
+  const firebaseSignIn = async (idToken: string) => {
     setLoading(true);
     try {
-      const response = await authService.googleSignIn({ idToken });
+      const response = await authService.firebaseSignIn({ idToken });
       authService.saveToken(response.accessToken);
       // Normalize id field for backward compatibility
       setUser({ ...response.user, id: response.user.id, _id: response.user.id } as UserProfile);
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('Firebase sign in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -136,8 +154,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendVerificationEmail = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
+      }
+    } catch (error: any) {
+      console.error('Failed to send verification email:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendPasswordResetLink = async (email: string) => {
+    setLoading(true);
+    try {
+      await authService.forgotPassword(email);
+    } catch (error: any) {
+      console.error('Failed to trigger themed reset email:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyResetCode = async (code: string): Promise<string> => {
+    try {
+      return await verifyPasswordResetCode(auth, code);
+    } catch (error: any) {
+      console.error('Failed to verify reset code:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, googleSignIn, refreshProfile }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, firebaseSignIn, refreshProfile, sendVerificationEmail, sendPasswordResetLink, verifyResetCode }}>
       {children}
     </AuthContext.Provider>
   );

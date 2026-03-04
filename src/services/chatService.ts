@@ -19,7 +19,7 @@ export interface SendMessageResponse {
 }
 
 // Use absolute URL to bypass proxy issues during development
-const CHAT_API_URL = 'https://api.legalpadhai.ai/chat';
+const CHAT_API_URL = 'http://localhost:3000/chat';
 
 class ChatService {
     private getHeaders() {
@@ -89,6 +89,58 @@ class ChatService {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || 'Failed to fetch conversation history');
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Rename a conversation session
+     */
+    async renameConversation(id: string, title: string): Promise<Conversation> {
+        const response = await fetch(`${CHAT_API_URL}/conversations/${id}`, {
+            method: 'PATCH',
+            headers: this.getHeaders(),
+            body: JSON.stringify({ title }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to rename conversation');
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Delete an entire conversation session
+     */
+    async deleteConversation(id: string): Promise<{ message: string }> {
+        const response = await fetch(`${CHAT_API_URL}/conversations/${id}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to delete conversation');
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Delete an individual message
+     */
+    async deleteMessage(id: string): Promise<{ message: string }> {
+        const response = await fetch(`${CHAT_API_URL}/message/${id}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to delete message');
         }
 
         return await response.json();
