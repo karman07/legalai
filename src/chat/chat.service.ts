@@ -100,4 +100,17 @@ export class ChatService {
             title: conversation.title,
         };
     }
+
+    async updateConversation(conversationId: string, title: string) {
+        return this.conversationModel.findByIdAndUpdate(conversationId, { title }, { new: true }).exec();
+    }
+
+    async deleteConversation(conversationId: string) {
+        await this.chatModel.deleteMany({ conversationId }).exec();
+        return this.conversationModel.findByIdAndDelete(conversationId).exec();
+    }
+
+    async deleteChatMessage(chatId: string) {
+        return this.chatModel.findByIdAndDelete(chatId).exec();
+    }
 }

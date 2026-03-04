@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class FirebaseService implements OnModuleInit {
   private firebaseApp: admin.app.App;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   onModuleInit() {
     // Initialize Firebase Admin SDK
@@ -36,6 +36,15 @@ export class FirebaseService implements OnModuleInit {
       return userRecord.uid;
     } catch (error) {
       throw new Error(`Failed to create Firebase user: ${error.message}`);
+    }
+  }
+
+  // Get Firebase user by email
+  async getFirebaseUserByEmail(email: string): Promise<admin.auth.UserRecord> {
+    try {
+      return await admin.auth().getUserByEmail(email);
+    } catch (error) {
+      throw new Error(`Failed to get Firebase user: ${error.message}`);
     }
   }
 
