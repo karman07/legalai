@@ -72,11 +72,13 @@ export class PdfsAdminController {
         }
 
         // If title contains array or multiple titles, use the index
-        let fileTitle = finalDto.title;
+        let fileTitle = finalDto.title || file.originalname;
         if (finalDto.titles && Array.isArray(finalDto.titles) && finalDto.titles[i]) {
           fileTitle = finalDto.titles[i];
+        } else if (files.length > 1 && finalDto.title) {
+          fileTitle = `${finalDto.title} (${i + 1})`;
         } else if (files.length > 1) {
-          fileTitle = `${finalDto.title || 'Document'} (${i + 1})`;
+          fileTitle = `${file.originalname} (${i + 1})`;
         }
 
         const createData = {
@@ -152,7 +154,7 @@ export class PdfsAdminController {
   )
   async update(
     @Param('id') id: string,
-    @Body() dto: any,
+    @Body() dto: UpdatePdfDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     console.log('Update DTO:', dto);
@@ -219,7 +221,7 @@ export class PdfsAdminController {
     }),
   )
   async bulkUpload(
-    @Body() dto: any,
+    @Body() dto: CreatePdfDto,
     @UploadedFiles() files: Express.Multer.File[],
     @Req() req: Request,
   ) {

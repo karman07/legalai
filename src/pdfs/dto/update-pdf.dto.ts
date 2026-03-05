@@ -3,6 +3,14 @@ import { IsDateString, IsOptional, IsString } from 'class-validator';
 export class UpdatePdfDto {
   @IsOptional()
   @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
   diary_no?: string;
 
   @IsOptional()
@@ -40,4 +48,11 @@ export class UpdatePdfDto {
   @IsOptional()
   @IsString()
   file?: string;
+
+  @IsOptional()
+  @IsString()
+  court?: string;
+
+  @IsOptional()
+  titles?: string[];
 }

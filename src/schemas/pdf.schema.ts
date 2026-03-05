@@ -43,6 +43,27 @@ export class Pdf {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ type: Object })
+  court?: {
+    level: string;
+    name: string;
+  };
+
+  @Prop()
+  fileSize?: number;
+
+  @Prop()
+  mimeType?: string;
+
+  @Prop({ type: 'ObjectId', ref: 'User' })
+  uploadedBy?: any;
+
+  @Prop({ default: 0 })
+  viewCount: number;
+
+  @Prop()
+  lastViewed?: Date;
 }
 
 export const PdfSchema = SchemaFactory.createForClass(Pdf);
