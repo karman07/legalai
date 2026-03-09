@@ -72,7 +72,7 @@ export default function BareActReader() {
       }
 
       const audio = audioRef.current;
-      const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace('/api', '');
+      const baseURL = (import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai').replace('/api', '');
       const sanitizedUrl = `${baseURL}${selectedLesson.audioUrl.replace(/[^a-zA-Z0-9-_./]/g, '')}`;
       audio.src = sanitizedUrl;
 

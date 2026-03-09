@@ -166,7 +166,7 @@ export default function GoogleAuthExample() {
  * ENVIRONMENT VARIABLES (.env):
  * 
  * # Backend API
- * VITE_API_URL=http://localhost:3000/api
+ * VITE_API_URL=http://api.legalpadhai.ai/api
  * 
  * # Firebase Configuration
  * VITE_FIREBASE_API_KEY=AIzaSy...

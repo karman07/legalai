@@ -57,7 +57,7 @@ export default function AudioPlayer() {
     }
 
     if (audioFile?.url) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai/api';
       // Remove only the trailing /api from the base URL
       const baseUrl = apiBaseUrl.endsWith('/api')
         ? apiBaseUrl.slice(0, -4)

@@ -5,7 +5,7 @@
 ### 1. Start Backend Server
 Make sure your backend is running at:
 ```
-http://localhost:3000/api
+http://api.legalpadhai.ai/api
 ```
 
 ### 2. Test Registration (Personal)
@@ -169,21 +169,21 @@ Open browser DevTools > Network tab to see:
 
 ### Successful Registration (200/201)
 ```
-POST http://localhost:3000/api/auth/register
+POST http://api.legalpadhai.ai/api/auth/register
 Request: { name, email, password, registrationType, ... }
 Response: { message, userId, email }
 ```
 
 ### Successful Login (200)
 ```
-POST http://localhost:3000/api/auth/login
+POST http://api.legalpadhai.ai/api/auth/login
 Request: { email, password }
 Response: { accessToken, user: {...} }
 ```
 
 ### Get Profile (200)
 ```
-GET http://localhost:3000/api/auth/profile
+GET http://api.legalpadhai.ai/api/auth/profile
 Headers: { Authorization: "Bearer eyJ..." }
 Response: { _id, name, email, role, ... }
 ```

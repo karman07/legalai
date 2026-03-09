@@ -1,6 +1,6 @@
 import apiClient from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai/api';
 
 export interface Court {
   id: string;
@@ -104,7 +104,7 @@ class PDFService {
     // Remove leading slash if present
     const cleanUrl = fileUrl.startsWith('/') ? fileUrl.substring(1) : fileUrl;
     // Remove only the trailing /api from API_BASE_URL
-    // e.g., http://localhost:3000/api -> http://localhost:3000
+    // e.g., http://api.legalpadhai.ai/api -> http://api.legalpadhai.ai
     const baseUrl = API_BASE_URL.endsWith('/api')
       ? API_BASE_URL.slice(0, -4)
       : API_BASE_URL;
