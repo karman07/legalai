@@ -18,8 +18,10 @@ export interface SendMessageResponse {
     title: string;
 }
 
-// Use absolute URL to bypass proxy issues during development
-const CHAT_API_URL = 'http://api.legalpadhai.ai/chat';
+// Use environment variable for API URL if available, otherwise fallback to default
+const VITE_API_URL = import.meta.env.VITE_API_URL || '';
+const BASE_URL = VITE_API_URL ? VITE_API_URL.replace(/\/api$/, '') : 'http://api.legalpadhai.ai';
+const CHAT_API_URL = `${BASE_URL}/chat`;
 
 class ChatService {
     private getHeaders() {
@@ -37,18 +39,26 @@ class ChatService {
      * Send a query to the AI chat system
      */
     async sendMessage(query: string, conversationId?: string | null): Promise<SendMessageResponse> {
-        const response = await fetch(CHAT_API_URL, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify({
-                query,
-                ...(conversationId ? { conversationId } : {})
-            }),
-        });
+        let response;
+        try {
+            response = await fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify({
+                    query,
+                    ...(conversationId ? { conversationId } : {})
+                }),
+            });
+        } catch (err: any) {
+            if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+                throw new Error('Network error: Cannot reach chat service. Please check your internet or if the server is running.');
+            }
+            throw err;
+        }
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || 'Failed to get response from chat service');
+            throw new Error(errorData.message || `Server error (${response.status}): Failed to get response from chat service`);
         }
 
         return await response.json();

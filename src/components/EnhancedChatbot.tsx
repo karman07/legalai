@@ -103,9 +103,9 @@ export default function EnhancedChatbot({ type }: ChatbotProps) {
       if (user) {
         loadConversations();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
-      setError('Failed to get response. Please check your connection.');
+      setError(error.message || 'Failed to get response. Please check your connection.');
       setInput(userMessage);
     } finally {
       setLoading(false);
