@@ -16,8 +16,16 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10gb' }));
   app.use(bodyParser.urlencoded({ limit: '10gb', extended: true }));
 
-  // Enable CORS - Completely open for all origins
-  app.enableCors();
+  // Enable CORS for specific origins
+  app.enableCors({
+    origin: [
+      "https://legalpadhai.ai",
+      "https://admin.legalpadhai.ai"
+    ],
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization,Accept,Origin,X-Requested-With,X-Api-Key',
+  });
 
   // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
