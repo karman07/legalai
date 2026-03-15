@@ -16,35 +16,12 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10gb' }));
   app.use(bodyParser.urlencoded({ limit: '10gb', extended: true }));
 
-  // Enable CORS - Allow all origins
-  app.enableCors({
-    origin: '*',
-    credentials: false,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Authorization,Accept,Origin,X-Requested-With,X-Api-Key',
-    exposedHeaders: 'Content-Length,Content-Range',
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
+  // Enable CORS - Completely open for all origins
+  app.enableCors();
 
-  // Serve static files from uploads directory with CORS headers
+  // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads',
-    setHeaders: (res, path) => {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    },
-  });
-
-  // Add security headers for Firebase and cross-origin isolation
-  // Applied to both /api and /chat routes
-  app.use(['/api', '/chat'], (req, res, next) => {
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    next();
   });
 
   // Global validation pipe
