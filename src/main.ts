@@ -16,14 +16,10 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10gb' }));
   app.use(bodyParser.urlencoded({ limit: '10gb', extended: true }));
 
-  // Enable CORS with proper origin handling for credentials
+  // Enable CORS - Allow all origins
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow all origins by reflecting the origin back
-      // This is necessary when credentials: true is used
-      callback(null, true);
-    },
-    credentials: true,
+    origin: '*',
+    credentials: false,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization,Accept,Origin,X-Requested-With,X-Api-Key',
     exposedHeaders: 'Content-Length,Content-Range',
