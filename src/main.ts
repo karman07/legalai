@@ -20,7 +20,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       "https://legalpadhai.ai",
-      "https://admin.legalpadhai.ai"
+      "https://admin.legalpadhai.ai",
+      "http://localhost:3001"
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
