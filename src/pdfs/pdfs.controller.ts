@@ -16,7 +16,7 @@ export class PdfsController {
     @Query('courtLevel') courtLevel?: string,
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: string,
-  ) {
+  ): Promise<any> {
     const filters: any = {};
 
     if (category) filters.category = category;
@@ -64,7 +64,7 @@ export class PdfsController {
     @Query('category') category?: string,
     @Query('year') year?: string,
     @Query('courtLevel') courtLevel?: string,
-  ) {
+  ): Promise<any> {
     const filters: any = {};
     if (category) filters.category = category;
     if (year) filters.year = parseInt(year);
@@ -88,7 +88,7 @@ export class PdfsController {
     @Param('category') category: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
-  ) {
+  ): Promise<any> {
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
@@ -101,7 +101,7 @@ export class PdfsController {
     @Param('level') level: string,
     @Query('page') page = '1',
     @Query('limit') limit = '12',
-  ) {
+  ): Promise<any> {
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
@@ -114,7 +114,7 @@ export class PdfsController {
     @Param('year') year: string,
     @Query('page') page = '1',
     @Query('limit') limit = '12',
-  ) {
+  ): Promise<any> {
     return this.pdfsService.findAll({
       page: parseInt(page),
       limit: parseInt(limit),
@@ -123,7 +123,7 @@ export class PdfsController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string): Promise<any> {
     return this.pdfsService.findOne(id);
   }
 }

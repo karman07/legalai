@@ -28,7 +28,7 @@ export class PdfsService {
     isActive?: boolean;
     filters?: Record<string, any>;
     sort?: Record<string, 1 | -1>;
-  }) {
+  }): Promise<any> {
     const {
       page = 1,
       limit = 20,
@@ -75,7 +75,7 @@ export class PdfsService {
     page?: number;
     limit?: number;
     filters?: Record<string, any>;
-  }) {
+  }): Promise<any> {
     const { query, page = 1, limit = 20, filters = {} } = params;
 
     if (!query || query.trim().length < 2) {
@@ -166,7 +166,7 @@ export class PdfsService {
     return categories.filter(Boolean).sort(); // Remove null/undefined and sort
   }
 
-  async findOne(id: string, includeFullText = false) {
+  async findOne(id: string, includeFullText = false): Promise<any> {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid PDF id');
     }

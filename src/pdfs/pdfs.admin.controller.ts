@@ -124,13 +124,13 @@ export class PdfsAdminController {
     @Query('page') page = '1',
     @Query('limit') limit = '10',
     @Query('isActive') isActive?: string,
-  ) {
+  ): Promise<any> {
     const parsed = typeof isActive === 'string' ? isActive === 'true' : undefined;
     return this.pdfsService.findAll({ page: parseInt(page), limit: parseInt(limit), isActive: parsed });
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string): Promise<any> {
     return this.pdfsService.findOne(id);
   }
 

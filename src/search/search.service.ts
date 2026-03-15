@@ -13,7 +13,7 @@ export class SearchService {
         @InjectModel(Quiz.name) private readonly quizModel: Model<QuizDocument>,
     ) { }
 
-    async globalSearch(query: string, limit = 10) {
+    async globalSearch(query: string, limit = 10): Promise<any> {
         if (!query || query.trim().length < 2) {
             return {
                 pdfs: [],

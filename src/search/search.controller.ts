@@ -11,7 +11,7 @@ export class SearchController {
     async globalSearch(
         @Query('q') query: string,
         @Query('limit') limit = '10',
-    ) {
+    ): Promise<any> {
         return this.searchService.globalSearch(query, parseInt(limit));
     }
 }
