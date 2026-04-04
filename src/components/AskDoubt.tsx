@@ -161,8 +161,8 @@ export default function AskDoubt() {
 
   const getPriorityBadge = (priority: string) => {
     const colors = {
-      low: 'bg-slate-100 text-slate-700',
-      medium: 'bg-amber-100 text-amber-700',
+      low: 'bg-brand-100 text-brand-700',
+      medium: 'bg-gold-100 text-gold-700',
       high: 'bg-red-100 text-red-700',
     };
 
@@ -179,18 +179,22 @@ export default function AskDoubt() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center">
-            <HelpCircle className="w-7 h-7 mr-2 text-amber-600" />
-            {isTeacher ? 'Student Doubts' : 'Ask a Doubt'}
-          </h2>
-          <p className="text-slate-600 mt-1">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-brand-100 dark:bg-brand-900 rounded-xl flex items-center justify-center">
+              <HelpCircle className="w-5 h-5 text-gold-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-brand-900">{isTeacher ? 'Student Doubts' : 'Ask a Doubt'}</h2>
+              <p className="text-brand-500 dark:text-brand-400 text-sm">
             {isTeacher ? 'Help students by answering their questions' : 'Get your questions answered by teachers'}
-          </p>
+            </p>
+            </div>
+          </div>
         </div>
         {!isTeacher && (
           <button
             onClick={() => setIsCreating(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 text-white rounded-xl transition-colors font-semibold text-sm"
           >
             <Plus className="w-5 h-5" />
             <span>Ask Doubt</span>
@@ -200,18 +204,18 @@ export default function AskDoubt() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full mx-auto"></div>
+          <div className="animate-spin w-8 h-8 border-4 border-gold-500 border-t-transparent rounded-full mx-auto"></div>
         </div>
       ) : doubts.length === 0 ? (
-        <div className="text-center py-12 bg-slate-50 rounded-lg">
-          <HelpCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-600">
+        <div className="text-center py-16 bg-white dark:bg-brand-800 border border-brand-100 dark:border-brand-700/60 rounded-2xl">
+          <HelpCircle className="w-12 h-12 text-brand-400 mx-auto mb-3" />
+          <p className="text-brand-600 dark:text-brand-300">
             {isTeacher ? 'No doubts submitted yet.' : 'You have not asked any doubts yet.'}
           </p>
           {!isTeacher && (
             <button
               onClick={() => setIsCreating(true)}
-              className="mt-4 px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+              className="mt-4 px-5 py-2.5 bg-brand-900 hover:bg-brand-800 text-white rounded-xl transition-colors font-semibold text-sm"
             >
               Ask Your First Doubt
             </button>
@@ -223,12 +227,12 @@ export default function AskDoubt() {
             <div
               key={doubt.id}
               onClick={() => loadDoubtWithResponses(doubt.id)}
-              className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-2xl p-5 hover:shadow-card hover:border-brand-300 transition-all cursor-pointer"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 mb-2">{doubt.title}</h3>
-                  <p className="text-sm text-slate-600 line-clamp-2">{doubt.question}</p>
+                  <h3 className="font-semibold text-brand-900 mb-2">{doubt.title}</h3>
+                  <p className="text-sm text-brand-600 line-clamp-2">{doubt.question}</p>
                 </div>
               </div>
 
@@ -236,9 +240,9 @@ export default function AskDoubt() {
                 {getStatusBadge(doubt.status)}
                 {getPriorityBadge(doubt.priority)}
                 {doubt.subject && (
-                  <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded">{doubt.subject}</span>
+                  <span className="px-2 py-1 bg-brand-100 text-brand-700 text-xs rounded">{doubt.subject}</span>
                 )}
-                <span className="text-xs text-slate-500">{new Date(doubt.created_at).toLocaleDateString('en-IN')}</span>
+                <span className="text-xs text-brand-500">{new Date(doubt.created_at).toLocaleDateString('en-IN')}</span>
               </div>
             </div>
           ))}
@@ -247,48 +251,48 @@ export default function AskDoubt() {
 
       {isCreating && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-900">Ask a Doubt</h2>
+          <div className="bg-white dark:bg-brand-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-brand-100 dark:border-brand-700">
+              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-brand-100 dark:bg-brand-900 rounded-lg flex items-center justify-center"><HelpCircle className="w-4 h-4 text-gold-400" /></div><h2 className="text-lg font-bold text-brand-900">Ask a Doubt</h2></div>
               <button
                 onClick={() => setIsCreating(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-brand-100 rounded-lg transition-colors"
               >
-                <X className="w-6 h-6 text-slate-600" />
+                <X className="w-6 h-6 text-brand-600" />
               </button>
             </div>
 
             <form onSubmit={handleCreateDoubt} className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Title</label>
+                <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-4 py-3 bg-white dark:bg-brand-800 border border-brand-300 dark:border-brand-600 rounded-lg text-brand-900 dark:text-brand-100 focus:outline-none focus:ring-2 focus:ring-gold-500 text-sm"
                   placeholder="Brief summary of your doubt..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Question</label>
+                <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Question</label>
                 <textarea
                   value={formData.question}
                   onChange={(e) => setFormData({ ...formData, question: e.target.value })}
                   required
                   rows={6}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-4 py-3 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
                   placeholder="Describe your doubt in detail..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
+                <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Subject</label>
                 <select
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-4 py-3 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
                 >
                   <option value="">Select subject...</option>
                   {subjects.map((subject) => (
@@ -300,11 +304,11 @@ export default function AskDoubt() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Priority</label>
+                <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Priority</label>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-4 py-3 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -316,13 +320,13 @@ export default function AskDoubt() {
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
-                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+                  className="px-6 py-3 bg-brand-100 hover:bg-brand-200 text-brand-700 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+                  className="px-6 py-3 bg-gold-500 hover:bg-gold-600 text-white rounded-lg transition-colors"
                 >
                   Submit Doubt
                 </button>
@@ -334,15 +338,15 @@ export default function AskDoubt() {
 
       {selectedDoubt && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-start justify-between p-6 border-b border-slate-200">
+          <div className="bg-white dark:bg-brand-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-start justify-between p-6 border-b border-brand-200">
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">{selectedDoubt.title}</h2>
+                <h2 className="text-xl font-bold text-brand-900 mb-2">{selectedDoubt.title}</h2>
                 <div className="flex flex-wrap items-center gap-3">
                   {getStatusBadge(selectedDoubt.status)}
                   {getPriorityBadge(selectedDoubt.priority)}
                   {selectedDoubt.subject && (
-                    <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded">
+                    <span className="px-2 py-1 bg-brand-100 text-brand-700 text-xs rounded">
                       {selectedDoubt.subject}
                     </span>
                   )}
@@ -350,26 +354,26 @@ export default function AskDoubt() {
               </div>
               <button
                 onClick={() => setSelectedDoubt(null)}
-                className="ml-4 p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="ml-4 p-2 hover:bg-brand-100 rounded-lg transition-colors"
               >
-                <X className="w-6 h-6 text-slate-600" />
+                <X className="w-6 h-6 text-brand-600" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Question</h3>
-                <p className="text-slate-700 whitespace-pre-wrap bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-brand-900 mb-2">Question</h3>
+                <p className="text-brand-700 whitespace-pre-wrap bg-brand-50 p-4 rounded-lg">
                   {selectedDoubt.question}
                 </p>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-brand-500 mt-2">
                   Asked on {new Date(selectedDoubt.created_at).toLocaleDateString('en-IN')}
                 </p>
               </div>
 
               {selectedDoubt.responses && selectedDoubt.responses.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-3">Responses</h3>
+                  <h3 className="font-semibold text-brand-900 mb-3">Responses</h3>
                   <div className="space-y-3">
                     {selectedDoubt.responses.map((response) => (
                       <div key={response.id} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -377,11 +381,11 @@ export default function AskDoubt() {
                           <span className="text-sm font-medium text-blue-900">
                             {response.teacher?.full_name || 'Teacher'}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-brand-500">
                             {new Date(response.created_at).toLocaleDateString('en-IN')}
                           </span>
                         </div>
-                        <p className="text-slate-700 whitespace-pre-wrap">{response.response}</p>
+                        <p className="text-brand-700 whitespace-pre-wrap">{response.response}</p>
                       </div>
                     ))}
                   </div>
@@ -389,20 +393,20 @@ export default function AskDoubt() {
               )}
 
               {isTeacher && selectedDoubt.status !== 'resolved' && (
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-slate-900 mb-3">Add Response</h3>
+                <div className="bg-brand-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-brand-900 mb-3">Add Response</h3>
                   <form onSubmit={handleAddResponse} className="space-y-3">
                     <textarea
                       value={responseText}
                       onChange={(e) => setResponseText(e.target.value)}
                       rows={4}
                       required
-                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-4 py-3 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500"
                       placeholder="Write your response to help the student..."
                     />
                     <button
                       type="submit"
-                      className="flex items-center space-x-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-brand-900 hover:bg-brand-800 text-white rounded-xl transition-colors font-semibold text-sm"
                     >
                       <Send className="w-5 h-5" />
                       <span>Send Response</span>

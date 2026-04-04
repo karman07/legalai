@@ -202,12 +202,12 @@ export default function MCQQuiz() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gold-500 rounded-xl flex items-center justify-center">
               <BookMarked className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-800">MCQ Practice</h1>
-              <p className="text-slate-600">Test your knowledge with interactive quizzes</p>
+              <h1 className="text-3xl font-bold text-brand-800 dark:text-brand-100">MCQ Practice</h1>
+              <p className="text-brand-600 dark:text-brand-300">Test your knowledge with interactive quizzes</p>
             </div>
           </div>
 
@@ -217,7 +217,7 @@ export default function MCQQuiz() {
             {/* PYQ Card */}
             <button
               onClick={() => { setActiveSection('pyq'); setTypeFilter('pyq'); setPage(1); }}
-              className={`text-left p-6 rounded-2xl transition-all shadow-sm border-2 ${activeSection === 'pyq' ? 'bg-blue-50 border-blue-200' : 'bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-md'}`}
+              className={`text-left p-6 rounded-2xl transition-all shadow-sm border-2 ${activeSection === 'pyq' ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/30' : 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/30 hover:border-blue-300 hover:shadow-md'}`}
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
@@ -225,14 +225,14 @@ export default function MCQQuiz() {
                 </div>
                 <div className="text-sm font-semibold text-blue-700">Previous Year Questions</div>
               </div>
-              <div className="text-slate-900 font-bold text-lg mb-1">Previous Year Questions</div>
-              <div className="text-slate-600 text-sm">Practice with actual exam questions from previous years</div>
+              <div className="text-brand-900 dark:text-brand-100 font-bold text-lg mb-1">Previous Year Questions</div>
+              <div className="text-brand-600 dark:text-brand-300 text-sm">Practice with actual exam questions from previous years</div>
             </button>
 
             {/* Mock Test Card */}
             <button
               onClick={() => { setActiveSection('mocktest'); setTypeFilter('mocktest'); setPage(1); }}
-              className={`text-left p-6 rounded-2xl transition-all shadow-sm border-2 ${activeSection === 'mocktest' ? 'bg-green-50 border-green-200' : 'bg-green-50 border-green-200 hover:border-green-300 hover:shadow-md'}`}
+              className={`text-left p-6 rounded-2xl transition-all shadow-sm border-2 ${activeSection === 'mocktest' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/30' : 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/30 hover:border-green-300 hover:shadow-md'}`}
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
@@ -240,23 +240,23 @@ export default function MCQQuiz() {
                 </div>
                 <div className="text-sm font-semibold text-green-700">Mock Tests</div>
               </div>
-              <div className="text-slate-900 font-bold text-lg mb-1">Mock Tests</div>
-              <div className="text-slate-600 text-sm">Take timed mock tests to simulate exam conditions</div>
+              <div className="text-brand-900 dark:text-brand-100 font-bold text-lg mb-1">Mock Tests</div>
+              <div className="text-brand-600 dark:text-brand-300 text-sm">Take timed mock tests to simulate exam conditions</div>
             </button>
 
             {/* AI Custom Quiz Card */}
             <button
               onClick={() => { setActiveSection('ai'); setTypeFilter(''); setPage(1); const el = document.getElementById('ai-generator'); el?.scrollIntoView({ behavior: 'smooth' }); }}
-              className={`text-left p-6 rounded-2xl transition-all shadow-sm border-2 ${activeSection === 'ai' ? 'bg-amber-50 border-amber-200' : 'bg-amber-50 border-amber-200 hover:border-amber-300 hover:shadow-md'}`}
+              className={`text-left p-6 rounded-2xl transition-all shadow-sm border-2 ${activeSection === 'ai' ? 'bg-gold-50 dark:bg-amber-950/20 border-gold-200 dark:border-amber-900/30' : 'bg-gold-50 dark:bg-amber-950/20 border-gold-200 dark:border-amber-900/30 hover:border-gold-400 hover:shadow-md'}`}
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                  <Award className="w-6 h-6 text-amber-700" />
+                <div className="w-10 h-10 rounded-xl bg-gold-500/20 flex items-center justify-center">
+                  <Award className="w-6 h-6 text-gold-700" />
                 </div>
-                <div className="text-sm font-semibold text-amber-700">AI Custom Quiz</div>
+                <div className="text-sm font-semibold text-gold-700">AI Custom Quiz</div>
               </div>
-              <div className="text-slate-900 font-bold text-lg mb-1">AI Custom Quiz</div>
-              <div className="text-slate-600 text-sm">Generate personalized quizzes using AI based on your topics</div>
+              <div className="text-brand-900 dark:text-brand-100 font-bold text-lg mb-1">AI Custom Quiz</div>
+              <div className="text-brand-600 dark:text-brand-300 text-sm">Generate personalized quizzes using AI based on your topics</div>
             </button>
           </div>
           )}
@@ -266,12 +266,12 @@ export default function MCQQuiz() {
             <div className="mb-4 flex items-center gap-3">
               <button
                 onClick={() => { setActiveSection(null); setTypeFilter(''); setTopicFilter(''); setSearchTerm(''); setPage(1); }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-700 dark:text-brand-200 hover:bg-brand-50 dark:hover:bg-brand-700 hover:border-brand-300 transition"
               >
                 <ChevronRight className="w-4 h-4 rotate-180" />
                 Back to Practice Modes
               </button>
-              <span className="text-slate-500 text-sm">
+              <span className="text-brand-500 dark:text-brand-400 text-sm">
                 {activeSection === 'pyq' && 'Viewing: Previous Year Questions'}
                 {activeSection === 'mocktest' && 'Viewing: Mock Tests'}
                 {activeSection === 'ai' && 'Viewing: AI Custom Quiz'}
@@ -283,25 +283,25 @@ export default function MCQQuiz() {
           {activeSection !== null && activeSection !== 'ai' && (
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search quizzes..."
-                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full pl-11 pr-4 py-3 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-700 dark:text-brand-200 placeholder-brand-400 dark:placeholder-brand-500 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
               />
             </div>
             
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
               <select
                 value={topicFilter}
                 onChange={(e) => {
                   setTopicFilter(e.target.value);
                   setPage(1);
                 }}
-                className="pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none cursor-pointer"
+                className="pl-11 pr-10 py-3 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-700 dark:text-brand-200 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="">All Topics</option>
                 {uniqueTopics.map(topic => (
@@ -311,7 +311,7 @@ export default function MCQQuiz() {
             </div>
 
             <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-400" />
               <select
                 value={typeFilter}
                 onChange={(e) => {
@@ -319,7 +319,7 @@ export default function MCQQuiz() {
                   setTypeFilter(val);
                   setPage(1);
                 }}
-                className="pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none cursor-pointer"
+                className="pl-11 pr-10 py-3 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-700 dark:text-brand-200 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="">All Types</option>
                 <option value="pyq">PYQ</option>
@@ -358,16 +358,16 @@ export default function MCQQuiz() {
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-gold-500 animate-spin" />
           </div>
         )}
 
         {/* Quiz Grid */}
         {!loading && filteredQuizzes.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-600 mb-2">No quizzes found</h3>
-            <p className="text-slate-500">Try adjusting your search or filters</p>
+            <BookOpen className="w-16 h-16 text-brand-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-brand-600 dark:text-brand-300 mb-2">No quizzes found</h3>
+            <p className="text-brand-500">Try adjusting your search or filters</p>
           </div>
         )}
 
@@ -377,29 +377,29 @@ export default function MCQQuiz() {
             {filteredQuizzes.map((quiz) => (
               <div
                 key={quiz._id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all border border-slate-100 overflow-hidden group"
+                className="bg-white dark:bg-brand-800 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-brand-100 dark:border-brand-700 overflow-hidden group"
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <div className="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full mb-3">
+                      <div className="inline-block px-3 py-1 bg-gold-100 text-gold-700 text-xs font-semibold rounded-full mb-3">
                         {quiz.topic}
                       </div>
                       {quiz.type && (
-                        <div className="inline-block ml-2 px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full mb-3">
+                        <div className="inline-block ml-2 px-3 py-1 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full mb-3">
                           {quiz.type === 'pyq' ? 'PYQ' : 'Mock Test'}
                         </div>
                       )}
-                      <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-amber-600 transition-colors">
+                      <h3 className="text-xl font-bold text-brand-800 dark:text-brand-100 mb-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">
                         {quiz.title}
                       </h3>
-                      <p className="text-slate-600 text-sm line-clamp-2">
+                      <p className="text-brand-600 dark:text-brand-300 text-sm line-clamp-2">
                         {quiz.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 mb-4 text-sm text-slate-500">
+                  <div className="flex items-center gap-4 mb-4 text-sm text-brand-500">
                     <div className="flex items-center gap-1">
                       <Target className="w-4 h-4" />
                       <span>{quiz.questions.length} Questions</span>
@@ -412,7 +412,7 @@ export default function MCQQuiz() {
 
                   <button
                     onClick={() => startQuiz(quiz)}
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
+                    className="w-full bg-gold-500 hover:bg-gold-600 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
                   >
                     <Play className="w-4 h-4" />
                     Start Quiz
@@ -430,17 +430,17 @@ export default function MCQQuiz() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-lg text-brand-700 dark:text-brand-200 hover:bg-brand-50 dark:hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
-            <span className="px-4 py-2 text-slate-600">
+            <span className="px-4 py-2 text-brand-600">
               Page {page} of {totalPages}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-lg text-brand-700 dark:text-brand-200 hover:bg-brand-50 dark:hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>
@@ -459,7 +459,7 @@ export default function MCQQuiz() {
     return (
       <div className="h-screen flex flex-col overflow-hidden">
         {/* Compact Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4 shadow-lg flex-shrink-0">
+        <div className="bg-brand-900 px-6 py-4 shadow-lg flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-white">{selectedQuiz.title}</h2>
@@ -487,14 +487,14 @@ export default function MCQQuiz() {
               <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
                 <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-3">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-gold-500 rounded-xl flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-bold">{currentQuestion + 1}</span>
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm text-slate-500 mb-2">
+                      <div className="text-sm text-brand-500 mb-2">
                         Question {currentQuestion + 1} of {selectedQuiz.questions.length}
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-800 leading-tight">
+                      <h3 className="text-lg sm:text-xl font-bold text-brand-800 leading-tight">
                         {currentQ.text}
                       </h3>
                     </div>
@@ -512,23 +512,23 @@ export default function MCQQuiz() {
                         onClick={() => selectAnswer(index)}
                         className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                           isSelected
-                            ? 'border-amber-500 bg-amber-50 shadow-md'
-                            : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50/50'
+                            ? 'border-gold-500 bg-gold-50 shadow-md'
+                            : 'border-brand-200 hover:border-gold-400 hover:bg-gold-50/50'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                               isSelected
-                                ? 'border-amber-500 bg-amber-500'
-                                : 'border-slate-300'
+                                ? 'border-gold-500 bg-gold-500'
+                                : 'border-brand-300'
                             }`}
                           >
                             {isSelected && (
                               <div className="w-2 h-2 bg-white rounded-full" />
                             )}
                           </div>
-                          <span className="font-medium text-slate-700">{option}</span>
+                          <span className="font-medium text-brand-700">{option}</span>
                         </div>
                       </button>
                     );
@@ -550,7 +550,7 @@ export default function MCQQuiz() {
                   <button
                     onClick={previousQuestion}
                     disabled={currentQuestion === 0}
-                    className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-white border-2 border-slate-200 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
+                    className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-white border-2 border-brand-200 rounded-xl text-brand-700 font-semibold hover:bg-brand-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
                   >
                     <span className="hidden sm:inline">Previous</span>
                     <span className="sm:hidden">Prev</span>
@@ -558,7 +558,7 @@ export default function MCQQuiz() {
 
                   <button
                     onClick={toggleMarkForReview}
-                    className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 border-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${markedForReview[currentQuestion] ? 'border-indigo-400 text-indigo-700 bg-indigo-50' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                    className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 border-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${markedForReview[currentQuestion] ? 'border-indigo-400 text-indigo-700 bg-indigo-50' : 'border-brand-200 text-brand-700 hover:bg-brand-50'}`}
                   >
                     <Flag className="w-4 h-4" />
                     <span className="hidden sm:inline">{markedForReview[currentQuestion] ? 'Marked' : 'Mark'}</span>
@@ -566,7 +566,7 @@ export default function MCQQuiz() {
 
                   <button
                     onClick={skipCurrent}
-                    className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-white border-2 border-amber-300 rounded-xl text-amber-700 font-semibold hover:bg-amber-50 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+                    className="flex-1 sm:flex-none px-4 sm:px-6 py-3 bg-white border-2 border-gold-300 rounded-xl text-gold-700 font-semibold hover:bg-gold-50 transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
                     <FastForward className="w-4 h-4" />
                     <span className="hidden sm:inline">Skip</span>
@@ -576,7 +576,7 @@ export default function MCQQuiz() {
                 {currentQuestion < selectedQuiz.questions.length - 1 ? (
                   <button
                     onClick={nextQuestion}
-                    className="w-full sm:w-auto sm:ml-auto px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto sm:ml-auto px-8 py-3 bg-gold-500 hover:bg-gold-600 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
                   >
                     Next
                     <ChevronRight className="w-5 h-5" />
@@ -605,21 +605,21 @@ export default function MCQQuiz() {
           </div>
 
           {/* Right: Fixed Question Navigator - Hidden on mobile */}
-          <aside className="hidden lg:flex w-80 bg-white border-l border-slate-200 flex-col">
-            <div className="p-4 border-b border-slate-200">
-              <h4 className="text-sm font-bold text-slate-800 mb-3">Question Navigator</h4>
+          <aside className="hidden lg:flex w-80 bg-white border-l border-brand-200 flex-col">
+            <div className="p-4 border-b border-brand-200">
+              <h4 className="text-sm font-bold text-brand-800 mb-3">Question Navigator</h4>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs">
                   <div className="w-6 h-6 rounded-lg bg-emerald-100 border border-emerald-300" />
-                  <span className="text-slate-600">Answered</span>
+                  <span className="text-brand-600 dark:text-brand-300">Answered</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="w-6 h-6 rounded-lg bg-amber-100 border border-amber-300" />
-                  <span className="text-slate-600">Skipped</span>
+                  <div className="w-6 h-6 rounded-lg bg-gold-100 border border-gold-300" />
+                  <span className="text-brand-600 dark:text-brand-300">Skipped</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <div className="w-6 h-6 rounded-lg bg-indigo-100 border border-indigo-300" />
-                  <span className="text-slate-600">Marked</span>
+                  <span className="text-brand-600 dark:text-brand-300">Marked</span>
                 </div>
               </div>
             </div>
@@ -631,14 +631,14 @@ export default function MCQQuiz() {
                     onClick={() => setCurrentQuestion(index)}
                     className={`aspect-square rounded-lg font-bold text-sm transition-all border-2 ${
                       index === currentQuestion
-                        ? 'bg-amber-500 text-white border-amber-600 shadow-md scale-110'
+                        ? 'bg-gold-500 text-white border-gold-600 shadow-md scale-110'
                         : markedForReview[index]
                         ? 'bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-indigo-200'
                         : userAnswers[index] !== null
                         ? 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200'
                         : skipped[index]
-                        ? 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-gold-100 text-gold-700 border-gold-300 hover:bg-gold-200'
+                        : 'bg-brand-50 text-brand-600 border-brand-200 hover:bg-brand-100'
                     }`}
                   >
                     {index + 1}
@@ -660,14 +660,14 @@ export default function MCQQuiz() {
     return (
       <div className="max-w-5xl mx-0 lg:ml-4 lg:mr-0 p-4 lg:p-6 overflow-x-hidden">
         {/* Score Card - Professional, neutral styling */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 md:p-10 mb-8">
+        <div className="bg-white rounded-3xl shadow-xl border border-brand-200 p-8 md:p-10 mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center border border-slate-200">
-              <Trophy className="w-8 h-8 text-slate-700" />
+            <div className="w-16 h-16 rounded-2xl bg-brand-100 flex items-center justify-center border border-brand-200">
+              <Trophy className="w-8 h-8 text-brand-700" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Quiz Complete</h2>
-              <p className="text-slate-600 text-sm md:text-base">{selectedQuiz.title}</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-brand-900">Quiz Complete</h2>
+              <p className="text-brand-600 text-sm md:text-base">{selectedQuiz.title}</p>
             </div>
           </div>
 
@@ -676,25 +676,25 @@ export default function MCQQuiz() {
               <div className="text-6xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
                 {percentage.toFixed(0)}%
               </div>
-              <div className="mt-2 text-slate-600">
+              <div className="mt-2 text-brand-600">
                 {quizResult.score} of {quizResult.totalQuestions} correct
               </div>
             </div>
 
             <div className="md:col-span-2">
-              <div className="w-full h-3 bg-slate-200 rounded-full">
+              <div className="w-full h-3 bg-brand-200 rounded-full">
                 <div
-                  className={`h-3 rounded-full transition-all ${passed ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                  className={`h-3 rounded-full transition-all ${passed ? 'bg-emerald-500' : 'bg-gold-500'}`}
                   style={{ width: `${percentage}%` }}
                 />
               </div>
-              <div className="mt-3 text-sm text-slate-600">
+              <div className="mt-3 text-sm text-brand-600">
                 {passed ? 'Good job—solid performance.' : 'Review topics and try again.'}
               </div>
             </div>
           </div>
 
-          <div className={`mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border ${passed ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+          <div className={`mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border ${passed ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gold-50 text-gold-700 border-gold-200'}`}>
             {passed ? <Award className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
             {passed ? 'Passed' : 'Needs Improvement'}
           </div>
@@ -702,16 +702,16 @@ export default function MCQQuiz() {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center border border-slate-200">
-            <div className="w-14 h-14 bg-slate-100 rounded-xl mx-auto mb-4 flex items-center justify-center border border-slate-200">
-              <Target className="w-7 h-7 text-slate-700" />
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center border border-brand-200">
+            <div className="w-14 h-14 bg-brand-100 rounded-xl mx-auto mb-4 flex items-center justify-center border border-brand-200">
+              <Target className="w-7 h-7 text-brand-700" />
             </div>
-            <div className="text-4xl font-bold text-slate-900 mb-2">
+            <div className="text-4xl font-bold text-brand-900 mb-2">
               {quizResult.totalQuestions}
             </div>
-            <div className="text-sm font-semibold text-slate-600">Total Questions</div>
+            <div className="text-sm font-semibold text-brand-600">Total Questions</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center border border-slate-200">
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center border border-brand-200">
             <div className="w-14 h-14 bg-emerald-50 rounded-xl mx-auto mb-4 flex items-center justify-center border border-emerald-200">
               <CheckCircle className="w-7 h-7 text-emerald-600" />
             </div>
@@ -720,7 +720,7 @@ export default function MCQQuiz() {
             </div>
             <div className="text-sm font-semibold text-emerald-700">Correct Answers</div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center border border-slate-200">
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center border border-brand-200">
             <div className="w-14 h-14 bg-rose-50 rounded-xl mx-auto mb-4 flex items-center justify-center border border-rose-200">
               <XCircle className="w-7 h-7 text-rose-600" />
             </div>
@@ -732,9 +732,9 @@ export default function MCQQuiz() {
         </div>
 
         {/* Detailed Results */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-slate-200">
-          <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-brand-200">
+          <h3 className="text-2xl font-bold text-brand-800 mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gold-500 rounded-xl flex items-center justify-center">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
             Detailed Results
@@ -763,10 +763,10 @@ export default function MCQQuiz() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+                    <div className="text-xs font-bold text-brand-500 uppercase tracking-wide mb-2">
                       Question {index + 1}
                     </div>
-                    <div className="font-bold text-lg text-slate-800 mb-3">
+                    <div className="font-bold text-lg text-brand-800 mb-3">
                       {detail.question}
                     </div>
                     
@@ -788,12 +788,12 @@ export default function MCQQuiz() {
                     </div>
 
                     {detail.explanation && (
-                      <div className="mt-4 p-4 bg-slate-50 border-l-4 border-slate-300 rounded-xl">
-                        <p className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                      <div className="mt-4 p-4 bg-brand-50 border-l-4 border-brand-300 rounded-xl">
+                        <p className="text-sm font-bold text-brand-900 mb-2 flex items-center gap-2">
                           <AlertCircle className="w-4 h-4" />
                           Explanation
                         </p>
-                        <p className="text-sm text-slate-700 leading-relaxed">{detail.explanation}</p>
+                        <p className="text-sm text-brand-700 leading-relaxed">{detail.explanation}</p>
                       </div>
                     )}
 
@@ -833,7 +833,7 @@ export default function MCQQuiz() {
                               console.error('Add note error:', err);
                             }
                           }}
-                          className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-amber-200"
+                          className="px-4 py-2 bg-gold-50 hover:bg-gold-100 text-gold-700 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-gold-200"
                         >
                           <BookMarked className="w-4 h-4" />
                           Add to Notes
@@ -851,7 +851,7 @@ export default function MCQQuiz() {
         <div className="flex flex-col sm:flex-row gap-4">
           <button
             onClick={restartQuiz}
-            className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-5 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+            className="flex-1 bg-gold-500 hover:bg-gold-600 text-white font-bold py-5 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg"
           >
             <RotateCcw className="w-6 h-6" />
             Try Another Quiz
@@ -863,7 +863,7 @@ export default function MCQQuiz() {
               setUserAnswers(new Array(selectedQuiz.questions.length).fill(null));
               setQuizResult(null);
             }}
-            className="flex-1 bg-white border-2 border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600 font-bold py-5 px-8 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-3 text-lg"
+            className="flex-1 bg-white border-2 border-gold-500 text-gold-600 hover:bg-gold-50 hover:border-gold-600 font-bold py-5 px-8 rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-3 text-lg"
           >
             <Play className="w-6 h-6" />
             Retake This Quiz

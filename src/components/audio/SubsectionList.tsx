@@ -43,15 +43,15 @@ export default function SubsectionList({
     
     if (isGrid) {
       return (
-        <div className="group relative bg-white border-2 border-slate-200 rounded-2xl overflow-hidden hover:border-amber-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="group relative bg-white border-2 border-brand-200 rounded-2xl overflow-hidden hover:border-amber-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-orange-50/0 group-hover:from-amber-50/50 group-hover:to-orange-50/30 transition-all duration-300" />
           <div className="relative p-6">
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-amber-100 to-orange-100 group-hover:from-amber-500 group-hover:to-orange-500 rounded-xl flex items-center justify-center font-bold text-lg text-amber-700 group-hover:text-white transition-all flex-shrink-0">
+              <div className="w-14 h-14 bg-gold-100 group-hover:bg-gold-500 rounded-xl flex items-center justify-center font-bold text-lg text-gold-700 group-hover:text-white transition-all flex-shrink-0">
                 {sectionIndex + 1}.{subIdx + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2 group-hover:text-amber-700 transition-colors text-left">
+                <h3 className="font-bold text-lg text-slate-900 mb-2 line-clamp-2 group-hover:text-gold-700 transition-colors text-left">
                   {subsection.title}
                 </h3>
               </div>
@@ -68,7 +68,7 @@ export default function SubsectionList({
                       e.stopPropagation();
                       setShowFullDescription(!showFullDescription);
                     }}
-                    className="text-xs text-amber-600 hover:text-amber-700 font-medium mt-1"
+                    className="text-xs text-gold-600 hover:text-gold-700 font-medium mt-1"
                   >
                     {showFullDescription ? 'Read less' : 'Read more'}
                   </button>
@@ -78,9 +78,9 @@ export default function SubsectionList({
             
             {hasAudio && (
               <div className="flex items-center justify-center mb-4">
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5 rounded-lg border border-amber-200">
-                  <Headphones className="w-3.5 h-3.5 text-amber-600" />
-                  <span className="text-xs font-medium text-amber-700">Audio available</span>
+                <div className="flex items-center gap-1.5 bg-gradient-to-r bg-gold-50 px-3 py-1.5 rounded-lg border border-gold-200">
+                  <Headphones className="w-3.5 h-3.5 text-gold-600" />
+                  <span className="text-xs font-medium text-gold-700">Audio available</span>
                 </div>
               </div>
             )}
@@ -102,43 +102,43 @@ export default function SubsectionList({
     return (
       <button
         onClick={() => onSelectSubsection(subIdx)}
-        className="w-full text-left p-5 rounded-xl border-2 border-slate-200 hover:border-amber-400 hover:bg-amber-50 transition-all group"
+        className="w-full text-left p-5 rounded-xl border-2 border-brand-200 hover:border-amber-400 hover:bg-gold-50 transition-all group"
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 group-hover:from-amber-500 group-hover:to-orange-500 rounded-xl flex items-center justify-center font-bold text-amber-700 group-hover:text-white transition-all flex-shrink-0">
+          <div className="w-12 h-12 bg-gold-100 group-hover:bg-gold-500 rounded-xl flex items-center justify-center font-bold text-gold-700 group-hover:text-white transition-all flex-shrink-0">
             {sectionIndex + 1}.{subIdx + 1}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-amber-700 transition-colors">{subsection.title}</h3>
+            <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-gold-700 transition-colors">{subsection.title}</h3>
             {description && (
               <p className="text-sm text-slate-600 mb-3 leading-relaxed line-clamp-2">
                 {truncateText(description, 150)}
               </p>
             )}
             {hasAudio && (
-              <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5 rounded-lg border border-amber-200 inline-flex">
-                <Headphones className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-xs font-medium text-amber-700">Audio available</span>
+              <div className="flex items-center gap-1.5 bg-gradient-to-r bg-gold-50 px-3 py-1.5 rounded-lg border border-gold-200 inline-flex">
+                <Headphones className="w-3.5 h-3.5 text-gold-600" />
+                <span className="text-xs font-medium text-gold-700">Audio available</span>
               </div>
             )}
           </div>
-          <Play className="w-6 h-6 text-slate-400 group-hover:text-amber-600 flex-shrink-0" />
+          <Play className="w-6 h-6 text-brand-400 group-hover:text-gold-600 flex-shrink-0" />
         </div>
       </button>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-gold-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <button onClick={onBack} className="mb-6 flex items-center gap-2 text-slate-600 hover:text-amber-600 transition-colors">
+        <button onClick={onBack} className="mb-6 flex items-center gap-2 text-slate-600 hover:text-gold-600 transition-colors">
           <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Back to Sections</span>
         </button>
 
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6">
           {lesson.headTitle && (
-            <div className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">
+            <div className="text-xs font-semibold text-gold-600 uppercase tracking-wider mb-2">
               {lesson.headTitle}
             </div>
           )}
@@ -154,7 +154,7 @@ export default function SubsectionList({
                   className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all shadow-sm ${
                     selectedLanguage === 'english'
                       ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md transform hover:scale-105'
-                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 hover:border-blue-300'
+                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-brand-300 hover:border-blue-300'
                   }`}
                 >
                   <Languages className="w-4 h-4 inline mr-2" />
@@ -167,7 +167,7 @@ export default function SubsectionList({
                   className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all shadow-sm ${
                     selectedLanguage === 'hindi'
                       ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md transform hover:scale-105'
-                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 hover:border-green-300'
+                      : 'bg-white text-slate-700 hover:bg-slate-50 border border-brand-300 hover:border-green-300'
                   }`}
                 >
                   <Languages className="w-4 h-4 inline mr-2" />
@@ -200,7 +200,7 @@ export default function SubsectionList({
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-md transition-all ${
                     viewMode === 'grid'
-                      ? 'bg-white text-amber-600 shadow-sm'
+                      ? 'bg-white text-gold-600 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -210,7 +210,7 @@ export default function SubsectionList({
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-md transition-all ${
                     viewMode === 'list'
-                      ? 'bg-white text-amber-600 shadow-sm'
+                      ? 'bg-white text-gold-600 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >

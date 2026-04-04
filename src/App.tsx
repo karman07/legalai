@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Auth from './components/Auth';
 import LandingPage from './components/LandingPage';
 import DashboardPage from './pages/DashboardPage';
@@ -20,7 +21,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-600"></div>
       </div>
     );
   }
@@ -133,10 +134,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </Router>
+    </ThemeProvider>
   );
 }

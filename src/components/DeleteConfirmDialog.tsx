@@ -28,7 +28,7 @@ export default function DeleteConfirmDialog({
         <div className="relative p-8 flex flex-col items-center text-center">
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            className="absolute right-4 top-4 p-2 text-brand-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -48,7 +48,7 @@ export default function DeleteConfirmDialog({
             <button
               onClick={onClose}
               disabled={isDeleting}
-              className="flex-1 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold transition-all disabled:opacity-50"
+              className="flex-1 px-6 py-3.5 bg-slate-100 hover:bg-brand-200 text-slate-600 rounded-2xl font-bold transition-all disabled:opacity-50"
             >
               Cancel
             </button>

@@ -62,7 +62,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <nav className="bg-white border-b border-brand-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -72,7 +72,7 @@ export default function Dashboard() {
               >
                 {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
-              <Scale className="w-8 h-8 text-amber-600" />
+              <Scale className="w-8 h-8 text-gold-600" />
               <div className="ml-2">
                 <span className="text-xl font-bold text-slate-900">
                   LegalPadhai.ai
@@ -97,7 +97,7 @@ export default function Dashboard() {
               </div>
               <button
                 onClick={handleSignOut}
-                className="flex items-center space-x-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-slate-100 hover:bg-brand-200 text-slate-700 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Logout</span>
@@ -114,7 +114,7 @@ export default function Dashboard() {
               sidebarOpen ? "block" : "hidden"
             } lg:block w-full lg:w-64 flex-shrink-0`}
           >
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sticky top-24">
+            <div className="bg-white rounded-xl shadow-sm border border-brand-200 p-4 sticky top-24">
               <nav className="space-y-2">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -126,19 +126,19 @@ export default function Dashboard() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`w-full flex items-start space-x-3 px-4 py-3 rounded-lg transition-all ${
                         isActive
-                          ? "bg-amber-50 text-amber-700 shadow-sm"
+                          ? "bg-gold-50 text-gold-700 shadow-sm"
                           : "text-slate-700 hover:bg-slate-50"
                       }`}
                     >
                       <Icon
                         className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                          isActive ? "text-amber-600" : "text-slate-400"
+                          isActive ? "text-gold-600" : "text-brand-400"
                         }`}
                       />
                       <div className="text-left">
                         <div
                           className={`font-medium ${
-                            isActive ? "text-amber-900" : "text-slate-900"
+                            isActive ? "text-brand-900" : "text-slate-900"
                           }`}
                         >
                           {tab.name}
@@ -155,7 +155,7 @@ export default function Dashboard() {
           </aside>
 
           <main className="flex-1 min-w-0">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-brand-200 p-6">
               {activeTab === "mcq" && <MCQQuiz />}
               {activeTab === "cases" && <CaseLaws />}
               {activeTab === "notes" && <Notes />}

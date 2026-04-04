@@ -36,16 +36,16 @@ export default function GenerateAIQuiz({ onGenerated }: GenerateAIQuizProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
+    <div className="bg-white rounded-2xl shadow-lg p-6 border border-brand-200">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <Wand2 className="w-5 h-5 text-amber-600" />
+        <h3 className="text-lg font-bold text-brand-900 flex items-center gap-2">
+          <Wand2 className="w-5 h-5 text-gold-600" />
           AI Custom Quiz
         </h3>
         <button
           type="button"
           onClick={() => setAdvanced(a => !a)}
-          className="text-xs px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+          className="text-xs px-3 py-1 rounded-lg border border-brand-200 text-brand-600 hover:bg-brand-50"
         >
           {advanced ? 'Basic' : 'Advanced'}
         </button>
@@ -59,25 +59,25 @@ export default function GenerateAIQuiz({ onGenerated }: GenerateAIQuizProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="col-span-2">
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Topic</label>
+          <label className="block text-xs font-semibold text-brand-600 mb-1">Topic</label>
           <input
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="e.g., Indian Penal Code (IPC)"
-            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-white border border-brand-200 rounded-xl text-brand-700 placeholder-brand-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
           />
-          <p className="mt-1 text-xs text-slate-500 inline-flex items-center gap-1"><Info className="w-3 h-3" /> Use specific chapters or acts for best results.</p>
+          <p className="mt-1 text-xs text-brand-500 inline-flex items-center gap-1"><Info className="w-3 h-3" /> Use specific chapters or acts for best results.</p>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Questions (max 20)</label>
+          <label className="block text-xs font-semibold text-brand-600 mb-1">Questions (max 20)</label>
           <input
             type="number"
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
             min={1}
             max={20}
-            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+            className="w-full px-3 py-2 bg-white border border-brand-200 rounded-xl text-brand-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -85,8 +85,8 @@ export default function GenerateAIQuiz({ onGenerated }: GenerateAIQuizProps) {
       {advanced && (
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Difficulty (optional)</label>
-            <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+            <label className="block text-xs font-semibold text-brand-600 mb-1">Difficulty (optional)</label>
+            <select className="w-full px-3 py-2 bg-white border border-brand-200 rounded-xl text-brand-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent">
               <option>Mixed</option>
               <option>Easy</option>
               <option>Medium</option>
@@ -94,8 +94,8 @@ export default function GenerateAIQuiz({ onGenerated }: GenerateAIQuizProps) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Include explanations</label>
-            <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+            <label className="block text-xs font-semibold text-brand-600 mb-1">Include explanations</label>
+            <select className="w-full px-3 py-2 bg-white border border-brand-200 rounded-xl text-brand-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent">
               <option>Yes</option>
               <option>No</option>
             </select>
@@ -107,7 +107,7 @@ export default function GenerateAIQuiz({ onGenerated }: GenerateAIQuizProps) {
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-5 py-2 bg-gold-500 hover:bg-gold-600 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Generating...</span>
@@ -115,7 +115,7 @@ export default function GenerateAIQuiz({ onGenerated }: GenerateAIQuizProps) {
             <span className="inline-flex items-center gap-2"><Wand2 className="w-4 h-4" /> Generate</span>
           )}
         </button>
-        <span className="text-xs text-slate-500">Max 20 questions</span>
+        <span className="text-xs text-brand-500">Max 20 questions</span>
       </div>
     </div>
   );

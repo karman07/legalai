@@ -1,5 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
-import { X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, StickyNote, Menu, FileText } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw,
+  StickyNote, Menu, FileText, Volume2, VolumeX, Play, Pause, Square,
+  Settings2, ChevronDown,
+} from 'lucide-react';
 import { PDF } from '../services/pdfService';
 import NotesPanel from './NotesPanel';
 import ReactMarkdown from 'react-markdown';
@@ -31,6 +35,89 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
   const [fileType, setFileType] = useState<'pdf' | 'markdown' | 'text'>('pdf');
   const [textContent, setTextContent] = useState('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // ── TTS state ──────────────────────────────────────────────
+  const [ttsPlaying, setTtsPlaying] = useState(false);
+  const [ttsPaused, setTtsPaused] = useState(false);
+  const [ttsRate, setTtsRate] = useState(1.0);
+  const [ttsVoice, setTtsVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [ttsText, setTtsText] = useState('');
+  const [showTtsPanel, setShowTtsPanel] = useState(false);
+  const [ttsSupported] = useState(() => 'speechSynthesis' in window);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Load available TTS voices
+  useEffect(() => {
+    if (!ttsSupported) return;
+    const loadVoices = () => {
+      const available = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en') || v.lang.startsWith('hi'));
+      setVoices(available);
+      if (available.length > 0 && !ttsVoice) setTtsVoice(available[0]);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, [ttsSupported]);
+
+  // Extract text from current PDF page whenever page/doc changes
+  const extractPageText = useCallback(async (): Promise<string> => {
+    if (!pdfDoc) return textContent;
+    if (fileType !== 'pdf') return textContent;
+    try {
+      const page = await pdfDoc.getPage(currentPage);
+      const content = await page.getTextContent();
+      return content.items.map((item: any) => item.str).join(' ').replace(/\s+/g, ' ').trim();
+    } catch {
+      return '';
+    }
+  }, [pdfDoc, currentPage, fileType, textContent]);
+
+  // Stop TTS when page changes
+  useEffect(() => {
+    stopTTS();
+  }, [currentPage]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => { window.speechSynthesis?.cancel(); };
+  }, []);
+
+  const stopTTS = () => {
+    window.speechSynthesis?.cancel();
+    setTtsPlaying(false);
+    setTtsPaused(false);
+  };
+
+  const playTTS = async () => {
+    if (!ttsSupported) return;
+    if (ttsPaused) {
+      window.speechSynthesis.resume();
+      setTtsPlaying(true);
+      setTtsPaused(false);
+      return;
+    }
+    const text = await extractPageText();
+    if (!text) return;
+    setTtsText(text.slice(0, 5000));
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text.slice(0, 5000));
+    utterance.rate = ttsRate;
+    utterance.lang = 'en-IN';
+    if (ttsVoice) utterance.voice = ttsVoice;
+    utterance.onstart = () => { setTtsPlaying(true); setTtsPaused(false); };
+    utterance.onend = () => { setTtsPlaying(false); setTtsPaused(false); };
+    utterance.onerror = () => { setTtsPlaying(false); setTtsPaused(false); };
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const pauseTTS = () => {
+    window.speechSynthesis.pause();
+    setTtsPlaying(false);
+    setTtsPaused(true);
+  };
 
   useEffect(() => {
     const type = getFileType(fileUrl, pdf.fileName);
@@ -129,46 +216,173 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
   }, [pdfDoc, showThumbnails, totalPages]);
 
   return (
-    <div className="fixed inset-0 bg-white flex z-50">
+    <div className="fixed inset-0 bg-brand-50 flex z-50 flex-col">
       <div className="w-full h-full flex flex-col">
-        {/* Enhanced Header */}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 shadow-lg">
-          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+
+        {/* ── Header ─────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-3 sm:px-5 py-3 bg-brand-900 border-b border-brand-800 flex-shrink-0">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <div className="w-8 h-8 bg-gold-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-base sm:text-xl font-bold text-white truncate">{pdf.caseTitle || pdf.title}</h2>
-              {pdf.citation && <p className="text-xs sm:text-sm text-amber-100 font-mono hidden sm:block">{pdf.citation}</p>}
+              <h2 className="text-sm sm:text-base font-bold text-white truncate leading-tight">
+                {pdf.caseTitle || pdf.title}
+              </h2>
+              {pdf.citation && (
+                <p className="text-xs text-brand-400 font-mono hidden sm:block truncate">{pdf.citation}</p>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-3 flex-shrink-0">
+            {ttsSupported && fileType === 'pdf' && (
+              <button
+                onClick={() => setShowTtsPanel(v => !v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  showTtsPanel
+                    ? 'bg-gold-500 text-white'
+                    : 'bg-brand-800 hover:bg-brand-700 text-brand-300'
+                }`}
+                title="Listen to this page"
+              >
+                <Volume2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Listen</span>
+              </button>
+            )}
             <button
               onClick={() => setShowNotes(!showNotes)}
-              className="px-2 sm:px-4 py-2 bg-white/90 hover:bg-white active:bg-white text-amber-600 rounded-lg flex items-center gap-1 sm:gap-2 transition-all font-semibold shadow-md text-sm touch-manipulation"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-800 hover:bg-brand-700 text-brand-300 hover:text-white rounded-lg text-xs font-semibold transition-all"
             >
-              <StickyNote className="w-4 h-4 sm:w-5 sm:h-5" />
+              <StickyNote className="w-4 h-4" />
               <span className="hidden sm:inline">Notes</span>
             </button>
             <a
               href={fileUrl}
               download={pdf.fileName}
-              className="p-2 bg-white/90 hover:bg-white active:bg-white rounded-lg transition-all shadow-md touch-manipulation"
+              className="p-2 bg-brand-800 hover:bg-brand-700 text-brand-300 hover:text-white rounded-lg transition-all"
+              title="Download"
             >
-              <Download className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+              <Download className="w-4 h-4" />
             </a>
-            <button onClick={onClose} className="p-2 bg-white/90 hover:bg-white active:bg-white rounded-lg transition-all shadow-md touch-manipulation">
-              <X className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+            <button
+              onClick={() => { stopTTS(); onClose(); }}
+              className="p-2 bg-brand-800 hover:bg-red-500/20 text-brand-300 hover:text-red-400 rounded-lg transition-all"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
+        {/* ── TTS Panel ──────────────────────────────────── */}
+        {showTtsPanel && ttsSupported && fileType === 'pdf' && (
+          <div className="flex-shrink-0 bg-brand-900 border-b border-brand-700 px-3 sm:px-5 py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Playback controls */}
+              <div className="flex items-center gap-1.5">
+                {!ttsPlaying && !ttsPaused ? (
+                  <button
+                    onClick={playTTS}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gold-500 hover:bg-gold-400 text-white rounded-lg text-xs font-semibold transition-all"
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    <span>Play Page {currentPage}</span>
+                  </button>
+                ) : ttsPlaying ? (
+                  <button
+                    onClick={pauseTTS}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-700 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all"
+                  >
+                    <Pause className="w-3.5 h-3.5" />
+                    <span>Pause</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={playTTS}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gold-500 hover:bg-gold-400 text-white rounded-lg text-xs font-semibold transition-all"
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    <span>Resume</span>
+                  </button>
+                )}
+                {(ttsPlaying || ttsPaused) && (
+                  <button
+                    onClick={stopTTS}
+                    className="p-1.5 bg-brand-700 hover:bg-red-500/20 text-brand-300 hover:text-red-400 rounded-lg transition-all"
+                    title="Stop"
+                  >
+                    <Square className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {(ttsPlaying || ttsPaused) && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gold-500/15 rounded-lg border border-gold-500/30">
+                    <div className={`w-2 h-2 rounded-full ${ttsPlaying ? 'bg-gold-400 animate-pulse' : 'bg-brand-500'}`} />
+                    <span className="text-xs font-medium text-gold-300">
+                      {ttsPlaying ? 'Reading...' : 'Paused'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Speed control */}
+              <div className="flex items-center gap-2 ml-auto">
+                <Settings2 className="w-3.5 h-3.5 text-brand-500" />
+                <span className="text-xs text-brand-400">Speed:</span>
+                <div className="flex items-center gap-1">
+                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map(rate => (
+                    <button
+                      key={rate}
+                      onClick={() => {
+                        setTtsRate(rate);
+                        if (utteranceRef.current) utteranceRef.current.rate = rate;
+                      }}
+                      className={`px-2 py-0.5 rounded text-xs font-mono font-semibold transition-all ${
+                        ttsRate === rate
+                          ? 'bg-gold-500 text-white'
+                          : 'text-brand-400 hover:text-brand-200 hover:bg-brand-800'
+                      }`}
+                    >
+                      {rate}x
+                    </button>
+                  ))}
+                </div>
+
+                {/* Voice selector */}
+                {voices.length > 1 && (
+                  <div className="relative ml-2">
+                    <select
+                      value={ttsVoice?.name || ''}
+                      onChange={e => {
+                        const v = voices.find(v => v.name === e.target.value);
+                        if (v) setTtsVoice(v);
+                      }}
+                      className="appearance-none bg-brand-800 border border-brand-700 text-brand-300 text-xs rounded-lg px-2.5 py-1.5 pr-6 focus:outline-none focus:border-gold-500 cursor-pointer"
+                    >
+                      {voices.map(v => (
+                        <option key={v.name} value={v.name}>{v.name.split(' ')[0]}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-brand-500 pointer-events-none" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {ttsText && (
+              <p className="mt-2 text-xs text-brand-500 truncate">
+                <span className="text-brand-600 font-medium">Reading: </span>
+                {ttsText.slice(0, 120)}…
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="flex-1 flex overflow-hidden">
-          {/* Thumbnail Sidebar - Hidden on mobile */}
+          {/* Thumbnail Sidebar */}
           {showThumbnails && fileType === 'pdf' && (
-            <div className="hidden md:block w-48 bg-slate-50 border-r border-slate-200 overflow-y-auto">
+            <div className="hidden md:flex w-44 bg-brand-900 border-r border-brand-800 flex-col overflow-y-auto">
               <div className="p-3">
-                <h3 className="text-slate-800 font-semibold mb-3 text-sm">Pages</h3>
+                <h3 className="text-brand-400 font-semibold mb-3 text-xs uppercase tracking-wider">Pages</h3>
                 <div className="space-y-2">
                   {[...Array(Math.min(totalPages, 20))].map((_, idx) => (
                     <div
@@ -176,18 +390,20 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
                       onClick={() => setCurrentPage(idx + 1)}
                       className={`cursor-pointer border-2 rounded-lg overflow-hidden transition-all ${
                         currentPage === idx + 1
-                          ? 'border-amber-500 bg-amber-50'
-                          : 'border-slate-200 hover:border-amber-300'
+                          ? 'border-gold-500 ring-1 ring-gold-500/30'
+                          : 'border-brand-700 hover:border-brand-600'
                       }`}
                     >
                       {thumbnails[idx + 1] ? (
                         <img src={thumbnails[idx + 1]} alt={`Page ${idx + 1}`} className="w-full" />
                       ) : (
-                        <div className="aspect-[8.5/11] bg-white flex items-center justify-center">
-                          <span className="text-slate-400 text-xs">Loading...</span>
+                        <div className="aspect-[8.5/11] bg-brand-800 flex items-center justify-center">
+                          <span className="text-brand-600 text-xs">…</span>
                         </div>
                       )}
-                      <div className="text-center py-1 text-xs font-medium text-slate-600">
+                      <div className={`text-center py-1 text-xs font-semibold ${
+                        currentPage === idx + 1 ? 'text-gold-400' : 'text-brand-500'
+                      }`}>
                         {idx + 1}
                       </div>
                     </div>
@@ -199,110 +415,102 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Enhanced Toolbar */}
+            {/* Toolbar */}
             {fileType === 'pdf' && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-3 sm:px-6 py-3 bg-white border-b border-slate-200 shadow-sm gap-3 sm:gap-0">
-              <div className="flex items-center gap-2 sm:gap-3 justify-center sm:justify-start">
-                <button
-                  onClick={() => setShowThumbnails(!showThumbnails)}
-                  className="hidden md:block p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 text-slate-700 transition-all touch-manipulation"
-                  title="Toggle thumbnails"
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
-                
-                <div className="hidden md:block w-px h-6 bg-slate-300"></div>
-
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 disabled:opacity-30 text-slate-700 transition-all touch-manipulation"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg min-w-[100px] sm:min-w-[120px] justify-center shadow-md">
-                  {totalPages > 0 ? (
-                    <>
-                      <span className="font-bold text-white text-sm sm:text-base">{currentPage}</span>
-                      <span className="text-amber-100 text-sm sm:text-base">/</span>
-                      <span className="text-white text-sm sm:text-base">{totalPages}</span>
-                    </>
-                  ) : (
-                    <span className="text-white text-xs sm:text-sm">Loading...</span>
-                  )}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-3 sm:px-5 py-2.5 bg-white border-b border-brand-200 gap-2 sm:gap-0 flex-shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 justify-center sm:justify-start">
+                  <button
+                    onClick={() => setShowThumbnails(!showThumbnails)}
+                    className="hidden md:flex p-2 rounded-lg hover:bg-brand-100 text-brand-500 transition-all"
+                    title="Toggle thumbnails"
+                  >
+                    <Menu className="w-4 h-4" />
+                  </button>
+                  <div className="hidden md:block w-px h-5 bg-brand-200" />
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg hover:bg-brand-100 disabled:opacity-30 text-brand-600 transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-900 rounded-lg min-w-[90px] justify-center">
+                    {totalPages > 0 ? (
+                      <>
+                        <span className="font-bold text-white text-sm">{currentPage}</span>
+                        <span className="text-brand-500 dark:text-brand-400 text-sm">/</span>
+                        <span className="text-brand-300 text-sm">{totalPages}</span>
+                      </>
+                    ) : (
+                      <span className="text-brand-400 text-xs">Loading…</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg hover:bg-brand-100 disabled:opacity-30 text-brand-600 transition-all"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 disabled:opacity-30 text-slate-700 transition-all touch-manipulation"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1.5 sm:gap-2 justify-center sm:justify-end">
+                  <button
+                    onClick={() => setScale(s => Math.max(0.5, s - 0.25))}
+                    disabled={scale <= 0.5}
+                    className="p-2 rounded-lg hover:bg-brand-100 disabled:opacity-30 text-brand-600 transition-all"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs font-semibold text-brand-700 min-w-[48px] text-center px-2 py-1 bg-brand-50 border border-brand-200 rounded-lg">
+                    {Math.round(scale * 100)}%
+                  </span>
+                  <button
+                    onClick={() => setScale(s => Math.min(3, s + 0.25))}
+                    disabled={scale >= 3}
+                    className="p-2 rounded-lg hover:bg-brand-100 disabled:opacity-30 text-brand-600 transition-all"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                  <div className="w-px h-5 bg-brand-200" />
+                  <button
+                    onClick={() => setRotation(r => (r + 90) % 360)}
+                    className="p-2 rounded-lg hover:bg-brand-100 text-brand-600 transition-all"
+                    title="Rotate"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-
-              <div className="flex items-center gap-2 sm:gap-3 justify-center sm:justify-end">
-                <button
-                  onClick={() => setScale(s => Math.max(0.5, s - 0.25))}
-                  disabled={scale <= 0.5}
-                  className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 disabled:opacity-30 text-slate-700 transition-all touch-manipulation"
-                >
-                  <ZoomOut className="w-5 h-5" />
-                </button>
-
-                <span className="text-xs sm:text-sm font-semibold text-slate-700 min-w-[50px] sm:min-w-[60px] text-center px-2 sm:px-3 py-1 bg-slate-100 rounded-lg">
-                  {Math.round(scale * 100)}%
-                </span>
-
-                <button
-                  onClick={() => setScale(s => Math.min(3, s + 0.25))}
-                  disabled={scale >= 3}
-                  className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 disabled:opacity-30 text-slate-700 transition-all touch-manipulation"
-                >
-                  <ZoomIn className="w-5 h-5" />
-                </button>
-
-                <div className="w-px h-6 bg-slate-300"></div>
-
-                <button
-                  onClick={() => setRotation(r => (r + 90) % 360)}
-                  className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 text-slate-700 transition-all touch-manipulation"
-                >
-                  <RotateCw className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
             )}
 
             {/* Content Display */}
-            <div className="flex-1 overflow-auto bg-slate-100 p-2 sm:p-4 md:p-8">
+            <div className="flex-1 overflow-auto bg-brand-100 p-2 sm:p-4 md:p-8">
               {loading ? (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                  <div className="text-slate-700 text-xl font-semibold">Loading...</div>
+                <div className="flex flex-col items-center justify-center h-full gap-4">
+                  <div className="w-12 h-12 border-3 border-gold-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-brand-600 font-semibold">Loading…</span>
                 </div>
               ) : fileType === 'pdf' ? (
                 <div className="flex justify-center">
-                  <div className="bg-white shadow-2xl rounded-lg overflow-hidden" style={{ width: 'fit-content' }}>
+                  <div className="bg-white shadow-elevated rounded-xl overflow-hidden" style={{ width: 'fit-content' }}>
                     <canvas ref={canvasRef} className="max-w-full h-auto" />
                   </div>
                 </div>
               ) : fileType === 'markdown' ? (
-                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-lg p-8">
-                  <div className="prose prose-slate prose-amber max-w-none prose-headings:text-slate-900 prose-h1:text-3xl prose-h1:font-bold prose-h1:border-b prose-h1:border-amber-200 prose-h1:pb-3 prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-8 prose-h3:text-xl prose-h3:font-semibold prose-p:text-slate-700 prose-p:leading-relaxed prose-a:text-amber-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-slate-900 prose-strong:font-semibold prose-code:text-amber-700 prose-code:bg-amber-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-blockquote:border-l-4 prose-blockquote:border-amber-500 prose-blockquote:bg-amber-50 prose-blockquote:italic prose-ul:list-disc prose-ol:list-decimal prose-li:text-slate-700">
+                <div className="max-w-4xl mx-auto bg-white shadow-card rounded-2xl p-8 border border-brand-200">
+                  <div className="prose prose-slate max-w-none prose-headings:text-brand-900 prose-h1:text-3xl prose-h1:font-bold prose-h2:text-xl prose-h2:font-semibold prose-p:text-brand-700 prose-a:text-gold-600 prose-strong:text-brand-900 prose-code:text-brand-700 prose-code:bg-brand-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-brand-900 prose-pre:text-brand-100 prose-blockquote:border-l-4 prose-blockquote:border-gold-500 prose-blockquote:bg-gold-50">
                     <ReactMarkdown>{textContent}</ReactMarkdown>
                   </div>
                 </div>
               ) : (
-                <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-lg p-8">
-                  <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 leading-relaxed">{textContent}</pre>
+                <div className="max-w-4xl mx-auto bg-white shadow-card rounded-2xl p-8 border border-brand-200">
+                  <pre className="whitespace-pre-wrap font-mono text-sm text-brand-700 leading-relaxed">{textContent}</pre>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Notes Panel - Full screen on mobile, sidebar on desktop */}
+          {/* Notes Panel */}
           {showNotes && (
             <div className="fixed inset-0 md:relative md:inset-auto z-50 md:z-auto">
               <NotesPanel

@@ -188,73 +188,77 @@ export default function Notes() {
 
   return (
     <div>
+      {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center">
-            <BookMarked className="w-7 h-7 mr-2 text-amber-600" />
-            My Notes
-          </h2>
-          <p className="text-slate-600 mt-1">Create and organize your study notes</p>
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-brand-100 dark:bg-brand-900 rounded-xl flex items-center justify-center">
+            <BookMarked className="w-5 h-5 text-brand-700 dark:text-gold-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-brand-900 dark:text-brand-100">My Notes</h2>
+            <p className="text-brand-400 dark:text-brand-400 text-sm">
+              {notes.length} note{notes.length !== 1 ? 's' : ''} · {filteredNotes.length} shown
+            </p>
+          </div>
         </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="flex items-center space-x-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 text-white rounded-xl transition-colors font-semibold text-sm"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           <span>New Note</span>
         </button>
       </div>
 
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center space-x-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search notes..."
-              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search notes..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm"
+          />
         </div>
-
-        <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500 text-brand-700 dark:text-brand-200 text-sm"
           >
-            <option value="">All Categories</option>
+            <option value="">All Tags</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat || ''}>
-                {cat}
-              </option>
+              <option key={cat} value={cat || ''}>{cat}</option>
             ))}
           </select>
-
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${showFavoritesOnly
-                ? 'bg-amber-500 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium ${showFavoritesOnly
+              ? 'bg-brand-900 text-white'
+              : 'bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-700'
+            }`}
           >
             <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-            <span>Favorites</span>
+            <span>Favourites</span>
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full mx-auto"></div>
+        <div className="flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredNotes.length === 0 ? (
-        <div className="text-center py-12 bg-slate-50 rounded-lg">
-          <BookMarked className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-600">
-            {notes.length === 0 ? 'No notes yet. Create your first note!' : 'No notes match your filters.'}
+        <div className="text-center py-16 bg-white dark:bg-brand-800 border border-brand-100 dark:border-brand-700/60 rounded-2xl">
+          <div className="w-16 h-16 bg-brand-100 dark:bg-brand-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <BookMarked className="w-8 h-8 text-brand-400" />
+          </div>
+          <h3 className="text-brand-700 dark:text-brand-200 font-semibold text-lg mb-1">
+            {notes.length === 0 ? 'No notes yet' : 'No matching notes'}
+          </h3>
+          <p className="text-brand-500 dark:text-brand-400 text-sm">
+            {notes.length === 0 ? 'Create your first note to get started' : 'Try different search terms or filters'}
           </p>
         </div>
       ) : (
@@ -262,51 +266,42 @@ export default function Notes() {
           {filteredNotes.map((note) => (
             <div
               key={note._id}
-              className="border border-slate-200 rounded-xl p-5 hover:shadow-lg transition-all bg-white group"
+              className="bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-2xl p-5 hover:shadow-card hover:border-brand-300 transition-all group"
             >
               <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-slate-900 flex-1 line-clamp-1 text-lg">{note.title}</h3>
-                <div className="flex items-center space-x-1 ml-2">
+                <h3 className="font-semibold text-brand-900 dark:text-brand-100 flex-1 line-clamp-1 text-base">{note.title}</h3>
+                <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                   <button
                     onClick={() => toggleBookmark(note)}
-                    className="p-1.5 hover:bg-amber-50 rounded-lg transition-colors"
-                    title={note.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                    className="p-1.5 hover:bg-gold-50 rounded-lg transition-colors"
                   >
-                    <Bookmark
-                      className={`w-5 h-5 transition-colors ${note.isBookmarked ? 'fill-amber-500 text-amber-500' : 'text-slate-400 group-hover:text-slate-600'
-                        }`}
-                    />
+                    <Bookmark className={`w-4 h-4 transition-colors ${note.isBookmarked ? 'fill-gold-500 text-gold-500' : 'text-brand-300 dark:text-brand-500 group-hover:text-brand-500'}`} />
                   </button>
                   <button
                     onClick={() => toggleFavorite(note)}
                     className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                    title={note.isFavourite ? 'Remove from favorites' : 'Add to favorites'}
                   >
-                    <Heart
-                      className={`w-5 h-5 transition-colors ${note.isFavourite ? 'fill-red-500 text-red-500' : 'text-slate-400 group-hover:text-slate-600'
-                        }`}
-                    />
+                    <Heart className={`w-4 h-4 transition-colors ${note.isFavourite ? 'fill-red-500 text-red-500' : 'text-brand-300 dark:text-brand-500 group-hover:text-brand-500'}`} />
                   </button>
                 </div>
               </div>
 
               <div className="mb-4">
-                <div className={`text-sm text-slate-600 whitespace-pre-wrap leading-relaxed break-words ${expandedNotes.has(note._id) ? '' : 'line-clamp-3'
-                  }`}>
+                <div className={`text-sm text-brand-600 dark:text-brand-300 whitespace-pre-wrap leading-relaxed break-words ${expandedNotes.has(note._id) ? '' : 'line-clamp-3'}`}>
                   {note.content}
                 </div>
                 <button
                   onClick={() => toggleExpanded(note._id)}
-                  className="text-xs text-amber-600 hover:text-amber-700 font-medium mt-2 inline-block"
+                  className="text-xs text-gold-600 hover:text-gold-700 font-medium mt-1.5 inline-block"
                 >
                   {expandedNotes.has(note._id) ? 'Read less' : 'Read more'}
                 </button>
               </div>
 
               {note.tags && note.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-4">
                   {note.tags.slice(0, 3).map((tag, idx) => (
-                    <span key={idx} className="flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 text-xs rounded-md font-medium">
+                    <span key={idx} className="flex items-center px-2 py-0.5 bg-brand-100 dark:bg-brand-700 text-brand-600 dark:text-brand-300 text-xs rounded-md font-medium">
                       <Tag className="w-3 h-3 mr-1" />
                       {tag}
                     </span>
@@ -314,26 +309,24 @@ export default function Notes() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-brand-100 dark:border-brand-700/60">
                 {note.updatedAt && (
-                  <span className="text-xs text-slate-500 font-medium">
+                  <span className="text-xs text-brand-400 dark:text-brand-500">
                     {new Date(note.updatedAt).toLocaleDateString('en-IN')}
                   </span>
                 )}
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => startEditing(note)}
-                    className="p-2 hover:bg-blue-50 rounded-lg transition-colors group/edit"
-                    title="Edit note"
+                    className="p-2 hover:bg-brand-100 rounded-lg transition-colors"
                   >
-                    <Edit2 className="w-4 h-4 text-slate-500 group-hover/edit:text-blue-600 transition-colors" />
+                    <Edit2 className="w-3.5 h-3.5 text-brand-400 hover:text-brand-700" />
                   </button>
                   <button
                     onClick={() => setDeleteDialog({ isOpen: true, noteId: note._id })}
-                    className="p-2 hover:bg-red-50 rounded-lg transition-colors group/delete"
-                    title="Delete note"
+                    className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                   >
-                    <Trash2 className="w-4 h-4 text-slate-500 group-hover/delete:text-red-600 transition-colors" />
+                    <Trash2 className="w-3.5 h-3.5 text-brand-400 hover:text-red-500" />
                   </button>
                 </div>
               </div>
@@ -343,71 +336,76 @@ export default function Notes() {
       )}
 
       {(isCreating || editingNote) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-900">
-                {editingNote ? 'Edit Note' : 'Create New Note'}
-              </h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-brand-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-brand-200 dark:border-brand-700">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-brand-100 dark:border-brand-700/60">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-brand-100 dark:bg-brand-900 rounded-lg flex items-center justify-center">
+                  <BookMarked className="w-4 h-4 text-gold-400" />
+                </div>
+                <h2 className="text-lg font-bold text-brand-900 dark:text-brand-100">
+                  {editingNote ? 'Edit Note' : 'Create New Note'}
+                </h2>
+              </div>
               <button
                 onClick={cancelEditing}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-brand-100 dark:hover:bg-brand-700 rounded-lg transition-colors"
               >
-                <X className="w-6 h-6 text-slate-600" />
+                <X className="w-5 h-5 text-brand-500 dark:text-brand-400" />
               </button>
             </div>
 
             <form onSubmit={editingNote ? handleUpdateNote : handleCreateNote} className="flex-1 overflow-y-auto p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Title</label>
+                <label className="label">Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter note title..."
+                  className="input-field"
+                  placeholder="Enter note title…"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Content</label>
+                <label className="label">Content</label>
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   required
                   rows={10}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Write your notes here..."
+                  className="input-field resize-none"
+                  placeholder="Write your notes here…"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Tags</label>
+                <label className="label">Tags</label>
                 <input
                   type="text"
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="input-field"
                   placeholder="Separate tags with commas"
                 />
-                <p className="text-xs text-slate-500 mt-1">Example: important, exam, article-370</p>
+                <p className="text-xs text-brand-400 dark:text-brand-500 mt-1">Example: important, exam, article-370</p>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={cancelEditing}
-                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+                  className="px-5 py-2.5 bg-brand-100 dark:bg-brand-800 hover:bg-brand-200 dark:hover:bg-brand-700 text-brand-700 dark:text-brand-200 rounded-xl transition-colors font-medium text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center space-x-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 text-white rounded-xl transition-colors font-semibold text-sm"
                 >
-                  <Save className="w-5 h-5" />
-                  <span>{editingNote ? 'Update' : 'Create'} Note</span>
+                  <Save className="w-4 h-4" />
+                  {editingNote ? 'Update Note' : 'Create Note'}
                 </button>
               </div>
             </form>

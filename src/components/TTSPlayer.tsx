@@ -167,20 +167,20 @@ export default function TTSPlayer() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center">
-            <Volume2 className="w-7 h-7 mr-2 text-amber-600" />
+          <h2 className="text-2xl font-bold text-brand-900 flex items-center">
+            <Volume2 className="w-7 h-7 mr-2 text-gold-600" />
             Audio Lessons
           </h2>
-          <p className="text-slate-600 mt-1">Listen to pre-recorded legal content</p>
+          <p className="text-brand-600 mt-1">Listen to pre-recorded legal content</p>
         </div>
       </div>
 
       <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-700 mb-2">Filter by Category</label>
+        <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Filter by Category</label>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (
@@ -193,13 +193,13 @@ export default function TTSPlayer() {
 
       {loading ? (
         <div className="text-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full mx-auto"></div>
+          <div className="animate-spin w-8 h-8 border-4 border-gold-500 border-t-transparent rounded-full mx-auto"></div>
         </div>
       ) : content.length === 0 ? (
-        <div className="text-center py-12 bg-slate-50 rounded-lg">
-          <BookMarked className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-600">No audio content available yet.</p>
-          <p className="text-sm text-slate-500 mt-2">Check back later for new lessons.</p>
+        <div className="text-center py-12 bg-brand-50 rounded-lg">
+          <BookMarked className="w-12 h-12 text-brand-400 mx-auto mb-3" />
+          <p className="text-brand-600 dark:text-brand-300">No audio content available yet.</p>
+          <p className="text-sm text-brand-500 mt-2">Check back later for new lessons.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -211,16 +211,16 @@ export default function TTSPlayer() {
                 key={item.id}
                 className={`border rounded-lg p-4 transition-all ${
                   selectedContent?.id === item.id
-                    ? 'border-amber-500 bg-amber-50'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                    ? 'border-gold-500 bg-gold-50'
+                    : 'border-brand-200 hover:border-brand-300 bg-white'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900 mb-1">{item.title}</h3>
-                    <div className="flex items-center space-x-3 text-sm text-slate-600">
+                    <h3 className="font-semibold text-brand-900 mb-1">{item.title}</h3>
+                    <div className="flex items-center space-x-3 text-sm text-brand-600">
                       {item.category && (
-                        <span className="px-2 py-1 bg-slate-100 rounded text-xs">{item.category}</span>
+                        <span className="px-2 py-1 bg-brand-100 rounded text-xs">{item.category}</span>
                       )}
                       {item.duration_seconds && (
                         <span className="flex items-center">
@@ -233,13 +233,13 @@ export default function TTSPlayer() {
                   </div>
                 </div>
 
-                <p className="text-sm text-slate-700 mb-4 line-clamp-2">{item.text_content}</p>
+                <p className="text-sm text-brand-700 mb-4 line-clamp-2">{item.text_content}</p>
 
                 <div className="flex items-center space-x-3">
                   {item.audio_url ? (
                     <button
                       onClick={() => handlePlayPrerecorded(item)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+                      className="flex items-center space-x-2 px-4 py-2 bg-gold-500 hover:bg-gold-600 text-white rounded-lg transition-colors"
                     >
                       {isCurrentlyPlaying ? (
                         <>
@@ -279,25 +279,25 @@ export default function TTSPlayer() {
       )}
 
       {selectedContent && selectedContent.audio_url && audioRef.current && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-2xl p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-brand-200 shadow-2xl p-4 z-50">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-2">
               <div className="flex-1 min-w-0 mr-4">
-                <h4 className="font-semibold text-slate-900 truncate">{selectedContent.title}</h4>
-                <p className="text-sm text-slate-600">Now Playing</p>
+                <h4 className="font-semibold text-brand-900 truncate">{selectedContent.title}</h4>
+                <p className="text-sm text-brand-600">Now Playing</p>
               </div>
 
               <div className="flex items-center space-x-4">
                 <button
                   onClick={skipBackward}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-brand-100 rounded-full transition-colors"
                 >
-                  <SkipBack className="w-5 h-5 text-slate-700" />
+                  <SkipBack className="w-5 h-5 text-brand-700" />
                 </button>
 
                 <button
                   onClick={togglePlayPause}
-                  className="p-3 bg-amber-500 hover:bg-amber-600 rounded-full transition-colors"
+                  className="p-3 bg-gold-500 hover:bg-gold-600 rounded-full transition-colors"
                 >
                   {isPlaying ? (
                     <Pause className="w-6 h-6 text-white" />
@@ -308,13 +308,13 @@ export default function TTSPlayer() {
 
                 <button
                   onClick={skipForward}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-brand-100 rounded-full transition-colors"
                 >
-                  <SkipForward className="w-5 h-5 text-slate-700" />
+                  <SkipForward className="w-5 h-5 text-brand-700" />
                 </button>
               </div>
 
-              <div className="text-sm text-slate-600 ml-4">
+              <div className="text-sm text-brand-600 ml-4">
                 {formatTime(currentTime)} /{' '}
                 {selectedContent.duration_seconds
                   ? formatTime(selectedContent.duration_seconds)
@@ -322,9 +322,9 @@ export default function TTSPlayer() {
               </div>
             </div>
 
-            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-brand-200 h-2 rounded-full overflow-hidden">
               <div
-                className="bg-amber-500 h-full transition-all"
+                className="bg-gold-500 h-full transition-all"
                 style={{
                   width: selectedContent.duration_seconds
                     ? `${(currentTime / selectedContent.duration_seconds) * 100}%`

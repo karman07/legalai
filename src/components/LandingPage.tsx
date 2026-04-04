@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Scale, BookOpen, HelpCircle, BookMarked, MessageSquare, Brain, Volume2, FileText, ArrowRight, Users, Award, Zap, LogOut } from 'lucide-react';
+import {
+  Scale, BookOpen, HelpCircle, BookMarked, MessageSquare, Brain, Volume2,
+  FileText, ArrowRight, Users, Award, LogOut, GraduationCap, Shield,
+  Sparkles, Star, Library,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -15,112 +19,119 @@ export default function LandingPage() {
 
   const features = [
     {
-      icon: BookOpen,
-      title: 'MCQ Quiz',
-      description: 'Practice with thousands of multiple-choice questions across all subjects of Indian law',
-      path: '/mcq',
-      color: 'bg-blue-500',
+      icon: BookOpen, title: 'MCQ Quiz',
+      description: 'Practice with thousands of multiple-choice questions covering all subjects of Indian law.',
+      path: '/mcq', bg: 'bg-blue-50', iconColor: 'text-blue-600',
     },
     {
-      icon: Scale,
-      title: 'Case Laws Database',
-      description: 'Browse comprehensive collection of judgments organized by year, court, and category',
-      path: '/cases',
-      color: 'bg-amber-600',
+      icon: Scale, title: 'Case Laws',
+      description: 'Browse comprehensive judgments organized by year, court, and category.',
+      path: '/cases', bg: 'bg-gold-50', iconColor: 'text-gold-600',
     },
     {
-      icon: BookMarked,
-      title: 'My Notes',
-      description: 'Create and organize personal study notes with tags and categories',
-      path: '/notes',
-      color: 'bg-green-500',
+      icon: BookMarked, title: 'My Notes',
+      description: 'Create and organize personal study notes with tags and categories.',
+      path: '/notes', bg: 'bg-emerald-50', iconColor: 'text-emerald-600',
     },
     {
-      icon: HelpCircle,
-      title: 'Ask a Doubt',
-      description: 'Get your questions answered by experienced legal educators',
-      path: '/doubts',
-      color: 'bg-red-500',
+      icon: HelpCircle, title: 'Ask a Doubt',
+      description: 'Get your questions answered by experienced legal educators.',
+      path: '/doubts', bg: 'bg-red-50', iconColor: 'text-red-600',
     },
     {
-      icon: MessageSquare,
-      title: 'Study Assistant',
-      description: 'AI-powered chatbot to help with your legal studies and exam preparation',
-      path: '/chatbot',
-      color: 'bg-cyan-500',
+      icon: MessageSquare, title: 'Study Assistant',
+      description: 'AI-powered chatbot to help with your legal studies and exam preparation.',
+      path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600',
     },
     {
-      icon: Brain,
-      title: 'Legal Expert Bot',
-      description: 'Advanced AI assistant for complex legal analysis and case discussions',
-      path: '/expert',
-      color: 'bg-violet-500',
+      icon: Brain, title: 'Legal Expert Bot',
+      description: 'Advanced AI assistant for complex legal analysis and case discussions.',
+      path: '/expert', bg: 'bg-violet-50', iconColor: 'text-violet-600',
     },
     {
-      icon: Volume2,
-      title: 'Immersive Bare Act Reader',
-      description: 'Read and listen to Indian laws in government and simplified language with audio narration',
-      path: '/audio',
-      color: 'bg-orange-500',
+      icon: Volume2, title: 'Bare Act Reader',
+      description: 'Read and listen to Indian laws with audio narration and simplified explanations.',
+      path: '/audio', bg: 'bg-gold-50', iconColor: 'text-gold-600',
     },
     {
-      icon: FileText,
-      title: 'Answer Evaluation',
-      description: 'Submit written answers and get detailed feedback from educators',
-      path: '/answers',
-      color: 'bg-pink-500',
+      icon: FileText, title: 'Answer Evaluation',
+      description: 'Submit written answers and get detailed AI feedback from educators.',
+      path: '/answers', bg: 'bg-pink-50', iconColor: 'text-pink-600',
+    },
+    {
+      icon: Library, title: 'My Library',
+      description: 'A curated space to save case laws, notes, and study resources.',
+      path: '/library', bg: 'bg-teal-50', iconColor: 'text-teal-600',
     },
   ];
 
   const stats = [
-    { icon: Users, label: 'Active Students', value: '10,000+' },
+    { icon: Users,    label: 'Active Students',    value: '10,000+' },
     { icon: BookOpen, label: 'Practice Questions', value: '50,000+' },
-    { icon: Scale, label: 'Case Laws', value: '25,000+' },
-    { icon: Award, label: 'Success Rate', value: '95%' },
+    { icon: Scale,    label: 'Case Laws',          value: '25,000+' },
+    { icon: Award,    label: 'Success Rate',       value: '95%'     },
+  ];
+
+  const benefits = [
+    {
+      icon: Sparkles, iconColor: 'text-violet-500', bg: 'bg-violet-50',
+      title: 'AI-Powered Learning',
+      description: 'Leverage advanced AI for personalized learning, instant doubt resolution, and intelligent recommendations tailored to your exam goals.',
+    },
+    {
+      icon: GraduationCap, iconColor: 'text-emerald-500', bg: 'bg-emerald-50',
+      title: 'Expert-Led Content',
+      description: 'Learn from content curated by experienced legal educators. Get personalized feedback on your answers and guidance from domain experts.',
+    },
+    {
+      icon: Shield, iconColor: 'text-gold-600', bg: 'bg-gold-50',
+      title: 'Proven Results',
+      description: 'Join thousands of successful law students who have cracked judiciary exams and bar council tests using our comprehensive platform.',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-white">
+
+      {/* ── Navbar ─────────────────────────────────────────── */}
+      <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-brand-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Scale className="w-8 h-8 text-amber-600" />
-              <div className="ml-2">
-                <span className="text-xl font-bold text-slate-900">LegalPadhai.ai</span>
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-gold-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                <Scale className="w-4 h-4 text-white" />
               </div>
+              <span className="text-lg font-bold text-brand-900 tracking-tight">
+                LegalPadhai<span className="text-gold-500">.ai</span>
+              </span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               {user ? (
                 <>
-                  <span className="text-sm text-slate-700">{user.email}</span>
+                  <span className="hidden sm:block text-sm text-brand-500 truncate max-w-[160px]">
+                    {user.email}
+                  </span>
                   <Link
                     to="/dashboard"
-                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+                    className="px-4 py-2 bg-gold-500 hover:bg-gold-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
                   >
                     Dashboard
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 px-4 py-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
+                    title="Logout"
+                    className="p-2 text-brand-400 hover:text-brand-700 hover:bg-brand-100 rounded-lg transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/auth"
-                    className="px-4 py-2 text-slate-700 hover:text-slate-900 font-medium transition-colors"
-                  >
-                    Login
+                  <Link to="/auth" className="hidden sm:block text-sm font-medium text-brand-600 hover:text-brand-900 transition-colors">
+                    Sign in
                   </Link>
-                  <Link
-                    to="/auth"
-                    className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors shadow-md"
-                  >
-                    Get Started
+                  <Link to="/auth" className="px-4 py-2 bg-brand-900 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                    Get Started Free
                   </Link>
                 </>
               )}
@@ -129,51 +140,55 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-amber-500 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-500 rounded-full mb-6 shadow-2xl">
-            <Scale className="w-10 h-10 text-white" />
+      {/* ── Hero ───────────────────────────────────────────── */}
+      <section className="min-h-screen bg-brand-900 pt-16 flex items-center relative overflow-hidden hero-pattern">
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/3 right-1/5 w-80 h-80 bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-28 text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-gold-500/10 border border-gold-500/25 rounded-full mb-8">
+            <Star className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />
+            <span className="text-xs font-bold text-gold-300 tracking-widest uppercase">
+              India's #1 AI Law Education Platform
+            </span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-            India's First AI Empowered
-            <span className="text-amber-400"> Law Education Platform</span>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-[1.06] tracking-tight mb-6">
+            Master Indian Law<br />
+            <span className="text-gold-400">with AI-Powered</span><br />
+            Education
           </h1>
 
-          <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            The most comprehensive legal education platform in India. Practice MCQs, explore case laws,
-            get expert guidance, and ace your law exams with cutting-edge technology.
+          <p className="text-lg sm:text-xl text-brand-300 max-w-2xl mx-auto leading-relaxed mb-10">
+            The most comprehensive legal education platform. Practice MCQs, explore case laws,
+            get expert AI guidance, and ace your judiciary exams.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
             <Link
-              to={user ? "/dashboard" : "/auth"}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+              to={user ? '/dashboard' : '/auth'}
+              className="flex items-center gap-2 px-8 py-3.5 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-glow-gold active:scale-[0.98] text-base"
             >
               <span>Start Learning Free</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link
-              to="#features"
-              className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition-all border-2 border-white/20"
+            <a
+              href="#features"
+              className="flex items-center gap-2 px-8 py-3.5 bg-white/8 hover:bg-white/14 text-white font-semibold rounded-xl border border-white/20 transition-all text-base"
             >
               Explore Features
-            </Link>
+            </a>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            {stats.map((stat, idx) => {
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-white/10 bg-white/5 rounded-2xl border border-white/10 max-w-3xl mx-auto overflow-hidden">
+            {stats.map((stat, i) => {
               const Icon = stat.icon;
               return (
-                <div key={idx} className="text-center">
-                  <Icon className="w-8 h-8 mx-auto mb-2 text-amber-400" />
-                  <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-sm text-slate-400">{stat.label}</div>
+                <div key={i} className="px-6 py-5 text-center">
+                  <Icon className="w-5 h-5 text-gold-400 mx-auto mb-2" />
+                  <div className="text-2xl font-extrabold text-white">{stat.value}</div>
+                  <div className="text-xs text-brand-400 mt-0.5">{stat.label}</div>
                 </div>
               );
             })}
@@ -181,34 +196,35 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      {/* ── Features ───────────────────────────────────────── */}
+      <section id="features" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">Comprehensive Learning Tools</h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Everything you need to excel in your legal education journey, all in one platform
+            <span className="section-badge">Features</span>
+            <h2 className="section-heading">Everything You Need to Succeed</h2>
+            <p className="section-subtext">
+              A complete toolkit for modern legal education — from AI assistants to curated case law libraries.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {features.map((feature, idx) => {
               const Icon = feature.icon;
               return (
                 <Link
                   key={idx}
                   to={feature.path}
-                  className="group bg-white border-2 border-slate-200 rounded-xl p-6 hover:border-amber-500 hover:shadow-2xl transition-all transform hover:-translate-y-2"
+                  className="group bg-white border border-brand-200 rounded-2xl p-6 hover:border-gold-400 hover:shadow-elevated transition-all duration-300"
                 >
-                  <div className={`inline-flex items-center justify-center w-14 h-14 ${feature.color} rounded-lg mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-7 h-7 text-white" />
+                  <div className={`inline-flex items-center justify-center w-11 h-11 ${feature.bg} rounded-xl mb-4`}>
+                    <Icon className={`w-5 h-5 ${feature.iconColor}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-amber-600 transition-colors">
+                  <h3 className="text-sm font-bold text-brand-900 mb-2 group-hover:text-gold-700 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-slate-600 mb-4 leading-relaxed">{feature.description}</p>
-                  <div className="flex items-center text-amber-600 font-semibold group-hover:translate-x-2 transition-transform">
+                  <p className="text-xs text-brand-500 leading-relaxed mb-4">{feature.description}</p>
+                  <div className={`flex items-center gap-1 text-xs font-semibold ${feature.iconColor} group-hover:gap-2 transition-all duration-200`}>
                     <span>Explore</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <ArrowRight className="w-3 h-3" />
                   </div>
                 </Link>
               );
@@ -217,72 +233,70 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-amber-50 to-orange-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 shadow-lg border border-amber-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500 rounded-lg mb-4">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">AI-Powered</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Leverage advanced AI technology for personalized learning, instant doubt resolution,
-                and intelligent content recommendations.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg border border-amber-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">Expert Guidance</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Learn from experienced legal educators and get personalized feedback on your
-                answers and understanding.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg border border-amber-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-amber-500 rounded-lg mb-4">
-                <Award className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">Proven Results</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Join thousands of successful law students who have aced their exams using our
-                comprehensive platform.
-              </p>
-            </div>
+      {/* ── Benefits ───────────────────────────────────────── */}
+      <section className="py-24 bg-brand-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="section-badge">Why LegalPadhai</span>
+            <h2 className="section-heading">Built for Serious Law Students</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {benefits.map((b, i) => {
+              const Icon = b.icon;
+              return (
+                <div key={i} className="bg-white rounded-2xl p-8 border border-brand-200 shadow-card hover:shadow-elevated transition-all duration-300">
+                  <div className={`inline-flex items-center justify-center w-12 h-12 ${b.bg} rounded-xl mb-5`}>
+                    <Icon className={`w-6 h-6 ${b.iconColor}`} />
+                  </div>
+                  <h3 className="text-xl font-bold text-brand-900 mb-3">{b.title}</h3>
+                  <p className="text-brand-500 leading-relaxed text-sm">{b.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Excel in Law?</h2>
-          <p className="text-xl text-slate-300 mb-8">
-            Join LegalEdu India today and transform your legal education journey
+      {/* ── CTA Banner ─────────────────────────────────────── */}
+      <section className="py-20 bg-brand-900 relative overflow-hidden hero-pattern">
+        <div className="absolute top-0 left-1/3 w-72 h-72 bg-gold-500/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
+            Ready to Excel in Law?
+          </h2>
+          <p className="text-lg text-brand-300 mb-8">
+            Join 10,000+ law students already using LegalPadhai.ai to prepare smarter.
           </p>
           <Link
-            to={user ? "/dashboard" : "/auth"}
-            className="inline-flex items-center space-x-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+            to={user ? '/dashboard' : '/auth'}
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-glow-gold active:scale-[0.98] text-base"
           >
-            <span>Get Started Now</span>
+            <span>Get Started Free</span>
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
       </section>
 
-      <footer className="bg-slate-950 text-slate-400 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center mb-4">
-            <Scale className="w-8 h-8 text-amber-500" />
-            <span className="ml-2 text-xl font-bold text-white">LegalEdu India</span>
+      {/* ── Footer ─────────────────────────────────────────── */}
+      <footer className="bg-brand-950 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex items-center justify-center gap-2.5 mb-3">
+            <div className="w-7 h-7 bg-gold-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Scale className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-base font-bold text-white">
+              LegalPadhai<span className="text-gold-400">.ai</span>
+            </span>
           </div>
-          <p className="text-sm">
-            © 2025 LegalEdu India. Empowering legal education across the nation.
+          <p className="text-brand-500 text-xs max-w-xs mx-auto mb-3">
+            India's first AI-empowered law education platform. Helping students crack judiciary exams since 2024.
+          </p>
+          <p className="text-brand-600 text-xs">
+            © {new Date().getFullYear()} LegalPadhai.ai · All rights reserved
           </p>
         </div>
       </footer>
     </div>
   );
 }
+

@@ -65,52 +65,52 @@ export default function AudioLessons() {
   if (loading && audioLessons.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-gold-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-gold-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">Audio Lessons</h1>
-              <p className="text-slate-600">Explore our comprehensive collection of legal audio content</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-brand-900 mb-2">Audio Lessons</h1>
+              <p className="text-brand-600 dark:text-brand-300">Explore our comprehensive collection of legal audio content</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{filteredAndSortedLessons.length}</div>
-                <div className="text-xs text-slate-500">Available Lessons</div>
+                <div className="text-2xl font-bold bg-brand-900 bg-clip-text text-transparent">{filteredAndSortedLessons.length}</div>
+                <div className="text-xs text-brand-500">Available Lessons</div>
               </div>
             </div>
           </div>
 
           {/* Search and Controls */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-brand-200 p-4 sm:p-6">
             <div className="flex flex-col lg:flex-row gap-4">
               {/* Search */}
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-brand-400" />
                 <input
                   type="text"
                   placeholder="Search lessons by title or description..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-3 border border-brand-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                 />
               </div>
 
               {/* View Toggle */}
               <div className="flex items-center gap-2">
-                <div className="flex bg-slate-100 rounded-lg p-1">
+                <div className="flex bg-brand-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-brand-900 text-white shadow-sm'
+                      : 'text-brand-600 hover:text-brand-900'
                       }`}
                   >
                     <Grid3X3 className="w-4 h-4" />
@@ -118,8 +118,8 @@ export default function AudioLessons() {
                   <button
                     onClick={() => setViewMode('list')}
                     className={`p-2 rounded-md transition-all ${viewMode === 'list'
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-brand-900 text-white shadow-sm'
+                      : 'text-brand-600 hover:text-brand-900'
                       }`}
                   >
                     <List className="w-4 h-4" />
@@ -130,8 +130,8 @@ export default function AudioLessons() {
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className={`p-2 rounded-lg border transition-all ${showFilters
-                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 text-amber-600'
-                    : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50 hover:border-amber-300'
+                    ? 'bg-gradient-to-r bg-gold-50 border-gold-200 text-gold-600'
+                    : 'bg-white border-brand-300 text-brand-600 hover:bg-brand-50 hover:border-gold-400'
                     }`}
                 >
                   <Filter className="w-4 h-4" />
@@ -141,20 +141,20 @@ export default function AudioLessons() {
 
             {/* Filters */}
             {showFilters && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="mt-4 pt-4 border-t border-brand-200">
                 <div className="flex flex-col sm:flex-row gap-4">
                   {/* Categories */}
                   {categories.length > 1 && (
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
+                      <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Category</label>
                       <div className="flex gap-2 overflow-x-auto pb-2">
                         {categories.map(cat => (
                           <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat ?? 'all')}
                             className={`px-4 py-2 font-medium transition-all rounded-lg whitespace-nowrap text-sm shadow-sm ${selectedCategory === cat
-                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md transform hover:scale-105'
-                              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-300 hover:border-amber-300'
+                              ? 'bg-brand-900 text-white shadow-md transform hover:scale-105'
+                              : 'bg-white text-brand-600 hover:bg-brand-50 border border-brand-300 hover:border-gold-400'
                               }`}
                           >
                             {cat === 'all' ? 'All Categories' : cat}
@@ -166,13 +166,13 @@ export default function AudioLessons() {
 
                   {/* Sort */}
                   <div className="sm:w-48">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Sort by</label>
+                    <label className="block text-sm font-medium text-brand-700 dark:text-brand-300 mb-2">Sort by</label>
                     <div className="relative">
-                      <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-brand-400" />
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as SortBy)}
-                        className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white text-sm"
+                        className="w-full pl-10 pr-4 py-2 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white text-sm"
                       >
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
@@ -208,10 +208,10 @@ export default function AudioLessons() {
         </div>
 
         {filteredAndSortedLessons.length === 0 && !loading && (
-          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
-            <Volume2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">No lessons found</h3>
-            <p className="text-slate-500">
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-brand-200">
+            <Volume2 className="w-16 h-16 text-brand-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-brand-900 mb-2">No lessons found</h3>
+            <p className="text-brand-500">
               {searchQuery ? 'Try adjusting your search terms or filters' : 'No audio lessons available'}
             </p>
           </div>
@@ -223,7 +223,7 @@ export default function AudioLessons() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1 || loading}
-              className="px-5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:border-amber-300"
+              className="px-5 py-2.5 text-sm font-medium bg-white border border-brand-300 rounded-lg hover:bg-brand-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:border-gold-400"
             >
               Previous
             </button>
@@ -235,8 +235,8 @@ export default function AudioLessons() {
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
                     className={`w-10 h-10 text-sm font-medium rounded-lg transition-all ${page === pageNum
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md transform hover:scale-105'
-                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-amber-300'
+                      ? 'bg-brand-900 text-white shadow-md transform hover:scale-105'
+                      : 'bg-white border border-brand-300 text-brand-700 hover:bg-brand-50 hover:border-gold-400'
                       }`}
                   >
                     {pageNum}
@@ -247,7 +247,7 @@ export default function AudioLessons() {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages || loading}
-              className="px-5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:border-amber-300"
+              className="px-5 py-2.5 text-sm font-medium bg-white border border-brand-300 rounded-lg hover:bg-brand-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm hover:border-gold-400"
             >
               Next
             </button>

@@ -30,7 +30,7 @@ export default function Dialog({
       case 'error':
         return <AlertCircle className="w-12 h-12 text-red-500" />;
       case 'confirm':
-        return <AlertCircle className="w-12 h-12 text-amber-500" />;
+        return <AlertCircle className="w-12 h-12 text-gold-500" />;
       default:
         return <Info className="w-12 h-12 text-blue-500" />;
     }
@@ -43,7 +43,7 @@ export default function Dialog({
       case 'error':
         return 'from-red-50 to-rose-50';
       case 'confirm':
-        return 'from-amber-50 to-orange-50';
+        return 'bg-gold-50';
       default:
         return 'from-blue-50 to-indigo-50';
     }
@@ -65,7 +65,7 @@ export default function Dialog({
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-4 py-2.5 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 rounded-lg font-semibold transition-all touch-manipulation text-sm sm:text-base"
+                  className="flex-1 px-4 py-2.5 bg-brand-200 hover:bg-brand-300 active:bg-brand-400 text-slate-700 rounded-lg font-semibold transition-all touch-manipulation text-sm sm:text-base"
                 >
                   {cancelText}
                 </button>
@@ -74,7 +74,7 @@ export default function Dialog({
                     onConfirm();
                     onClose();
                   }}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 text-white rounded-lg font-semibold transition-all touch-manipulation text-sm sm:text-base"
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:bg-gold-800 text-white rounded-lg font-semibold transition-all touch-manipulation text-sm sm:text-base"
                 >
                   {confirmText}
                 </button>
@@ -82,7 +82,7 @@ export default function Dialog({
             ) : (
               <button
                 onClick={onClose}
-                className="w-full px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:from-amber-700 active:to-orange-700 text-white rounded-lg font-semibold transition-all touch-manipulation text-sm sm:text-base"
+                className="w-full px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:bg-gold-800 text-white rounded-lg font-semibold transition-all touch-manipulation text-sm sm:text-base"
               >
                 OK
               </button>

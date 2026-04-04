@@ -39,7 +39,7 @@ export default function SectionSelector({
 
         <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6">
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-16 h-16 bg-gold-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <Volume2 className="w-8 h-8 text-white" />
             </div>
             <div className="flex-1">
@@ -52,12 +52,12 @@ export default function SectionSelector({
               {lesson.description && <p className="text-slate-600 mb-4">{lesson.description}</p>}
               <div className="flex flex-wrap items-center gap-3">
                 {lesson.category && (
-                  <span className="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                  <span className="inline-block px-3 py-1 bg-gold-100 text-gold-700 rounded-full text-sm font-medium">
                     {lesson.category}
                   </span>
                 )}
                 <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                  <Headphones className="w-4 h-4 text-amber-600" />
+                  <Headphones className="w-4 h-4 text-gold-600" />
                   <span className="font-semibold">{totalAudioCount} audio lessons</span>
                 </div>
               </div>
@@ -71,7 +71,7 @@ export default function SectionSelector({
                 className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${
                   selectedLanguage === 'english'
                     ? 'bg-blue-500 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    : 'bg-slate-100 text-slate-700 hover:bg-brand-200'
                 }`}
               >
                 <Languages className="w-4 h-4 inline mr-2" />
@@ -83,8 +83,8 @@ export default function SectionSelector({
                 onClick={() => onLanguageChange('hindi')}
                 className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all ${
                   selectedLanguage === 'hindi'
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-gold-500 text-white shadow-md'
+                    : 'bg-slate-100 text-slate-700 hover:bg-brand-200'
                 }`}
               >
                 <Languages className="w-4 h-4 inline mr-2" />
@@ -106,7 +106,7 @@ export default function SectionSelector({
           <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <List className="w-5 h-5 text-amber-600" />
+                <List className="w-5 h-5 text-gold-600" />
                 Content Structure
               </h2>
               <span className="text-sm text-slate-600">
@@ -115,13 +115,13 @@ export default function SectionSelector({
             </div>
 
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-brand-400" />
               <input
                 type="text"
                 placeholder="Search sections and subsections..."
                 value={sectionSearchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                className="w-full pl-10 pr-4 py-2 border border-brand-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
               />
             </div>
 
@@ -142,7 +142,7 @@ export default function SectionSelector({
                   return (
                     <div
                       key={idx}
-                      className="border-2 border-slate-200 rounded-xl overflow-hidden hover:border-blue-300 transition-all"
+                      className="border-2 border-brand-200 rounded-xl overflow-hidden hover:border-blue-300 transition-all"
                     >
                       <button
                         onClick={() => onStartLesson(idx)}
@@ -169,12 +169,12 @@ export default function SectionSelector({
                               )}
                             </div>
                           </div>
-                          <Play className="w-5 h-5 text-slate-400 group-hover:text-blue-600 flex-shrink-0" />
+                          <Play className="w-5 h-5 text-brand-400 group-hover:text-blue-600 flex-shrink-0" />
                         </div>
                       </button>
 
                       {section.subsections && section.subsections.length > 0 && (
-                        <div className="bg-slate-50 border-t border-slate-200">
+                        <div className="bg-slate-50 border-t border-brand-200">
                           {section.subsections
                             .filter(
                               (sub) =>
@@ -191,7 +191,7 @@ export default function SectionSelector({
                                   className="w-full text-left p-3 pl-6 hover:bg-purple-50 transition-all group border-b border-slate-100 last:border-b-0"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-white group-hover:bg-purple-100 rounded-lg flex items-center justify-center text-xs font-bold text-slate-600 group-hover:text-purple-700 transition-all flex-shrink-0 border border-slate-200">
+                                    <div className="w-8 h-8 bg-white group-hover:bg-purple-100 rounded-lg flex items-center justify-center text-xs font-bold text-slate-600 group-hover:text-purple-700 transition-all flex-shrink-0 border border-brand-200">
                                       {idx + 1}.{subIdx + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -203,7 +203,7 @@ export default function SectionSelector({
                                         </div>
                                       )}
                                     </div>
-                                    <Play className="w-4 h-4 text-slate-400 group-hover:text-purple-600 flex-shrink-0" />
+                                    <Play className="w-4 h-4 text-brand-400 group-hover:text-purple-600 flex-shrink-0" />
                                   </div>
                                 </button>
                               );
