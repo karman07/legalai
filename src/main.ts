@@ -21,7 +21,9 @@ async function bootstrap() {
     origin: [
       "https://legalpadhai.ai",
       "https://admin.legalpadhai.ai",
-      "http://localhost:3001"
+      "http://localhost:3001",
+      "http://localhost:5173",
+      "http://localhost:5174"
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

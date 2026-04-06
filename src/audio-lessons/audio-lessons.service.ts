@@ -304,6 +304,62 @@ export class AudioLessonsService {
     return updated;
   }
 
+  /**
+   * Patch audio files onto specific sections / subsections of an existing lesson.
+   * Does NOT touch any text fields or displace other audio already saved.
+   *
+   * Fieldname patterns parsed from uploaded files:
+   *   section_{sIdx}_{audioField}
+   *   section_{sIdx}_subsection_{subIdx}_{audioField}
+   */
+  async patchAudio(lessonId: string, files: Express.Multer.File[]) {
+    if (!lessonId || !Types.ObjectId.isValid(lessonId)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+
+    const lesson = await this.audioLessonModel.findById(lessonId);
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+
+    const AUDIO_FIELDS = ['englishAudio', 'hindiAudio', 'easyEnglishAudio', 'easyHindiAudio'];
+
+    for (const file of files || []) {
+      const audioObj = {
+        url: `/uploads/audio/${file.filename}`,
+        fileName: file.originalname,
+        fileSize: file.size,
+      };
+
+      // section_{sIdx}_{audioField}
+      const secMatch = file.fieldname.match(
+        /^section_(\d+)_(englishAudio|hindiAudio|easyEnglishAudio|easyHindiAudio)$/,
+      );
+      if (secMatch) {
+        const sIdx = parseInt(secMatch[1], 10);
+        const audioField = secMatch[2];
+        if (lesson.sections?.[sIdx]) {
+          (lesson.sections[sIdx] as any)[audioField] = audioObj;
+        }
+        continue;
+      }
+
+      // section_{sIdx}_subsection_{subIdx}_{audioField}
+      const subMatch = file.fieldname.match(
+        /^section_(\d+)_subsection_(\d+)_(englishAudio|hindiAudio|easyEnglishAudio|easyHindiAudio)$/,
+      );
+      if (subMatch) {
+        const sIdx = parseInt(subMatch[1], 10);
+        const subIdx = parseInt(subMatch[2], 10);
+        const audioField = subMatch[3];
+        if (lesson.sections?.[sIdx]?.subsections?.[subIdx]) {
+          (lesson.sections[sIdx].subsections![subIdx] as any)[audioField] = audioObj;
+        }
+      }
+    }
+
+    lesson.markModified('sections');
+    return await lesson.save();
+  }
+
   async appendSections(lessonId: string, newSections: any[]) {
     if (!lessonId || !Types.ObjectId.isValid(lessonId)) {
       throw new NotFoundException('Invalid audio lesson id');

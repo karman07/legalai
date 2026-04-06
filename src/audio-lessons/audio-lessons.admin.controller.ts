@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors, BadRequestException, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors, BadRequestException, UsePipes, ValidationPipe } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -519,6 +519,52 @@ export class AudioLessonsAdminController {
       englishAudio: englishAudioFile,
       hindiAudio: hindiAudioFile,
     });
+  }
+
+  /**
+   * PATCH /:id/audio
+   * Upload audio files for specific section(s) / subsection(s) WITHOUT replacing
+   * any existing text or other audio already saved on the lesson.
+   *
+   * File fieldname conventions:
+   *   section_{sIdx}_{audioField}
+   *   section_{sIdx}_subsection_{subIdx}_{audioField}
+   *
+   * where audioField is one of:
+   *   englishAudio | hindiAudio | easyEnglishAudio | easyHindiAudio
+   */
+  @Patch(':id/audio')
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: diskStorage({
+        destination: './uploads/audio',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const prefix = file.fieldname.replace(/[^a-zA-Z0-9]/g, '-');
+          cb(null, `${prefix}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        const allowedMimes = [
+          'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
+          'audio/x-wav', 'audio/mp4', 'audio/m4a', 'audio/x-m4a',
+          'audio/aac', 'audio/ogg', 'audio/webm', 'audio/flac',
+        ];
+        if (allowedMimes.includes(file.mimetype) || file.originalname.match(/\.(mp3|wav|m4a|aac|ogg|webm|flac|opus)$/i)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only audio files are allowed'), false);
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 * 1024 },
+    }),
+  )
+  async patchAudio(
+    @Param('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.audioLessonsService.patchAudio(id, files);
   }
 
   @Delete(':id')
