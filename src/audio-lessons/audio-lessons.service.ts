@@ -317,10 +317,10 @@ export class AudioLessonsService {
       throw new NotFoundException('Invalid audio lesson id');
     }
 
-    const lesson = await this.audioLessonModel.findById(lessonId);
-    if (!lesson) throw new NotFoundException('Audio lesson not found');
-
-    const AUDIO_FIELDS = ['englishAudio', 'hindiAudio', 'easyEnglishAudio', 'easyHindiAudio'];
+    // Build a flat $set map so every file becomes one atomic field update.
+    // Using findByIdAndUpdate with $set avoids Mongoose VersionError entirely —
+    // each concurrent PATCH touches a different dotted path, so there is no conflict.
+    const $set: Record<string, any> = {};
 
     for (const file of files || []) {
       const audioObj = {
@@ -334,11 +334,7 @@ export class AudioLessonsService {
         /^section_(\d+)_(englishAudio|hindiAudio|easyEnglishAudio|easyHindiAudio)$/,
       );
       if (secMatch) {
-        const sIdx = parseInt(secMatch[1], 10);
-        const audioField = secMatch[2];
-        if (lesson.sections?.[sIdx]) {
-          (lesson.sections[sIdx] as any)[audioField] = audioObj;
-        }
+        $set[`sections.${secMatch[1]}.${secMatch[2]}`] = audioObj;
         continue;
       }
 
@@ -347,17 +343,19 @@ export class AudioLessonsService {
         /^section_(\d+)_subsection_(\d+)_(englishAudio|hindiAudio|easyEnglishAudio|easyHindiAudio)$/,
       );
       if (subMatch) {
-        const sIdx = parseInt(subMatch[1], 10);
-        const subIdx = parseInt(subMatch[2], 10);
-        const audioField = subMatch[3];
-        if (lesson.sections?.[sIdx]?.subsections?.[subIdx]) {
-          (lesson.sections[sIdx].subsections![subIdx] as any)[audioField] = audioObj;
-        }
+        $set[`sections.${subMatch[1]}.subsections.${subMatch[2]}.${subMatch[3]}`] = audioObj;
       }
     }
 
-    lesson.markModified('sections');
-    return await lesson.save();
+    if (Object.keys($set).length === 0) return {};
+
+    const updated = await this.audioLessonModel.findByIdAndUpdate(
+      lessonId,
+      { $set },
+      { new: true },
+    );
+    if (!updated) throw new NotFoundException('Audio lesson not found');
+    return updated;
   }
 
   async appendSections(lessonId: string, newSections: any[]) {
