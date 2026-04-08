@@ -181,16 +181,30 @@ export class AudioLessonsService {
     const section = lesson.sections?.[0] as any;
     if (!section) throw new NotFoundException(`Section index ${sectionIndex} not found`);
 
-    // Strip the subsections array — callers use getSubsections() instead
+    const rawSubs: any[] = section.subsections ?? [];
+
+    // Include slim subsection entries directly in the response so the frontend
+    // doesn't need a separate round-trip just to show the subsection list.
+    const subsections = rawSubs.map((sub, i) => ({
+      _index: i,
+      title: sub.title,
+      hasEnglishAudio:     !!sub.englishAudio,
+      hasHindiAudio:       !!sub.hindiAudio,
+      hasEasyEnglishAudio: !!sub.easyEnglishAudio,
+      hasEasyHindiAudio:   !!sub.easyHindiAudio,
+      englishTextPreview:  sub.englishText?.slice(0, 200) ?? '',
+    }));
+
     const { subsections: _omit, ...sectionHead } = section;
     return {
       _index: sectionIndex,
       ...sectionHead,
-      totalSubsections: sectionHead.totalSubsections ?? _omit?.length ?? 0,
+      totalSubsections: sectionHead.totalSubsections ?? rawSubs.length,
       hasEnglishAudio:     !!sectionHead.englishAudio,
       hasHindiAudio:       !!sectionHead.hindiAudio,
       hasEasyEnglishAudio: !!sectionHead.easyEnglishAudio,
       hasEasyHindiAudio:   !!sectionHead.easyHindiAudio,
+      subsections,
     };
   }
 
