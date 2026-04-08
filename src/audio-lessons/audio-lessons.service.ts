@@ -81,6 +81,7 @@ export class AudioLessonsService {
     const [items, total] = await Promise.all([
       this.audioLessonModel
         .find(filters)
+        .select('-sections')          // never send section data in list responses
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -111,23 +112,47 @@ export class AudioLessonsService {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid audio lesson id');
     }
-    const lesson = await this.audioLessonModel.findById(id).select('sections totalSections').lean();
-    if (!lesson) throw new NotFoundException('Audio lesson not found');
-
-    const total = lesson.totalSections ?? (lesson.sections?.length ?? 0);
     const start = (page - 1) * limit;
-    const end = start + limit;
 
-    // Return slim section entries (no subsection detail, trim text to 200 chars)
-    const items = (lesson.sections ?? []).slice(start, end).map((s: any, relIdx: number) => ({
+    // Aggregation: transform sections inside MongoDB so only slim fields for the
+    // requested page are transmitted over the wire. This avoids loading the full
+    // sections array (potentially hundreds of MB) into Node.js.
+    const [result] = await this.audioLessonModel.aggregate([
+      { $match: { _id: new Types.ObjectId(id) } },
+      {
+        $project: {
+          totalSections: 1,
+          sections: {
+            $slice: [
+              {
+                $map: {
+                  input: '$sections',
+                  as: 's',
+                  in: {
+                    title: '$$s.title',
+                    totalSubsections: { $ifNull: ['$$s.totalSubsections', 0] },
+                    hasEnglishAudio:     { $cond: [{ $ifNull: ['$$s.englishAudio',     false] }, true, false] },
+                    hasHindiAudio:       { $cond: [{ $ifNull: ['$$s.hindiAudio',       false] }, true, false] },
+                    hasEasyEnglishAudio: { $cond: [{ $ifNull: ['$$s.easyEnglishAudio', false] }, true, false] },
+                    hasEasyHindiAudio:   { $cond: [{ $ifNull: ['$$s.easyHindiAudio',   false] }, true, false] },
+                    englishTextPreview: { $substrCP: [{ $ifNull: ['$$s.englishText', ''] }, 0, 200] },
+                  },
+                },
+              },
+              start,
+              limit,
+            ],
+          },
+        },
+      },
+    ]);
+
+    if (!result) throw new NotFoundException('Audio lesson not found');
+
+    const total: number = result.totalSections ?? 0;
+    const items = (result.sections ?? []).map((s: any, relIdx: number) => ({
       _index: start + relIdx,
-      title: s.title,
-      totalSubsections: s.totalSubsections ?? s.subsections?.length ?? 0,
-      hasEnglishAudio:     !!s.englishAudio,
-      hasHindiAudio:       !!s.hindiAudio,
-      hasEasyEnglishAudio: !!s.easyEnglishAudio,
-      hasEasyHindiAudio:   !!s.easyHindiAudio,
-      englishTextPreview:  s.englishText?.slice(0, 200) ?? '',
+      ...s,
     }));
 
     return {
@@ -139,16 +164,96 @@ export class AudioLessonsService {
     };
   }
 
+  /**
+   * Returns section HEAD (title, text, section-level audio) — NO subsections array.
+   * Use getSubsections() for the subsection list.
+   */
   async getSectionDetail(id: string, sectionIndex: number) {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid audio lesson id');
     }
-    const lesson = await this.audioLessonModel.findById(id).select('sections').lean();
+    // $slice loads only the one target section from MongoDB
+    const lesson = await this.audioLessonModel
+      .findById(id, { sections: { $slice: [sectionIndex, 1] } })
+      .lean();
     if (!lesson) throw new NotFoundException('Audio lesson not found');
 
-    const section = lesson.sections?.[sectionIndex];
+    const section = lesson.sections?.[0] as any;
     if (!section) throw new NotFoundException(`Section index ${sectionIndex} not found`);
-    return { _index: sectionIndex, ...section };
+
+    // Strip the subsections array — callers use getSubsections() instead
+    const { subsections: _omit, ...sectionHead } = section;
+    return {
+      _index: sectionIndex,
+      ...sectionHead,
+      totalSubsections: sectionHead.totalSubsections ?? _omit?.length ?? 0,
+      hasEnglishAudio:     !!sectionHead.englishAudio,
+      hasHindiAudio:       !!sectionHead.hindiAudio,
+      hasEasyEnglishAudio: !!sectionHead.easyEnglishAudio,
+      hasEasyHindiAudio:   !!sectionHead.easyHindiAudio,
+    };
+  }
+
+  /**
+   * Returns paginated slim subsection entries for one section.
+   * Only loads a single section from MongoDB via $slice.
+   */
+  async getSubsections(id: string, sectionIndex: number, page: number, limit: number) {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+    const lesson = await this.audioLessonModel
+      .findById(id, { sections: { $slice: [sectionIndex, 1] } })
+      .lean();
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+
+    const section = lesson.sections?.[0] as any;
+    if (!section) throw new NotFoundException(`Section index ${sectionIndex} not found`);
+
+    const allSubs: any[] = section.subsections ?? [];
+    const total = section.totalSubsections ?? allSubs.length;
+    const start = (page - 1) * limit;
+    const pageSlice = allSubs.slice(start, start + limit);
+
+    const items = pageSlice.map((sub, relIdx) => ({
+      _index: start + relIdx,
+      title: sub.title,
+      hasEnglishAudio:     !!sub.englishAudio,
+      hasHindiAudio:       !!sub.hindiAudio,
+      hasEasyEnglishAudio: !!sub.easyEnglishAudio,
+      hasEasyHindiAudio:   !!sub.easyHindiAudio,
+      englishTextPreview:  sub.englishText?.slice(0, 200) ?? '',
+    }));
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
+   * Returns full detail for a single subsection (text + audio metadata).
+   * Only loads the target section from MongoDB via $slice.
+   */
+  async getSubsectionDetail(id: string, sectionIndex: number, subIndex: number) {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+    const lesson = await this.audioLessonModel
+      .findById(id, { sections: { $slice: [sectionIndex, 1] } })
+      .lean();
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+
+    const section = lesson.sections?.[0] as any;
+    if (!section) throw new NotFoundException(`Section index ${sectionIndex} not found`);
+
+    const subsection = section.subsections?.[subIndex];
+    if (!subsection) throw new NotFoundException(`Subsection index ${subIndex} not found`);
+
+    return { _index: subIndex, ...subsection };
   }
 
   async update(id: string, updateDto: UpdateAudioLessonDto, files?: { englishAudio?: Express.Multer.File; hindiAudio?: Express.Multer.File }) {

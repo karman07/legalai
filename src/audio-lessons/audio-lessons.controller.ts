@@ -98,6 +98,26 @@ export class AudioLessonsController {
     return this.audioLessonsService.getSections(id, parseInt(page), parseInt(limit));
   }
 
+  // Subsection routes must be declared before :id/sections/:index to avoid conflicts
+  @Get(':id/sections/:sectionIdx/subsections')
+  async getSubsections(
+    @Param('id') id: string,
+    @Param('sectionIdx') sectionIdx: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.audioLessonsService.getSubsections(id, parseInt(sectionIdx), parseInt(page), parseInt(limit));
+  }
+
+  @Get(':id/sections/:sectionIdx/subsections/:subIdx')
+  async getSubsectionDetail(
+    @Param('id') id: string,
+    @Param('sectionIdx') sectionIdx: string,
+    @Param('subIdx') subIdx: string,
+  ) {
+    return this.audioLessonsService.getSubsectionDetail(id, parseInt(sectionIdx), parseInt(subIdx));
+  }
+
   @Get(':id/sections/:index')
   async getSectionDetail(
     @Param('id') id: string,
