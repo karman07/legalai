@@ -12,6 +12,7 @@ export interface Court {
 
 export interface PDF {
   _id: string;
+  title?: string;
   diary_no?: string;
   case_no?: string;
   pet?: string;

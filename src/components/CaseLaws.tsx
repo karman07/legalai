@@ -181,7 +181,7 @@ export default function CaseLaws() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-brand-900 dark:text-brand-100 mb-1 line-clamp-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors leading-tight">
-                        {pdf.case_no || pdf.caseTitle || 'Case Document'}
+                        {pdf.title || pdf.case_no || 'Case Document'}
                       </h3>
                       {pdf.citation && (
                         <p className="text-xs font-mono text-brand-500 dark:text-brand-400 truncate">{pdf.citation}</p>
