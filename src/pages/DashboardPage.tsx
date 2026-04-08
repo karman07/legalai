@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 //import { useTheme } from '../contexts/ThemeContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
-  GraduationCap, BookMarked, HelpCircle, ArrowRight,
+  GraduationCap, BookMarked, ArrowRight,
   LayoutGrid,
 } from 'lucide-react';
 
@@ -32,11 +32,12 @@ export default function DashboardPage() {
       description: 'Create and organize personal study notes with tags',
       path: '/notes', bg: 'bg-emerald-50', iconColor: 'text-emerald-600', border: 'hover:border-emerald-200',
     },
-    {
-      icon: HelpCircle, title: 'Ask a Doubt',
-      description: 'Get questions answered by experienced legal educators',
-      path: '/doubts', bg: 'bg-red-50', iconColor: 'text-red-600', border: 'hover:border-red-200',
-    },
+    // HIDDEN: Ask a Doubt
+    // {
+    //   icon: HelpCircle, title: 'Ask a Doubt',
+    //   description: 'Get questions answered by experienced legal educators',
+    //   path: '/doubts', bg: 'bg-red-50', iconColor: 'text-red-600', border: 'hover:border-red-200',
+    // },
     {
       icon: MessageSquare, title: 'Study Assistant',
       description: 'AI chatbot for general legal study and exam prep help',

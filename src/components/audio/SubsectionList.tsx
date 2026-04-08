@@ -220,17 +220,3 @@ export default function SubsectionList({
     </div>
   );
 }
-
-type ViewMode = 'grid' | 'list';
-
-interface SubsectionListProps {
-  lesson: AudioLesson;
-  section: AudioSection;
-  sectionIndex: number;
-  selectedLanguage: 'english' | 'hindi';
-  onSelectSubsection: (subsectionIndex: number) => void;
-  onPlaySection: () => void;
-  onLanguageChange: (lang: 'english' | 'hindi') => void;
-  onBack: () => void;
-}
-

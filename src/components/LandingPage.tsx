@@ -33,11 +33,12 @@ export default function LandingPage() {
       description: 'Create and organize personal study notes with tags and categories.',
       path: '/notes', bg: 'bg-emerald-50', iconColor: 'text-emerald-600',
     },
-    {
-      icon: HelpCircle, title: 'Ask a Doubt',
-      description: 'Get your questions answered by experienced legal educators.',
-      path: '/doubts', bg: 'bg-red-50', iconColor: 'text-red-600',
-    },
+    // HIDDEN: Ask a Doubt
+    // {
+    //   icon: HelpCircle, title: 'Ask a Doubt',
+    //   description: 'Get your questions answered by experienced legal educators.',
+    //   path: '/doubts', bg: 'bg-red-50', iconColor: 'text-red-600',
+    // },
     {
       icon: MessageSquare, title: 'Study Assistant',
       description: 'AI-powered chatbot to help with your legal studies and exam preparation.',

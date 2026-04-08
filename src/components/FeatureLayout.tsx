@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
-  GraduationCap, BookMarked, HelpCircle, LayoutDashboard,
-  Menu, ChevronRight, Sun, Moon,
+  GraduationCap, BookMarked, LayoutDashboard,
+  Menu, ChevronRight,
 } from 'lucide-react';
 
 type FeatureLayoutProps = {
@@ -14,7 +13,6 @@ type FeatureLayoutProps = {
 
 export default function FeatureLayout({ children }: FeatureLayoutProps) {
   const { user, signOut } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,7 +26,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
     { icon: BookOpen,        title: 'MCQ Quiz',       path: '/mcq'       },
     { icon: Scale,           title: 'Case Laws',      path: '/cases'     },
     { icon: BookMarked,      title: 'My Notes',       path: '/notes'     },
-    { icon: HelpCircle,      title: 'Ask a Doubt',    path: '/doubts'    },
+    // { icon: HelpCircle,      title: 'Ask a Doubt',    path: '/doubts'    },  // HIDDEN
     { icon: MessageSquare,   title: 'Study Assistant',path: '/chatbot'   },
     // { icon: Brain,           title: 'Legal Expert',   path: '/expert'    },  // HIDDEN
     { icon: Volume2,         title: 'Bare Act Reader',path: '/audio'     },
@@ -153,12 +151,14 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
               </span>
             </div>
             <div className="flex items-center gap-1">
+              {/* theme toggle hidden
               <button
                 onClick={toggleTheme}
                 className="p-2 text-brand-400 dark:text-brand-400 hover:text-brand-700 dark:hover:text-gold-400 hover:bg-brand-100 dark:hover:bg-brand-800 rounded-lg transition-colors"
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
+              */}
               <button
                 onClick={handleSignOut}
                 className="p-2 text-brand-400 hover:text-brand-700 dark:hover:text-red-400 hover:bg-brand-100 dark:hover:bg-brand-800 rounded-lg transition-colors"

@@ -52,7 +52,7 @@ export default function Dashboard() {
     { id: "mcq" as Tab, name: "MCQ Quiz", icon: BookOpen, description: "Practice questions" },
     { id: "cases" as Tab, name: "Case Laws", icon: Scale, description: "Browse judgments" },
     { id: "notes" as Tab, name: "My Notes", icon: BookMarked, description: "Personal notes" },
-    { id: "doubts" as Tab, name: "Ask a Doubt", icon: HelpCircle, description: "Get help" },
+    // { id: "doubts" as Tab, name: "Ask a Doubt", icon: HelpCircle, description: "Get help" },  // HIDDEN
     { id: "chatbot" as Tab, name: "Study Bot", icon: MessageSquare, description: "General help" },
     // { id: "expert" as Tab, name: "Legal Expert", icon: Brain, description: "Expert guidance" },  // HIDDEN
     { id: "tts" as Tab, name: "Bare Act Reader", icon: Volume2, description: "Immersive reading" },

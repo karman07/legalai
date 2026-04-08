@@ -2,11 +2,12 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw,
   StickyNote, Menu, FileText, Volume2, VolumeX, Play, Pause, Square,
-  Settings2, ChevronDown,
+  Settings2, ChevronDown, Sparkles, Send, Loader2,
 } from 'lucide-react';
 import { PDF } from '../services/pdfService';
 import NotesPanel from './NotesPanel';
 import ReactMarkdown from 'react-markdown';
+import chatService from '../services/chatService';
 
 interface CustomPDFViewerProps {
   pdf: PDF;
@@ -46,6 +47,42 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
   const [showTtsPanel, setShowTtsPanel] = useState(false);
   const [ttsSupported] = useState(() => 'speechSynthesis' in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // ── Text-selection AI chat state ───────────────────────────
+  const [selectionPopup, setSelectionPopup] = useState<{ x: number; y: number } | null>(null);
+  const [selectedText, setSelectedText] = useState('');
+  const [showAiChat, setShowAiChat] = useState(false);
+  const [aiQuery, setAiQuery] = useState('');
+  const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiConversationId, setAiConversationId] = useState<string | null>(null);
+  const aiChatRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const chatStorageKey = `ai-chat:pdf:${pdf._id}`;
+
+  type ChatMessageItem = { role: 'user' | 'ai'; text: string };
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(chatStorageKey);
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as {
+        aiMessages?: ChatMessageItem[];
+        aiConversationId?: string | null;
+        aiQuery?: string;
+      };
+      setAiMessages(parsed.aiMessages ?? []);
+      setAiConversationId(parsed.aiConversationId ?? null);
+      setAiQuery(parsed.aiQuery ?? '');
+    } catch {
+      // Ignore malformed localStorage payloads
+    }
+  }, [chatStorageKey]);
+
+  useEffect(() => {
+    const payload = JSON.stringify({ aiMessages, aiConversationId, aiQuery });
+    localStorage.setItem(chatStorageKey, payload);
+  }, [chatStorageKey, aiMessages, aiConversationId, aiQuery]);
 
   // Load available TTS voices
   useEffect(() => {
@@ -214,6 +251,66 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
 
     generateThumbnails();
   }, [pdfDoc, showThumbnails, totalPages]);
+
+  // ── Text-selection handler ─────────────────────────────────
+  const handleContentMouseUp = useCallback(() => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim() ?? '';
+    if (text.length > 3) {
+      const range = selection!.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setSelectedText(text);
+      setSelectionPopup({ x: rect.left + rect.width / 2, y: rect.top - 8 });
+    } else {
+      setSelectionPopup(null);
+    }
+  }, []);
+
+  const openAiChat = useCallback(() => {
+    if (selectedText) {
+      setAiQuery(prev => prev.trim() ? prev : `Selected text:\n"${selectedText}"\n\nQuestion: `);
+    }
+    setShowAiChat(true);
+    setSelectionPopup(null);
+  }, [selectedText]);
+
+  const sendAiMessage = useCallback(async () => {
+    const rawQuery = aiQuery.trim();
+    if (!rawQuery || aiLoading) return;
+
+    const userMsg = { role: 'user' as const, text: rawQuery };
+    setAiMessages(prev => [...prev, userMsg]);
+    setAiQuery('');
+    setAiLoading(true);
+
+    try {
+      const res = await chatService.sendMessage(rawQuery, aiConversationId);
+      setAiConversationId(res.conversationId);
+      setAiMessages(prev => [...prev, { role: 'ai' as const, text: res.response }]);
+    } catch (err: any) {
+      setAiMessages(prev => [...prev, { role: 'ai' as const, text: `Error: ${err.message ?? 'Failed to get response'}` }]);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiQuery, aiLoading, selectedText, aiConversationId]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (aiChatRef.current) {
+      aiChatRef.current.scrollTop = aiChatRef.current.scrollHeight;
+    }
+  }, [aiMessages]);
+
+  // Close popup on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (selectionPopup && !(e.target as Element)?.closest('[data-ai-popup]')) {
+        setSelectionPopup(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [selectionPopup]);
 
   return (
     <div className="fixed inset-0 bg-brand-50 flex z-50 flex-col">
@@ -484,7 +581,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
             )}
 
             {/* Content Display */}
-            <div className="flex-1 overflow-auto bg-brand-100 p-2 sm:p-4 md:p-8">
+            <div ref={contentRef} onMouseUp={handleContentMouseUp} className="flex-1 overflow-auto bg-brand-100 p-2 sm:p-4 md:p-8 select-text">
               {loading ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4">
                   <div className="w-12 h-12 border-3 border-gold-500 border-t-transparent rounded-full animate-spin" />
@@ -523,6 +620,105 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
           )}
         </div>
       </div>
+
+      {/* ── Text-Selection AI Popup Bubble ─────────────────── */}
+      {selectionPopup && (
+        <div
+          data-ai-popup="true"
+          style={{ position: 'fixed', left: selectionPopup.x, top: selectionPopup.y, transform: 'translate(-50%, -100%)' }}
+          className="z-[200]"
+        >
+          <button
+            onClick={openAiChat}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-900 hover:bg-brand-700 text-white rounded-full shadow-lg text-xs font-semibold border border-brand-600 transition-all whitespace-nowrap"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+            Ask AI
+          </button>
+        </div>
+      )}
+
+      {/* ── AI Chat Mini Panel ──────────────────────────────── */}
+      {showAiChat && (
+        <div className="fixed bottom-4 right-4 z-[200] w-[92vw] sm:w-[520px] bg-white rounded-2xl shadow-2xl border border-brand-200 flex flex-col overflow-hidden" style={{ maxHeight: '72vh' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 bg-brand-900 text-white flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-gold-400" />
+              <div>
+                <p className="font-semibold text-base leading-tight">Ask AI</p>
+                <p className="text-[11px] text-brand-300">Context-aware legal assistant</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAiChat(false)}
+              className="p-1 rounded-lg hover:bg-brand-700 transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Selected text context badge */}
+          {selectedText && (
+            <div className="px-4 py-3 bg-gold-50 border-b border-gold-200 flex-shrink-0">
+              <p className="text-xs text-gold-700 font-semibold mb-1">Selected text loaded in draft:</p>
+              <p className="text-sm text-gold-800 line-clamp-2 italic">"{selectedText.slice(0, 180)}{selectedText.length > 180 ? '…' : ''}"</p>
+            </div>
+          )}
+
+          {/* Messages */}
+          <div ref={aiChatRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-0" style={{ maxHeight: '44vh' }}>
+            {aiMessages.length === 0 && (
+              <p className="text-sm text-brand-400 text-center py-6">
+                {selectedText ? 'Review the draft below and press send when ready.' : 'Ask anything about this document.'}
+              </p>
+            )}
+            {aiMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-brand-900 text-white'
+                    : 'bg-brand-50 text-brand-800 border border-brand-200'
+                }`}>
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            {aiLoading && (
+              <div className="flex justify-start">
+                <div className="bg-brand-50 border border-brand-200 rounded-xl px-3 py-2 flex items-center gap-1.5">
+                  <Loader2 className="w-3.5 h-3.5 text-brand-400 animate-spin" />
+                  <span className="text-xs text-brand-500">Thinking…</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className="flex items-end gap-2 p-4 border-t border-brand-200 flex-shrink-0 bg-white">
+            <textarea
+              value={aiQuery}
+              onChange={e => setAiQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAiMessage(); }
+              }}
+              placeholder="Write or edit your question before sending..."
+              rows={4}
+              className="flex-1 resize-none text-sm border border-brand-200 rounded-xl px-3.5 py-3 focus:outline-none focus:border-brand-500 text-brand-800 placeholder:text-brand-400"
+            />
+            <button
+              onClick={sendAiMessage}
+              disabled={!aiQuery.trim() || aiLoading}
+              className="px-4 py-3 bg-brand-900 hover:bg-brand-700 disabled:opacity-40 text-white rounded-xl transition-all flex-shrink-0 text-sm font-semibold"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Send className="w-4 h-4" />
+                Send
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

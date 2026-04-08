@@ -120,7 +120,7 @@ export interface AudioSectionsResponse {
   totalPages: number;
 }
 
-/** Full section detail returned by GET /:id/sections/:index — NO subsections array */
+/** Full section detail returned by GET /:id/sections/:index — slim subsections included */
 export interface AudioSectionDetail {
   _index: number;
   title: string;
@@ -137,6 +137,8 @@ export interface AudioSectionDetail {
   hindiAudio?: AudioFile;
   easyEnglishAudio?: AudioFile;
   easyHindiAudio?: AudioFile;
+  /** Slim list of subsections — full detail fetched on demand via getSubsectionDetail() */
+  subsections?: AudioSubsectionSlim[];
 }
 
 /** Slim subsection entry returned by GET /:id/sections/:si/subsections */
