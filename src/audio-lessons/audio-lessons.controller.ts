@@ -88,4 +88,21 @@ export class AudioLessonsController {
   async getById(@Param('id') id: string) {
     return this.audioLessonsService.findOne(id);
   }
+
+  @Get(':id/sections')
+  async getSections(
+    @Param('id') id: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    return this.audioLessonsService.getSections(id, parseInt(page), parseInt(limit));
+  }
+
+  @Get(':id/sections/:index')
+  async getSectionDetail(
+    @Param('id') id: string,
+    @Param('index') index: string,
+  ) {
+    return this.audioLessonsService.getSectionDetail(id, parseInt(index));
+  }
 }

@@ -101,9 +101,54 @@ export class AudioLessonsService {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid audio lesson id');
     }
-    const lesson = await this.audioLessonModel.findById(id).lean();
+    // Exclude the sections array — use getSections() for paginated access
+    const lesson = await this.audioLessonModel.findById(id).select('-sections').lean();
     if (!lesson) throw new NotFoundException('Audio lesson not found');
     return lesson;
+  }
+
+  async getSections(id: string, page: number, limit: number) {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+    const lesson = await this.audioLessonModel.findById(id).select('sections totalSections').lean();
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+
+    const total = lesson.totalSections ?? (lesson.sections?.length ?? 0);
+    const start = (page - 1) * limit;
+    const end = start + limit;
+
+    // Return slim section entries (no subsection detail, trim text to 200 chars)
+    const items = (lesson.sections ?? []).slice(start, end).map((s: any, relIdx: number) => ({
+      _index: start + relIdx,
+      title: s.title,
+      totalSubsections: s.totalSubsections ?? s.subsections?.length ?? 0,
+      hasEnglishAudio:     !!s.englishAudio,
+      hasHindiAudio:       !!s.hindiAudio,
+      hasEasyEnglishAudio: !!s.easyEnglishAudio,
+      hasEasyHindiAudio:   !!s.easyHindiAudio,
+      englishTextPreview:  s.englishText?.slice(0, 200) ?? '',
+    }));
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  async getSectionDetail(id: string, sectionIndex: number) {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+    const lesson = await this.audioLessonModel.findById(id).select('sections').lean();
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+
+    const section = lesson.sections?.[sectionIndex];
+    if (!section) throw new NotFoundException(`Section index ${sectionIndex} not found`);
+    return { _index: sectionIndex, ...section };
   }
 
   async update(id: string, updateDto: UpdateAudioLessonDto, files?: { englishAudio?: Express.Multer.File; hindiAudio?: Express.Multer.File }) {
