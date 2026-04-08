@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Pause, SkipBack, SkipForward, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2 } from 'lucide-react';
-import { audioLessonsAPI, AudioLesson, AudioSectionSlim, AudioSectionDetail } from '../services/api';
+import { audioLessonsAPI, AudioLesson, AudioSectionSlim, AudioSectionDetail, AudioSubsectionSlim, AudioSubsectionDetail } from '../services/api';
 import SectionList from './audio/SectionList';
 import SubsectionList from './audio/SubsectionList';
 import NotesPanel from './NotesPanel';
@@ -27,9 +27,18 @@ export default function AudioPlayer() {
   const [sectionsTotalPages, setSectionsTotalPages] = useState(1);
   const [sectionsLoading, setSectionsLoading] = useState(false);
 
-  // Full detail for the selected section (loaded on demand)
+  // Full detail for the selected section head (no subsections — use subsections state)
   const [currentSectionDetail, setCurrentSectionDetail] = useState<AudioSectionDetail | null>(null);
   const [sectionDetailLoading, setSectionDetailLoading] = useState(false);
+
+  // Paginated slim subsections for the current section
+  const [subsections, setSubsections] = useState<AudioSubsectionSlim[]>([]);
+  const [subsectionsPage, setSubsectionsPage] = useState(1);
+  const [subsectionsTotalPages, setSubsectionsTotalPages] = useState(1);
+  const [subsectionsLoading, setSubsectionsLoading] = useState(false);
+
+  // Full subsection detail (text + audio), loaded only when user hits play
+  const [currentSubsectionDetail, setCurrentSubsectionDetail] = useState<AudioSubsectionDetail | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -64,34 +73,28 @@ export default function AudioPlayer() {
   }, [sectionsPage]);
 
   useEffect(() => {
-    if (!currentSectionDetail || viewMode !== 'player') return;
+    if (viewMode !== 'player') return;
 
     let audioFile;
-    const section = currentSectionDetail;
-
-    if (!section) return;
-
-    if (currentSubsectionIndex >= 0 && section.subsections?.[currentSubsectionIndex]) {
-      const subsection = section.subsections[currentSubsectionIndex];
+    if (currentSubsectionIndex >= 0 && currentSubsectionDetail) {
+      // Playing a subsection — use subsection detail for audio
       audioFile = textMode === 'easy'
-        ? (selectedLanguage === 'english' ? subsection.easyEnglishAudio : subsection.easyHindiAudio)
-        : (selectedLanguage === 'english' ? subsection.englishAudio : subsection.hindiAudio);
-    } else {
+        ? (selectedLanguage === 'english' ? currentSubsectionDetail.easyEnglishAudio : currentSubsectionDetail.easyHindiAudio)
+        : (selectedLanguage === 'english' ? currentSubsectionDetail.englishAudio : currentSubsectionDetail.hindiAudio);
+    } else if (currentSubsectionIndex < 0 && currentSectionDetail) {
+      // Playing section-level audio
       audioFile = textMode === 'easy'
-        ? (selectedLanguage === 'english' ? section.easyEnglishAudio : section.easyHindiAudio)
-        : (selectedLanguage === 'english' ? section.englishAudio : section.hindiAudio);
+        ? (selectedLanguage === 'english' ? currentSectionDetail.easyEnglishAudio : currentSectionDetail.easyHindiAudio)
+        : (selectedLanguage === 'english' ? currentSectionDetail.englishAudio : currentSectionDetail.hindiAudio);
     }
 
     if (audioFile?.url) {
       const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai/api';
-      // Remove only the trailing /api from the base URL
-      const baseUrl = apiBaseUrl.endsWith('/api')
-        ? apiBaseUrl.slice(0, -4)
-        : apiBaseUrl;
+      const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
       setAudioUrl(`${baseUrl}${audioFile.url}`);
       setIsPlaying(false);
     }
-  }, [currentSectionDetail, selectedLanguage, textMode, viewMode, currentSectionIndex, currentSubsectionIndex]);
+  }, [currentSectionDetail, currentSubsectionDetail, selectedLanguage, textMode, viewMode, currentSubsectionIndex]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -130,11 +133,33 @@ export default function AudioPlayer() {
     try {
       const detail = await audioLessonsAPI.getSectionDetail(id, sectionIndex);
       setCurrentSectionDetail(detail);
-      // pick default language based on what audio is available
-      if (detail.englishAudio) setSelectedLanguage('english');
-      else if (detail.hindiAudio) setSelectedLanguage('hindi');
+      if (detail.hasEnglishAudio) setSelectedLanguage('english');
+      else if (detail.hasHindiAudio) setSelectedLanguage('hindi');
     } finally {
       setSectionDetailLoading(false);
+    }
+  };
+
+  const fetchSubsections = async (sectionIdx: number, p: number) => {
+    if (!id) return;
+    setSubsectionsLoading(true);
+    try {
+      const res = await audioLessonsAPI.getSubsections(id, sectionIdx, p, 20);
+      setSubsections(prev => p === 1 ? res.items : [...prev, ...res.items]);
+      setSubsectionsTotalPages(res.totalPages);
+    } finally {
+      setSubsectionsLoading(false);
+    }
+  };
+
+  const fetchSubsectionDetail = async (sectionIdx: number, subIdx: number): Promise<AudioSubsectionDetail | null> => {
+    if (!id) return null;
+    try {
+      const detail = await audioLessonsAPI.getSubsectionDetail(id, sectionIdx, subIdx);
+      setCurrentSubsectionDetail(detail);
+      return detail;
+    } catch {
+      return null;
     }
   };
 
@@ -220,15 +245,18 @@ export default function AudioPlayer() {
   const handlePrevSection = () => {
     if (currentSubsectionIndex > 0) {
       setCurrentSubsectionIndex(currentSubsectionIndex - 1);
+      fetchSubsectionDetail(currentSectionIndex, currentSubsectionIndex - 1);
     } else if (currentSectionIndex > 0) {
       startPlayer(currentSectionIndex - 1, -1);
     }
   };
 
   const handleNextSection = () => {
-    if (!currentSectionDetail) return;
-    if (currentSectionDetail.subsections && currentSubsectionIndex < currentSectionDetail.subsections.length - 1) {
-      setCurrentSubsectionIndex(currentSubsectionIndex + 1);
+    const totalSubs = currentSectionDetail?.totalSubsections ?? subsections.length;
+    if (currentSubsectionIndex < totalSubs - 1) {
+      const nextSub = currentSubsectionIndex + 1;
+      setCurrentSubsectionIndex(nextSub);
+      fetchSubsectionDetail(currentSectionIndex, nextSub);
     } else {
       const totalSections = lesson?.totalSections ?? sections.length;
       if (currentSectionIndex < totalSections - 1) {
@@ -237,11 +265,18 @@ export default function AudioPlayer() {
     }
   };
 
-  const startPlayer = (sectionIndex: number, subsectionIndex: number = -1) => {
+  const startPlayer = async (sectionIndex: number, subsectionIndex: number = -1) => {
     setCurrentSectionIndex(sectionIndex);
     setCurrentSubsectionIndex(subsectionIndex);
-    setCurrentSectionDetail(null);
-    fetchSectionDetail(sectionIndex);
+    setCurrentSubsectionDetail(null);
+    if (subsectionIndex >= 0) {
+      setSectionDetailLoading(true);
+      try {
+        await fetchSubsectionDetail(sectionIndex, subsectionIndex);
+      } finally {
+        setSectionDetailLoading(false);
+      }
+    }
     setViewMode('player');
   };
 
@@ -277,7 +312,11 @@ export default function AudioPlayer() {
         onLoadMoreSections={() => setSectionsPage(p => p + 1)}
         onSelectSection={(idx) => {
           setCurrentSectionIndex(idx);
+          setSubsections([]);
+          setSubsectionsPage(1);
+          setCurrentSectionDetail(null);
           fetchSectionDetail(idx);
+          fetchSubsections(idx, 1);
           setViewMode('subsections');
         }}
         onBack={() => navigate('/audio')}
@@ -296,8 +335,17 @@ export default function AudioPlayer() {
     return (
       <SubsectionList
         lesson={lesson}
-        section={currentSectionDetail}
+        sectionHead={currentSectionDetail}
         sectionIndex={currentSectionIndex}
+        subsections={subsections}
+        subsectionsPage={subsectionsPage}
+        subsectionsTotalPages={subsectionsTotalPages}
+        subsectionsLoading={subsectionsLoading}
+        onLoadMoreSubsections={() => {
+          const next = subsectionsPage + 1;
+          setSubsectionsPage(next);
+          fetchSubsections(currentSectionIndex, next);
+        }}
         selectedLanguage={selectedLanguage}
         onSelectSubsection={(subIdx) => startPlayer(currentSectionIndex, subIdx)}
         onPlaySection={() => startPlayer(currentSectionIndex, -1)}
@@ -378,7 +426,7 @@ export default function AudioPlayer() {
               <div className="p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-brand-900 mb-6">
                   {currentSubsectionIndex >= 0
-                    ? currentSectionDetail.subsections?.[currentSubsectionIndex]?.title
+                    ? (currentSubsectionDetail?.title ?? '...')
                     : currentSectionDetail.title}
                 </h2>
                 <div className="flex gap-2 mb-6">
@@ -392,14 +440,13 @@ export default function AudioPlayer() {
                 <div className="p-6 bg-brand-50 rounded-xl">
                   <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">
                     {(() => {
-                      const content = currentSubsectionIndex >= 0
-                        ? currentSectionDetail.subsections?.[currentSubsectionIndex]
-                        : currentSectionDetail;
-
+                      // Use subsection detail text when playing a subsection
+                      const content = currentSubsectionIndex >= 0 ? currentSubsectionDetail : currentSectionDetail;
+                      if (!content) return 'Loading...';
                       if (textMode === 'government') {
-                        return (selectedLanguage === 'english' ? content?.englishText : content?.hindiText) || 'No transcription available';
+                        return (selectedLanguage === 'english' ? content.englishText : content.hindiText) || 'No transcription available';
                       } else {
-                        return (selectedLanguage === 'english' ? content?.easyEnglishText : content?.easyHindiText) || 'No easy transcription available';
+                        return (selectedLanguage === 'english' ? content.easyEnglishText : content.easyHindiText) || 'No easy transcription available';
                       }
                     })()}
                   </p>
@@ -434,7 +481,7 @@ export default function AudioPlayer() {
             <button onClick={() => handleSkip(-10)} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
               <SkipBack className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
             </button>
-            {currentSubsectionIndex === -1 && currentSectionDetail?.subsections && currentSectionDetail.subsections.length > 0 && (
+            {currentSubsectionIndex === -1 && (currentSectionDetail?.totalSubsections ?? 0) > 0 && (
               <button
                 onClick={() => setCurrentSubsectionIndex(0)}
                 className="p-3 hover:bg-brand-100 rounded-full transition-all group"

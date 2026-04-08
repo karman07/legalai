@@ -120,9 +120,56 @@ export interface AudioSectionsResponse {
   totalPages: number;
 }
 
-/** Full section with subsections returned by GET /:id/sections/:index */
-export interface AudioSectionDetail extends AudioSection {
+/** Full section detail returned by GET /:id/sections/:index — NO subsections array */
+export interface AudioSectionDetail {
   _index: number;
+  title: string;
+  totalSubsections: number;
+  hasEnglishAudio: boolean;
+  hasHindiAudio: boolean;
+  hasEasyEnglishAudio: boolean;
+  hasEasyHindiAudio: boolean;
+  englishText?: string;
+  hindiText?: string;
+  easyEnglishText?: string;
+  easyHindiText?: string;
+  englishAudio?: AudioFile;
+  hindiAudio?: AudioFile;
+  easyEnglishAudio?: AudioFile;
+  easyHindiAudio?: AudioFile;
+}
+
+/** Slim subsection entry returned by GET /:id/sections/:si/subsections */
+export interface AudioSubsectionSlim {
+  _index: number;
+  title: string;
+  hasEnglishAudio: boolean;
+  hasHindiAudio: boolean;
+  hasEasyEnglishAudio: boolean;
+  hasEasyHindiAudio: boolean;
+  englishTextPreview: string;
+}
+
+export interface AudioSubsectionsResponse {
+  items: AudioSubsectionSlim[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/** Full subsection detail returned by GET /:id/sections/:si/subsections/:subi */
+export interface AudioSubsectionDetail {
+  _index: number;
+  title: string;
+  englishText?: string;
+  hindiText?: string;
+  easyEnglishText?: string;
+  easyHindiText?: string;
+  englishAudio?: AudioFile;
+  hindiAudio?: AudioFile;
+  easyEnglishAudio?: AudioFile;
+  easyHindiAudio?: AudioFile;
 }
 
 export const audioLessonsAPI = {
@@ -139,9 +186,17 @@ export const audioLessonsAPI = {
   getSections: async (id: string, page = 1, limit = 20): Promise<AudioSectionsResponse> => {
     return apiClient<AudioSectionsResponse>(`/audio-lessons/${id}/sections?page=${page}&limit=${limit}`);
   },
-  /** Full section detail including subsections — loaded only when user navigates into a section */
+  /** Full section detail (head only, no subsections) */
   getSectionDetail: async (id: string, sectionIndex: number): Promise<AudioSectionDetail> => {
     return apiClient<AudioSectionDetail>(`/audio-lessons/${id}/sections/${sectionIndex}`);
+  },
+  /** Paginated slim subsection list — safe for large sections */
+  getSubsections: async (id: string, sectionIndex: number, page = 1, limit = 20): Promise<AudioSubsectionsResponse> => {
+    return apiClient<AudioSubsectionsResponse>(`/audio-lessons/${id}/sections/${sectionIndex}/subsections?page=${page}&limit=${limit}`);
+  },
+  /** Full subsection detail (text + audio metadata) — loaded only when user plays */
+  getSubsectionDetail: async (id: string, sectionIndex: number, subIndex: number): Promise<AudioSubsectionDetail> => {
+    return apiClient<AudioSubsectionDetail>(`/audio-lessons/${id}/sections/${sectionIndex}/subsections/${subIndex}`);
   },
 };
 
