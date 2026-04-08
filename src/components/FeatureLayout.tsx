@@ -4,8 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
-  GraduationCap, Brain, BookMarked, HelpCircle, LayoutDashboard,
-  Menu, Library, ChevronRight, Sun, Moon,
+  GraduationCap, BookMarked, HelpCircle, LayoutDashboard,
+  Menu, ChevronRight, Sun, Moon,
 } from 'lucide-react';
 
 type FeatureLayoutProps = {
@@ -30,10 +30,10 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
     { icon: BookMarked,      title: 'My Notes',       path: '/notes'     },
     { icon: HelpCircle,      title: 'Ask a Doubt',    path: '/doubts'    },
     { icon: MessageSquare,   title: 'Study Assistant',path: '/chatbot'   },
-    { icon: Brain,           title: 'Legal Expert',   path: '/expert'    },
+    // { icon: Brain,           title: 'Legal Expert',   path: '/expert'    },  // HIDDEN
     { icon: Volume2,         title: 'Bare Act Reader',path: '/audio'     },
     { icon: FileText,        title: 'Answer Review',  path: '/answers'   },
-    { icon: Library,         title: 'My Library',     path: '/library'   },
+    // { icon: Library,         title: 'My Library',     path: '/library'   },  // HIDDEN
   ];
 
   const SidebarContent = () => (

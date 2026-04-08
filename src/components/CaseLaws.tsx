@@ -1,5 +1,29 @@
 import { useState, useEffect } from 'react';
-import { Scale, Search, FileText, X, Download, Eye, Loader2, ChevronLeft, ChevronRight, Building2, File, Image, Calendar } from 'lucide-react';
+import { Scale, Search, FileText, X, Download, Eye, ChevronLeft, ChevronRight, Building2, File, Image, Calendar } from 'lucide-react';
+
+function PDFSkeletonCard() {
+  return (
+    <div className="bg-white dark:bg-brand-800 rounded-2xl overflow-hidden border border-brand-200 dark:border-brand-700 flex flex-col animate-pulse">
+      <div className="p-5 border-b border-brand-100 dark:border-brand-700/60">
+        <div className="flex items-start gap-3">
+          <div className="w-11 h-11 rounded-xl bg-brand-200 dark:bg-brand-700 flex-shrink-0" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-brand-200 dark:bg-brand-700 rounded w-3/4" />
+            <div className="h-3 bg-brand-100 dark:bg-brand-700/60 rounded w-1/2" />
+          </div>
+        </div>
+      </div>
+      <div className="p-4 space-y-3 flex-1">
+        <div className="h-3 bg-brand-100 dark:bg-brand-700/60 rounded w-full" />
+        <div className="h-3 bg-brand-100 dark:bg-brand-700/60 rounded w-5/6" />
+        <div className="h-3 bg-brand-100 dark:bg-brand-700/60 rounded w-4/6" />
+      </div>
+      <div className="px-4 py-3 border-t border-brand-100 dark:border-brand-700/60">
+        <div className="h-10 bg-brand-200 dark:bg-brand-700 rounded-xl" />
+      </div>
+    </div>
+  );
+}
 import pdfService, { PDF } from '../services/pdfService';
 import CustomPDFViewer from './CustomPDFViewer';
 
@@ -12,6 +36,7 @@ export default function CaseLaws() {
   const [selectedPDF, setSelectedPDF] = useState<PDF | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [activeSearch, setActiveSearch] = useState('');
 
   const getFileType = (fileName: string): string => {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -33,55 +58,34 @@ export default function CaseLaws() {
 
 
   useEffect(() => {
-    loadPDFs();
-  }, [page]);
+    fetchDocs(page, activeSearch);
+  }, [page, activeSearch]);
 
-
-
-  const loadPDFs = async () => {
+  const fetchDocs = async (pg: number, query: string) => {
     setLoading(true);
     setError('');
     try {
-      const response = await pdfService.getPDFs({
-        page,
-        limit: 12,
-      });
-      console.log('PDF Response:', response);
-      console.log('PDF Items:', response.items);
+      const response = query.trim()
+        ? await pdfService.searchPDFs(query, { page: pg, limit: 12 })
+        : await pdfService.getPDFs({ page: pg, limit: 12 });
       setPdfs(response.items);
       setTotalPages(response.totalPages);
     } catch (err: any) {
-      console.error('Load PDFs Error:', err);
       setError(err.message || 'Failed to load case laws');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      loadPDFs();
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const response = await pdfService.searchPDFs(searchTerm, {
-        page,
-        limit: 12,
-      });
-      setPdfs(response.items);
-      setTotalPages(response.totalPages);
-    } catch (err: any) {
-      setError(err.message || 'Search failed');
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = () => {
+    setPage(1);
+    setActiveSearch(searchTerm);
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setPage(1);
+    setActiveSearch('');
   };
 
 
@@ -139,10 +143,10 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-gold-600 animate-spin" />
+      {/* Skeleton grid on initial load */}
+      {loading && pdfs.length === 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {Array.from({ length: 12 }).map((_, i) => <PDFSkeletonCard key={i} />)}
         </div>
       )}
 
@@ -155,9 +159,9 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {/* Document Grid */}
-      {!loading && pdfs.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {/* Document Grid – keep visible with reduced opacity while loading next page */}
+      {pdfs.length > 0 && (
+        <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
           {pdfs.map((pdf) => {
             const fileName = pdf.file || pdf.fileUrl?.split('/').pop() || 'document.pdf';
             const FileIcon = getFileIcon(fileName);

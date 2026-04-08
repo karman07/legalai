@@ -3,8 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 //import { useTheme } from '../contexts/ThemeContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
-  GraduationCap, Brain, BookMarked, HelpCircle, ArrowRight,
-  Library, LayoutGrid,
+  GraduationCap, BookMarked, HelpCircle, ArrowRight,
+  LayoutGrid,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -42,11 +42,12 @@ export default function DashboardPage() {
       description: 'AI chatbot for general legal study and exam prep help',
       path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600', border: 'hover:border-cyan-200',
     },
-    {
-      icon: Brain, title: 'Legal Expert Bot',
-      description: 'Advanced AI for complex legal analysis and RAG search',
-      path: '/expert', bg: 'bg-violet-50', iconColor: 'text-violet-600', border: 'hover:border-violet-200',
-    },
+    // HIDDEN: Legal Expert Bot
+    // {
+    //   icon: Brain, title: 'Legal Expert Bot',
+    //   description: 'Advanced AI for complex legal analysis and RAG search',
+    //   path: '/expert', bg: 'bg-violet-50', iconColor: 'text-violet-600', border: 'hover:border-violet-200',
+    // },
     {
       icon: Volume2, title: 'Bare Act Reader',
       description: 'Read Indian laws with audio narration and simplified language',
@@ -57,11 +58,12 @@ export default function DashboardPage() {
       description: 'Submit written answers and get detailed AI-powered feedback',
       path: '/answers', bg: 'bg-pink-50', iconColor: 'text-pink-600', border: 'hover:border-pink-200',
     },
-    {
-      icon: Library, title: 'My Library',
-      description: 'Saved case laws, notes, and curated study resources',
-      path: '/library', bg: 'bg-teal-50', iconColor: 'text-teal-600', border: 'hover:border-teal-200',
-    },
+    // HIDDEN: My Library
+    // {
+    //   icon: Library, title: 'My Library',
+    //   description: 'Saved case laws, notes, and curated study resources',
+    //   path: '/library', bg: 'bg-teal-50', iconColor: 'text-teal-600', border: 'hover:border-teal-200',
+    // },
   ];
 
   const hour = new Date().getHours();

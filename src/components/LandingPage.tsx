@@ -43,11 +43,12 @@ export default function LandingPage() {
       description: 'AI-powered chatbot to help with your legal studies and exam preparation.',
       path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600',
     },
-    {
-      icon: Brain, title: 'Legal Expert Bot',
-      description: 'Advanced AI assistant for complex legal analysis and case discussions.',
-      path: '/expert', bg: 'bg-violet-50', iconColor: 'text-violet-600',
-    },
+    // HIDDEN: Legal Expert Bot
+    // {
+    //   icon: Brain, title: 'Legal Expert Bot',
+    //   description: 'Advanced AI assistant for complex legal analysis and case discussions.',
+    //   path: '/expert', bg: 'bg-violet-50', iconColor: 'text-violet-600',
+    // },
     {
       icon: Volume2, title: 'Bare Act Reader',
       description: 'Read and listen to Indian laws with audio narration and simplified explanations.',
@@ -58,11 +59,12 @@ export default function LandingPage() {
       description: 'Submit written answers and get detailed AI feedback from educators.',
       path: '/answers', bg: 'bg-pink-50', iconColor: 'text-pink-600',
     },
-    {
-      icon: Library, title: 'My Library',
-      description: 'A curated space to save case laws, notes, and study resources.',
-      path: '/library', bg: 'bg-teal-50', iconColor: 'text-teal-600',
-    },
+    // HIDDEN: My Library
+    // {
+    //   icon: Library, title: 'My Library',
+    //   description: 'A curated space to save case laws, notes, and study resources.',
+    //   path: '/library', bg: 'bg-teal-50', iconColor: 'text-teal-600',
+    // },
   ];
 
   const stats = [

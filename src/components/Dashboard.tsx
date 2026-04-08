@@ -54,10 +54,10 @@ export default function Dashboard() {
     { id: "notes" as Tab, name: "My Notes", icon: BookMarked, description: "Personal notes" },
     { id: "doubts" as Tab, name: "Ask a Doubt", icon: HelpCircle, description: "Get help" },
     { id: "chatbot" as Tab, name: "Study Bot", icon: MessageSquare, description: "General help" },
-    { id: "expert" as Tab, name: "Legal Expert", icon: Brain, description: "Expert guidance" },
+    // { id: "expert" as Tab, name: "Legal Expert", icon: Brain, description: "Expert guidance" },  // HIDDEN
     { id: "tts" as Tab, name: "Bare Act Reader", icon: Volume2, description: "Immersive reading" },
     { id: "answers" as Tab, name: "Answer Review", icon: FileText, description: "Submit answers" },
-    { id: "library" as Tab, name: "My Library", icon: LibraryIcon, description: "Saved content" },
+    // { id: "library" as Tab, name: "My Library", icon: LibraryIcon, description: "Saved content" },  // HIDDEN
   ];
 
   return (

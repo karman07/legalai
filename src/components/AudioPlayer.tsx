@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Pause, SkipBack, SkipForward, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2 } from 'lucide-react';
-import { audioLessonsAPI, AudioLesson } from '../services/api';
+import { audioLessonsAPI, AudioLesson, AudioSectionSlim, AudioSectionDetail } from '../services/api';
 import SectionList from './audio/SectionList';
 import SubsectionList from './audio/SubsectionList';
 import NotesPanel from './NotesPanel';
@@ -11,11 +11,26 @@ type TextMode = 'government' | 'easy';
 type ViewMode = 'sections' | 'subsections' | 'player';
 type PlaybackSpeed = 0.5 | 0.75 | 1 | 1.25 | 1.5 | 2;
 
+const SECTIONS_PER_PAGE = 20;
+
 export default function AudioPlayer() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  // Lesson head (no sections array)
   const [lesson, setLesson] = useState<AudioLesson | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Paginated slim sections list
+  const [sections, setSections] = useState<AudioSectionSlim[]>([]);
+  const [sectionsPage, setSectionsPage] = useState(1);
+  const [sectionsTotalPages, setSectionsTotalPages] = useState(1);
+  const [sectionsLoading, setSectionsLoading] = useState(false);
+
+  // Full detail for the selected section (loaded on demand)
+  const [currentSectionDetail, setCurrentSectionDetail] = useState<AudioSectionDetail | null>(null);
+  const [sectionDetailLoading, setSectionDetailLoading] = useState(false);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -33,15 +48,26 @@ export default function AudioPlayer() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Load lesson head on mount
   useEffect(() => {
     if (id) fetchLesson(id);
   }, [id]);
 
+  // Load first page of sections once lesson is ready
   useEffect(() => {
-    if (!lesson || viewMode !== 'player') return;
+    if (id && lesson) fetchSections(1);
+  }, [lesson]);
+
+  // Load more sections when page changes
+  useEffect(() => {
+    if (id && lesson && sectionsPage > 1) fetchSections(sectionsPage);
+  }, [sectionsPage]);
+
+  useEffect(() => {
+    if (!currentSectionDetail || viewMode !== 'player') return;
 
     let audioFile;
-    const section = lesson.sections?.[currentSectionIndex];
+    const section = currentSectionDetail;
 
     if (!section) return;
 
@@ -65,7 +91,7 @@ export default function AudioPlayer() {
       setAudioUrl(`${baseUrl}${audioFile.url}`);
       setIsPlaying(false);
     }
-  }, [lesson, selectedLanguage, textMode, viewMode, currentSectionIndex, currentSubsectionIndex]);
+  }, [currentSectionDetail, selectedLanguage, textMode, viewMode, currentSectionIndex, currentSubsectionIndex]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -79,12 +105,36 @@ export default function AudioPlayer() {
       setLoading(true);
       const data = await audioLessonsAPI.getAudioLesson(lessonId);
       setLesson(data);
-      if (data.sections?.[0]?.englishAudio) setSelectedLanguage('english');
-      else if (data.sections?.[0]?.hindiAudio) setSelectedLanguage('hindi');
     } catch {
       setLesson(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSections = async (p: number) => {
+    if (!id) return;
+    setSectionsLoading(true);
+    try {
+      const res = await audioLessonsAPI.getSections(id, p, SECTIONS_PER_PAGE);
+      setSections(prev => p === 1 ? res.items : [...prev, ...res.items]);
+      setSectionsTotalPages(res.totalPages);
+    } finally {
+      setSectionsLoading(false);
+    }
+  };
+
+  const fetchSectionDetail = async (sectionIndex: number) => {
+    if (!id) return;
+    setSectionDetailLoading(true);
+    try {
+      const detail = await audioLessonsAPI.getSectionDetail(id, sectionIndex);
+      setCurrentSectionDetail(detail);
+      // pick default language based on what audio is available
+      if (detail.englishAudio) setSelectedLanguage('english');
+      else if (detail.hindiAudio) setSelectedLanguage('hindi');
+    } finally {
+      setSectionDetailLoading(false);
     }
   };
 
@@ -171,27 +221,27 @@ export default function AudioPlayer() {
     if (currentSubsectionIndex > 0) {
       setCurrentSubsectionIndex(currentSubsectionIndex - 1);
     } else if (currentSectionIndex > 0) {
-      const prevSection = lesson?.sections?.[currentSectionIndex - 1];
-      setCurrentSectionIndex(currentSectionIndex - 1);
-      setCurrentSubsectionIndex(prevSection?.subsections?.length ? prevSection.subsections.length - 1 : -1);
+      startPlayer(currentSectionIndex - 1, -1);
     }
   };
 
   const handleNextSection = () => {
-    if (!lesson?.sections) return;
-    const currentSection = lesson.sections[currentSectionIndex];
-
-    if (currentSection?.subsections && currentSubsectionIndex < currentSection.subsections.length - 1) {
+    if (!currentSectionDetail) return;
+    if (currentSectionDetail.subsections && currentSubsectionIndex < currentSectionDetail.subsections.length - 1) {
       setCurrentSubsectionIndex(currentSubsectionIndex + 1);
-    } else if (currentSectionIndex < lesson.sections.length - 1) {
-      setCurrentSectionIndex(currentSectionIndex + 1);
-      setCurrentSubsectionIndex(-1);
+    } else {
+      const totalSections = lesson?.totalSections ?? sections.length;
+      if (currentSectionIndex < totalSections - 1) {
+        startPlayer(currentSectionIndex + 1, -1);
+      }
     }
   };
 
   const startPlayer = (sectionIndex: number, subsectionIndex: number = -1) => {
     setCurrentSectionIndex(sectionIndex);
     setCurrentSubsectionIndex(subsectionIndex);
+    setCurrentSectionDetail(null);
+    fetchSectionDetail(sectionIndex);
     setViewMode('player');
   };
 
@@ -220,8 +270,14 @@ export default function AudioPlayer() {
     return (
       <SectionList
         lesson={lesson}
+        sections={sections}
+        sectionsPage={sectionsPage}
+        sectionsTotalPages={sectionsTotalPages}
+        sectionsLoading={sectionsLoading}
+        onLoadMoreSections={() => setSectionsPage(p => p + 1)}
         onSelectSection={(idx) => {
           setCurrentSectionIndex(idx);
+          fetchSectionDetail(idx);
           setViewMode('subsections');
         }}
         onBack={() => navigate('/audio')}
@@ -230,13 +286,17 @@ export default function AudioPlayer() {
   }
 
   if (viewMode === 'subsections') {
-    const currentSection = lesson.sections?.[currentSectionIndex];
-    if (!currentSection) return null;
-
+    if (sectionDetailLoading || !currentSectionDetail) {
+      return (
+        <div className="min-h-screen bg-brand-50 flex items-center justify-center">
+          <Loader2 className="w-12 h-12 text-gold-600 animate-spin" />
+        </div>
+      );
+    }
     return (
       <SubsectionList
         lesson={lesson}
-        section={currentSection}
+        section={currentSectionDetail}
         sectionIndex={currentSectionIndex}
         selectedLanguage={selectedLanguage}
         onSelectSubsection={(subIdx) => startPlayer(currentSectionIndex, subIdx)}
@@ -248,7 +308,6 @@ export default function AudioPlayer() {
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const currentSection = lesson.sections?.[currentSectionIndex];
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-brand-50 via-white to-slate-50">
@@ -269,8 +328,8 @@ export default function AudioPlayer() {
             <div className="flex-1 min-w-0">
               <h1 className="text-sm sm:text-base font-bold text-brand-900 truncate">
                 {currentSubsectionIndex >= 0
-                  ? `${currentSection?.title} › ${currentSection?.subsections?.[currentSubsectionIndex]?.title}`
-                  : currentSection?.title}
+                  ? `${currentSectionDetail?.title} › ${currentSectionDetail?.subsections?.[currentSubsectionIndex]?.title}`
+                  : currentSectionDetail?.title}
               </h1>
               <div className="flex items-center gap-3 mt-1">
                 <p className="text-xs text-brand-500">
@@ -314,13 +373,13 @@ export default function AudioPlayer() {
 
       <div className="flex-1 overflow-auto p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
-          {currentSection && (
+          {currentSectionDetail && (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-brand-900 mb-6">
                   {currentSubsectionIndex >= 0
-                    ? currentSection.subsections?.[currentSubsectionIndex]?.title
-                    : currentSection.title}
+                    ? currentSectionDetail.subsections?.[currentSubsectionIndex]?.title
+                    : currentSectionDetail.title}
                 </h2>
                 <div className="flex gap-2 mb-6">
                   <button onClick={() => setTextMode('government')} className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${textMode === 'government' ? 'bg-slate-700 text-white shadow-md' : 'bg-brand-100 text-brand-700 hover:bg-brand-200'}`}>
@@ -334,8 +393,8 @@ export default function AudioPlayer() {
                   <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">
                     {(() => {
                       const content = currentSubsectionIndex >= 0
-                        ? currentSection.subsections?.[currentSubsectionIndex]
-                        : currentSection;
+                        ? currentSectionDetail.subsections?.[currentSubsectionIndex]
+                        : currentSectionDetail;
 
                       if (textMode === 'government') {
                         return (selectedLanguage === 'english' ? content?.englishText : content?.hindiText) || 'No transcription available';
@@ -375,7 +434,7 @@ export default function AudioPlayer() {
             <button onClick={() => handleSkip(-10)} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
               <SkipBack className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
             </button>
-            {currentSubsectionIndex === -1 && currentSection?.subsections && currentSection.subsections.length > 0 && (
+            {currentSubsectionIndex === -1 && currentSectionDetail?.subsections && currentSectionDetail.subsections.length > 0 && (
               <button
                 onClick={() => setCurrentSubsectionIndex(0)}
                 className="p-3 hover:bg-brand-100 rounded-full transition-all group"

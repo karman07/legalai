@@ -1,11 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Search, Volume2, Grid3X3, List, Filter, SortAsc } from 'lucide-react';
+import { Search, Volume2, Grid3X3, List, Filter, SortAsc } from 'lucide-react';
 import { audioLessonsAPI, AudioLesson } from '../services/api';
 import LessonCard from './audio/LessonCard';
 
 type ViewMode = 'grid' | 'list';
 type SortBy = 'newest' | 'oldest' | 'title';
+
+function LessonSkeletonCard({ viewMode }: { viewMode: ViewMode }) {
+  if (viewMode === 'list') {
+    return (
+      <div className="bg-white rounded-xl border border-brand-200 p-4 flex gap-4 animate-pulse">
+        <div className="w-12 h-12 rounded-xl bg-brand-200 flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-brand-200 rounded w-2/3" />
+          <div className="h-3 bg-brand-100 rounded w-full" />
+          <div className="h-3 bg-brand-100 rounded w-1/2" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-white rounded-2xl border border-brand-200 overflow-hidden animate-pulse">
+      <div className="p-5 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-xl bg-brand-200 flex-shrink-0" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-brand-200 rounded w-3/4" />
+            <div className="h-3 bg-brand-100 rounded w-1/3" />
+          </div>
+        </div>
+        <div className="h-3 bg-brand-100 rounded w-full" />
+        <div className="h-3 bg-brand-100 rounded w-5/6" />
+      </div>
+      <div className="px-5 pb-5">
+        <div className="h-10 bg-brand-200 rounded-xl" />
+      </div>
+    </div>
+  );
+}
 
 export default function AudioLessons() {
   const navigate = useNavigate();
@@ -64,8 +97,18 @@ export default function AudioLessons() {
 
   if (loading && audioLessons.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-gold-600 animate-spin" />
+      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-gold-50/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="mb-8">
+            <div className="h-10 bg-brand-200 rounded w-1/3 mb-3 animate-pulse" />
+            <div className="h-4 bg-brand-100 rounded w-1/2 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <LessonSkeletonCard key={i} viewMode="grid" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -192,11 +235,11 @@ export default function AudioLessons() {
           </div>
         )}
 
-        {/* Lessons Grid/List */}
+        {/* Lessons Grid/List – keep visible with reduced opacity during page transitions */}
         <div className={`${viewMode === 'grid'
           ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
           : 'space-y-4'
-          }`}>
+          } transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
           {filteredAndSortedLessons.map((lesson) => (
             <LessonCard
               key={lesson._id}

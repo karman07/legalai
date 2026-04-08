@@ -83,6 +83,7 @@ export interface AudioLesson {
   description?: string;
   totalSections?: number;
   totalSubsections?: number;
+  // sections is NOT included in the head response — use audioLessonsAPI.getSections()
   sections?: AudioSection[];
   category?: string;
   tags?: string[];
@@ -99,14 +100,48 @@ export interface AudioLessonsResponse {
   totalPages: number;
 }
 
+/** Slim section entry returned by GET /:id/sections (no subsection bodies) */
+export interface AudioSectionSlim {
+  _index: number;
+  title: string;
+  totalSubsections: number;
+  hasEnglishAudio: boolean;
+  hasHindiAudio: boolean;
+  hasEasyEnglishAudio: boolean;
+  hasEasyHindiAudio: boolean;
+  englishTextPreview: string;
+}
+
+export interface AudioSectionsResponse {
+  items: AudioSectionSlim[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/** Full section with subsections returned by GET /:id/sections/:index */
+export interface AudioSectionDetail extends AudioSection {
+  _index: number;
+}
+
 export const audioLessonsAPI = {
   getAudioLessons: async (page = 1, limit = 10, category?: string): Promise<AudioLessonsResponse> => {
     const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
     if (category) params.append('category', category);
     return apiClient<AudioLessonsResponse>(`/audio-lessons?${params}`);
   },
+  /** Returns lesson head (no sections array) */
   getAudioLesson: async (id: string): Promise<AudioLesson> => {
     return apiClient<AudioLesson>(`/audio-lessons/${id}`);
+  },
+  /** Paginated slim section list — safe for large acts */
+  getSections: async (id: string, page = 1, limit = 20): Promise<AudioSectionsResponse> => {
+    return apiClient<AudioSectionsResponse>(`/audio-lessons/${id}/sections?page=${page}&limit=${limit}`);
+  },
+  /** Full section detail including subsections — loaded only when user navigates into a section */
+  getSectionDetail: async (id: string, sectionIndex: number): Promise<AudioSectionDetail> => {
+    return apiClient<AudioSectionDetail>(`/audio-lessons/${id}/sections/${sectionIndex}`);
   },
 };
 
