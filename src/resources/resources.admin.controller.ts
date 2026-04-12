@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
-import { ResourcesService } from './resources.service';
+import { ResourceListResponse, ResourceResponse, ResourcesService } from './resources.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 
@@ -59,7 +59,7 @@ export class ResourcesAdminController {
     @Body() dto: CreateResourceDto,
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request,
-  ) {
+  ): Promise<ResourceResponse> {
     if (!file) {
       throw new BadRequestException('File is required');
     }
@@ -86,7 +86,7 @@ export class ResourcesAdminController {
     @Query('fileType') fileType?: 'pdf' | 'md',
     @Query('category') category?: string,
     @Query('isActive') isActive?: string,
-  ) {
+  ): Promise<ResourceListResponse> {
     return this.resourcesService.findAll({
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
@@ -98,7 +98,7 @@ export class ResourcesAdminController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string): Promise<ResourceResponse> {
     return this.resourcesService.findOne(id);
   }
 
@@ -129,7 +129,7 @@ export class ResourcesAdminController {
     @Param('id') id: string,
     @Body() dto: UpdateResourceDto,
     @UploadedFile() file?: Express.Multer.File,
-  ) {
+  ): Promise<ResourceResponse> {
     const payload: any = { ...dto };
     if (file) {
       payload.fileName = file.filename;
@@ -142,7 +142,7 @@ export class ResourcesAdminController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string): Promise<{ message: string; id: string }> {
     return this.resourcesService.remove(id);
   }
 }

@@ -5,6 +5,34 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Resource, ResourceDocument } from '../schemas/resource.schema';
 
+export interface ResourceResponse {
+  _id: string;
+  title: string;
+  description?: string;
+  fileType: 'pdf' | 'md';
+  fileName: string;
+  fileUrl: string;
+  originalName?: string;
+  category?: string;
+  tags?: string[];
+  isActive: boolean;
+  uploadedBy?: any;
+  fileSize?: number;
+  mimeType?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ResourceListResponse {
+  items: ResourceResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 @Injectable()
 export class ResourcesService {
   constructor(
@@ -29,7 +57,7 @@ export class ResourcesService {
     return [];
   }
 
-  async create(payload: any, uploadedBy?: string) {
+  async create(payload: any, uploadedBy?: string): Promise<ResourceResponse> {
     const data = {
       ...payload,
       tags: this.normalizeTags(payload.tags),
@@ -38,7 +66,13 @@ export class ResourcesService {
     };
 
     const doc = new this.resourceModel(data);
-    return doc.save();
+    const saved = await doc.save();
+    const item = saved.toObject();
+    return {
+      ...(item as any),
+      _id: String((item as any)._id),
+      fileUrl: `/uploads/resources/${item.fileName}`,
+    };
   }
 
   async findAll(params: {
@@ -48,7 +82,7 @@ export class ResourcesService {
     fileType?: 'pdf' | 'md';
     category?: string;
     isActive?: boolean;
-  }) {
+  }): Promise<ResourceListResponse> {
     const {
       page = 1,
       limit = 20,
@@ -77,15 +111,19 @@ export class ResourcesService {
         .sort({ createdAt: -1 })
         .skip((validatedPage - 1) * validatedLimit)
         .limit(validatedLimit)
-        .lean(),
+        .lean()
+        .exec(),
       this.resourceModel.countDocuments(filter),
     ]);
 
+    const mappedItems: ResourceResponse[] = (items as any[]).map((item) => ({
+      ...item,
+      _id: String(item._id),
+      fileUrl: `/uploads/resources/${item.fileName}`,
+    }));
+
     return {
-      items: items.map((item) => ({
-        ...item,
-        fileUrl: `/uploads/resources/${item.fileName}`,
-      })),
+      items: mappedItems,
       total,
       page: validatedPage,
       limit: validatedLimit,
@@ -95,28 +133,29 @@ export class ResourcesService {
     };
   }
 
-  async getCategories() {
+  async getCategories(): Promise<string[]> {
     const categories = await this.resourceModel.distinct('category', { isActive: true });
     return categories.filter(Boolean).sort();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ResourceResponse> {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid resource id');
     }
 
-    const item = await this.resourceModel.findById(id).lean();
+    const item = await this.resourceModel.findById(id).lean().exec();
     if (!item) {
       throw new NotFoundException('Resource not found');
     }
 
     return {
-      ...item,
+      ...(item as any),
+      _id: String((item as any)._id),
       fileUrl: `/uploads/resources/${item.fileName}`,
     };
   }
 
-  async update(id: string, dto: any) {
+  async update(id: string, dto: any): Promise<ResourceResponse> {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid resource id');
     }
@@ -135,14 +174,19 @@ export class ResourcesService {
       dto.tags = this.normalizeTags(dto.tags);
     }
 
-    const updated = await this.resourceModel.findByIdAndUpdate(id, dto, { new: true }).lean();
+    const updated = await this.resourceModel.findByIdAndUpdate(id, dto, { new: true }).lean().exec();
+    if (!updated) {
+      throw new NotFoundException('Resource not found');
+    }
+
     return {
-      ...updated,
-      fileUrl: updated?.fileName ? `/uploads/resources/${updated.fileName}` : null,
+      ...(updated as any),
+      _id: String((updated as any)._id),
+      fileUrl: `/uploads/resources/${updated.fileName}`,
     };
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<{ message: string; id: string }> {
     if (!id || !Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid resource id');
     }

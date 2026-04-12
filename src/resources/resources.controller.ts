@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ResourcesService } from './resources.service';
+import { ResourceListResponse, ResourceResponse, ResourcesService } from './resources.service';
 
 @Controller('resources')
 @UseGuards(JwtAuthGuard)
@@ -14,7 +14,7 @@ export class ResourcesController {
     @Query('search') search?: string,
     @Query('fileType') fileType?: 'pdf' | 'md',
     @Query('category') category?: string,
-  ) {
+  ): Promise<ResourceListResponse> {
     return this.resourcesService.findAll({
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
@@ -26,12 +26,12 @@ export class ResourcesController {
   }
 
   @Get('categories')
-  async categories() {
+  async categories(): Promise<string[]> {
     return this.resourcesService.getCategories();
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id') id: string): Promise<ResourceResponse> {
     return this.resourcesService.findOne(id);
   }
 }
