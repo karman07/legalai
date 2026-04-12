@@ -9,6 +9,15 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { User, UserDocument } from '../schemas/user.schema';
+import { Quiz, QuizDocument } from '../schemas/quiz.schema';
+import { Pdf, PdfDocument } from '../schemas/pdf.schema';
+import { AudioLesson, AudioLessonDocument } from '../schemas/audio-lesson.schema';
+import { Note, NoteDocument } from '../schemas/note.schema';
+import { Resource, ResourceDocument } from '../schemas/resource.schema';
+import { Blog, BlogDocument } from '../schemas/blog.schema';
+import { Chat } from '../schemas/chat.schema';
+import { Conversation } from '../schemas/conversation.schema';
+import { AnswerCheck, AnswerCheckDocument } from '../schemas/answer-check.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 import { EmailService } from '../email/email.service';
@@ -18,6 +27,15 @@ import { RegistrationType, UserRole } from '../common/enums/user-role.enum';
 export class AdminService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Quiz.name) private quizModel: Model<QuizDocument>,
+    @InjectModel(Pdf.name) private pdfModel: Model<PdfDocument>,
+    @InjectModel(AudioLesson.name) private audioLessonModel: Model<AudioLessonDocument>,
+    @InjectModel(Note.name) private noteModel: Model<NoteDocument>,
+    @InjectModel(Resource.name) private resourceModel: Model<ResourceDocument>,
+    @InjectModel(Blog.name) private blogModel: Model<BlogDocument>,
+    @InjectModel(Chat.name) private chatModel: Model<any>,
+    @InjectModel(Conversation.name) private conversationModel: Model<any>,
+    @InjectModel(AnswerCheck.name) private answerCheckModel: Model<AnswerCheckDocument>,
     private firebaseService: FirebaseService,
     private emailService: EmailService,
   ) {}
@@ -295,6 +313,138 @@ export class AdminService {
         acc[curr._id] = curr.count;
         return acc;
       }, {}),
+    };
+  }
+
+  async getSystemOverview() {
+    const [
+      totalUsers,
+      activeUsers,
+      verifiedUsers,
+      totalQuizzes,
+      publishedQuizzes,
+      totalPdfs,
+      activePdfs,
+      totalAudioLessons,
+      totalNotes,
+      totalResources,
+      activeResources,
+      totalBlogs,
+      publishedBlogs,
+      totalChats,
+      totalConversations,
+      totalAnswerChecks,
+      uniqueAuthenticatedVisitors,
+      anonymousVisitors,
+    ] = await Promise.all([
+      this.userModel.countDocuments(),
+      this.userModel.countDocuments({ isActive: true }),
+      this.userModel.countDocuments({ isVerified: true }),
+      this.quizModel.countDocuments(),
+      this.quizModel.countDocuments({ isPublished: true }),
+      this.pdfModel.countDocuments(),
+      this.pdfModel.countDocuments({ isActive: true }),
+      this.audioLessonModel.countDocuments(),
+      this.noteModel.countDocuments(),
+      this.resourceModel.countDocuments(),
+      this.resourceModel.countDocuments({ isActive: true }),
+      this.blogModel.countDocuments(),
+      this.blogModel.countDocuments({ isPublished: true }),
+      this.chatModel.countDocuments(),
+      this.conversationModel.countDocuments(),
+      this.answerCheckModel.countDocuments(),
+      this.conversationModel.distinct('userId', { userId: { $ne: null } }).then((ids: any[]) => ids.length),
+      this.conversationModel.countDocuments({ $or: [{ userId: null }, { userId: { $exists: false } }] }),
+    ]);
+
+    const totalVisitors = uniqueAuthenticatedVisitors + anonymousVisitors;
+
+    return {
+      generatedAt: new Date().toISOString(),
+      stats: {
+        users: {
+          total: totalUsers,
+          active: activeUsers,
+          verified: verifiedUsers,
+        },
+        quizzes: {
+          total: totalQuizzes,
+          published: publishedQuizzes,
+        },
+        pdfs: {
+          total: totalPdfs,
+          active: activePdfs,
+        },
+        audioLessons: {
+          total: totalAudioLessons,
+        },
+        notes: {
+          total: totalNotes,
+        },
+        resources: {
+          total: totalResources,
+          active: activeResources,
+        },
+        blogs: {
+          total: totalBlogs,
+          published: publishedBlogs,
+        },
+        chats: {
+          totalMessages: totalChats,
+          totalConversations,
+        },
+        visitors: {
+          total: totalVisitors,
+          authenticated: uniqueAuthenticatedVisitors,
+          anonymous: anonymousVisitors,
+        },
+        answerChecks: {
+          total: totalAnswerChecks,
+        },
+      },
+      moduleVolume: [
+        { module: 'Users', value: totalUsers },
+        { module: 'Quizzes', value: totalQuizzes },
+        { module: 'PDFs', value: totalPdfs },
+        { module: 'Audio', value: totalAudioLessons },
+        { module: 'Notes', value: totalNotes },
+        { module: 'Resources', value: totalResources },
+        { module: 'Blogs', value: totalBlogs },
+        { module: 'Answer Checks', value: totalAnswerChecks },
+      ],
+      crudCoverage: [
+        { module: 'Users', basePath: '/admin/users', create: true, read: true, update: true, delete: true },
+        { module: 'Quizzes', basePath: '/admin/quizzes', create: true, read: true, update: true, delete: true },
+        { module: 'PDFs', basePath: '/admin/pdfs', create: true, read: true, update: true, delete: true },
+        { module: 'Audio Lessons', basePath: '/admin/audio-lessons', create: true, read: true, update: true, delete: true },
+        { module: 'Resources', basePath: '/admin/resources', create: true, read: true, update: true, delete: true },
+        { module: 'Blogs', basePath: '/admin/blogs', create: true, read: true, update: true, delete: true },
+      ],
+      routeInventory: {
+        admin: [
+          '/admin/users',
+          '/admin/users/stats',
+          '/admin/system/overview',
+          '/admin/quizzes',
+          '/admin/pdfs',
+          '/admin/audio-lessons',
+          '/admin/resources',
+          '/admin/blogs',
+        ],
+        publicApi: [
+          '/auth/login',
+          '/quizzes',
+          '/pdfs',
+          '/pdfs/years',
+          '/audio-lessons',
+          '/notes',
+          '/search',
+          '/chat',
+          '/resources',
+          '/blogs',
+          '/answer-check',
+        ],
+      },
     };
   }
 }

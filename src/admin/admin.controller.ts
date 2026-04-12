@@ -47,6 +47,11 @@ export class AdminController {
     return this.adminService.getUserStats();
   }
 
+  @Get('system/overview')
+  async getSystemOverview() {
+    return this.adminService.getSystemOverview();
+  }
+
   @Get('users/:id')
   async getUserById(@Param('id') id: string) {
     return this.adminService.getUserById(id);

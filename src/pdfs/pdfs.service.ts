@@ -270,24 +270,54 @@ export class PdfsService {
 
   private buildFilter(filters: Record<string, any>): Record<string, any> {
     const normalized = { ...filters };
+    const andConditions: Record<string, any>[] = [];
+
+    if (normalized.search) {
+      const search = String(normalized.search).trim();
+      if (search) {
+        const rx = new RegExp(search, 'i');
+        andConditions.push({
+          $or: [
+            { title: rx },
+            { pet: rx },
+            { case_no: rx },
+            { diary_no: rx },
+            { judgement_by: rx },
+            { bench: rx },
+            { category: rx },
+          ],
+        });
+      }
+      delete normalized.search;
+    }
+
+    if (normalized.category) {
+      andConditions.push({ category: normalized.category });
+      delete normalized.category;
+    }
+
     const year = normalized.year;
     delete normalized.year;
+    if (typeof year === 'number' && !Number.isNaN(year)) {
+      const yearStart = new Date(Date.UTC(year, 0, 1));
+      const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+      andConditions.push({
+        $or: [
+          { year },
+          { judgment_dates: { $gte: yearStart, $lt: yearEnd } },
+          { case_no: new RegExp(`\\b${year}\\b`) },
+          { title: new RegExp(`\\b${year}\\b`) },
+        ],
+      });
+    }
 
-    if (typeof year !== 'number' || Number.isNaN(year)) {
+    if (andConditions.length === 0) {
       return normalized;
     }
 
-    const yearStart = new Date(Date.UTC(year, 0, 1));
-    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
-
     return {
       ...normalized,
-      $or: [
-        { year },
-        { judgment_dates: { $gte: yearStart, $lt: yearEnd } },
-        { case_no: new RegExp(`\\b${year}\\b`) },
-        { title: new RegExp(`\\b${year}\\b`) },
-      ],
+      $and: andConditions,
     };
   }
 

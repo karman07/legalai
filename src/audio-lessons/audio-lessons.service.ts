@@ -78,15 +78,28 @@ export class AudioLessonsService {
   async findAll(params: { page?: number; limit?: number; filters?: Record<string, any> }) {
     const { page = 1, limit = 10, filters = {} } = params;
 
+    const mongoFilters: Record<string, any> = { ...filters };
+    if (typeof mongoFilters.search === 'string' && mongoFilters.search.trim()) {
+      const rx = new RegExp(mongoFilters.search.trim(), 'i');
+      delete mongoFilters.search;
+      mongoFilters.$or = [
+        { title: rx },
+        { headTitle: rx },
+        { description: rx },
+        { category: rx },
+        { tags: rx },
+      ];
+    }
+
     const [items, total] = await Promise.all([
       this.audioLessonModel
-        .find(filters)
+        .find(mongoFilters)
         .select('-sections')          // never send section data in list responses
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
-      this.audioLessonModel.countDocuments(filters),
+      this.audioLessonModel.countDocuments(mongoFilters),
     ]);
 
     return {
@@ -104,6 +117,15 @@ export class AudioLessonsService {
     }
     // Exclude the sections array — use getSections() for paginated access
     const lesson = await this.audioLessonModel.findById(id).select('-sections').lean();
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+    return lesson;
+  }
+
+  async findOneWithSections(id: string) {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+    const lesson = await this.audioLessonModel.findById(id).lean();
     if (!lesson) throw new NotFoundException('Audio lesson not found');
     return lesson;
   }
@@ -268,6 +290,56 @@ export class AudioLessonsService {
     if (!subsection) throw new NotFoundException(`Subsection index ${subIndex} not found`);
 
     return { _index: subIndex, ...subsection };
+  }
+
+  async getSectionFull(id: string, sectionIndex: number) {
+    if (!id || !Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+    const lesson = await this.audioLessonModel
+      .findById(id, { sections: { $slice: [sectionIndex, 1] } })
+      .lean();
+    if (!lesson) throw new NotFoundException('Audio lesson not found');
+
+    const section = lesson.sections?.[0] as any;
+    if (!section) throw new NotFoundException(`Section index ${sectionIndex} not found`);
+
+    return { _index: sectionIndex, ...section };
+  }
+
+  async updateSingleSection(lessonId: string, sectionIndex: number, section: any) {
+    if (!lessonId || !Types.ObjectId.isValid(lessonId)) {
+      throw new NotFoundException('Invalid audio lesson id');
+    }
+
+    const lesson = await this.audioLessonModel.findById(lessonId);
+    if (!lesson) {
+      throw new NotFoundException('Audio lesson not found');
+    }
+
+    if (!lesson.sections || sectionIndex < 0 || sectionIndex >= lesson.sections.length) {
+      throw new NotFoundException(`Section index ${sectionIndex} not found`);
+    }
+
+    const normalizedSection = {
+      ...section,
+      totalSubsections: Array.isArray(section?.subsections) ? section.subsections.length : 0,
+    };
+
+    lesson.sections[sectionIndex] = normalizedSection as any;
+    lesson.totalSections = lesson.sections.length;
+    lesson.totalSubsections = lesson.sections.reduce(
+      (sum: number, s: any) => sum + (s.totalSubsections || (Array.isArray(s.subsections) ? s.subsections.length : 0)),
+      0,
+    );
+
+    await lesson.save();
+    return {
+      message: `Section ${sectionIndex + 1} updated successfully`,
+      sectionIndex,
+      totalSections: lesson.totalSections,
+      totalSubsections: lesson.totalSubsections,
+    };
   }
 
   async update(id: string, updateDto: UpdateAudioLessonDto, files?: { englishAudio?: Express.Multer.File; hindiAudio?: Express.Multer.File }) {

@@ -193,10 +193,12 @@ export class AudioLessonsAdminController {
     @Query('limit') limit = '10',
     @Query('isActive') isActive?: string,
     @Query('category') category?: string,
+    @Query('search') search?: string,
   ) {
     const filters: any = {};
     if (typeof isActive === 'string') filters.isActive = isActive === 'true';
     if (category) filters.category = category;
+    if (search?.trim()) filters.search = search.trim();
     
     return this.audioLessonsService.findAll({ 
       page: parseInt(page), 
@@ -220,12 +222,154 @@ export class AudioLessonsAdminController {
     return this.audioLessonsService.findOne(id);
   }
 
+  @Get(':id/full')
+  async getByIdFull(@Param('id') id: string) {
+    return this.audioLessonsService.findOneWithSections(id);
+  }
+
+  @Get(':id/sections/:sectionIndex/full')
+  async getSectionFull(
+    @Param('id') id: string,
+    @Param('sectionIndex') sectionIndex: string,
+  ) {
+    return this.audioLessonsService.getSectionFull(id, parseInt(sectionIndex, 10));
+  }
+
   @Put(':id/sections')
   async updateSections(
     @Param('id') id: string,
     @Body() body: { sections: any[] },
   ) {
     return this.audioLessonsService.updateSections(id, body.sections);
+  }
+
+  @Put(':id/sections/:sectionIndex')
+  @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: false }))
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: diskStorage({
+        destination: './uploads/audio',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const prefix = file.fieldname.replace(/[^a-zA-Z0-9]/g, '-');
+          cb(null, `${prefix}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        const allowedMimes = [
+          'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
+          'audio/x-wav', 'audio/mp4', 'audio/m4a', 'audio/x-m4a',
+          'audio/aac', 'audio/ogg', 'audio/webm', 'audio/flac',
+        ];
+        if (allowedMimes.includes(file.mimetype) || file.originalname.match(/\.(mp3|wav|m4a|aac|ogg|webm|flac|opus)$/i)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only audio files are allowed'), false);
+        }
+      },
+      limits: { fileSize: 5 * 1024 * 1024 * 1024 },
+    }),
+  )
+  async updateSingleSection(
+    @Param('id') id: string,
+    @Param('sectionIndex') sectionIndex: string,
+    @Body() body: any,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const parsed = { ...body };
+    if (typeof body.section === 'string') {
+      try {
+        parsed.section = JSON.parse(body.section as any);
+      } catch {
+        throw new BadRequestException('Invalid section JSON format');
+      }
+    }
+
+    if (!parsed.section || typeof parsed.section !== 'object') {
+      throw new BadRequestException('section payload is required');
+    }
+
+    const section = parsed.section;
+    const sectionFiles = {
+      englishAudio: files?.find((f) => f.fieldname === 'section_englishAudio'),
+      hindiAudio: files?.find((f) => f.fieldname === 'section_hindiAudio'),
+      easyEnglishAudio: files?.find((f) => f.fieldname === 'section_easyEnglishAudio'),
+      easyHindiAudio: files?.find((f) => f.fieldname === 'section_easyHindiAudio'),
+    };
+
+    if (sectionFiles.englishAudio) {
+      section.englishAudio = {
+        url: `/uploads/audio/${sectionFiles.englishAudio.filename}`,
+        fileName: sectionFiles.englishAudio.originalname,
+        fileSize: sectionFiles.englishAudio.size,
+      };
+    }
+    if (sectionFiles.hindiAudio) {
+      section.hindiAudio = {
+        url: `/uploads/audio/${sectionFiles.hindiAudio.filename}`,
+        fileName: sectionFiles.hindiAudio.originalname,
+        fileSize: sectionFiles.hindiAudio.size,
+      };
+    }
+    if (sectionFiles.easyEnglishAudio) {
+      section.easyEnglishAudio = {
+        url: `/uploads/audio/${sectionFiles.easyEnglishAudio.filename}`,
+        fileName: sectionFiles.easyEnglishAudio.originalname,
+        fileSize: sectionFiles.easyEnglishAudio.size,
+      };
+    }
+    if (sectionFiles.easyHindiAudio) {
+      section.easyHindiAudio = {
+        url: `/uploads/audio/${sectionFiles.easyHindiAudio.filename}`,
+        fileName: sectionFiles.easyHindiAudio.originalname,
+        fileSize: sectionFiles.easyHindiAudio.size,
+      };
+    }
+
+    if (section.subsections && Array.isArray(section.subsections)) {
+      section.subsections = section.subsections.map((subsection: any, idx: number) => {
+        const subsectionFiles = {
+          englishAudio: files?.find((f) => f.fieldname === `subsection_${idx}_englishAudio`),
+          hindiAudio: files?.find((f) => f.fieldname === `subsection_${idx}_hindiAudio`),
+          easyEnglishAudio: files?.find((f) => f.fieldname === `subsection_${idx}_easyEnglishAudio`),
+          easyHindiAudio: files?.find((f) => f.fieldname === `subsection_${idx}_easyHindiAudio`),
+        };
+
+        if (subsectionFiles.englishAudio) {
+          subsection.englishAudio = {
+            url: `/uploads/audio/${subsectionFiles.englishAudio.filename}`,
+            fileName: subsectionFiles.englishAudio.originalname,
+            fileSize: subsectionFiles.englishAudio.size,
+          };
+        }
+        if (subsectionFiles.hindiAudio) {
+          subsection.hindiAudio = {
+            url: `/uploads/audio/${subsectionFiles.hindiAudio.filename}`,
+            fileName: subsectionFiles.hindiAudio.originalname,
+            fileSize: subsectionFiles.hindiAudio.size,
+          };
+        }
+        if (subsectionFiles.easyEnglishAudio) {
+          subsection.easyEnglishAudio = {
+            url: `/uploads/audio/${subsectionFiles.easyEnglishAudio.filename}`,
+            fileName: subsectionFiles.easyEnglishAudio.originalname,
+            fileSize: subsectionFiles.easyEnglishAudio.size,
+          };
+        }
+        if (subsectionFiles.easyHindiAudio) {
+          subsection.easyHindiAudio = {
+            url: `/uploads/audio/${subsectionFiles.easyHindiAudio.filename}`,
+            fileName: subsectionFiles.easyHindiAudio.originalname,
+            fileSize: subsectionFiles.easyHindiAudio.size,
+          };
+        }
+
+        return subsection;
+      });
+    }
+
+    return this.audioLessonsService.updateSingleSection(id, parseInt(sectionIndex, 10), section);
   }
 
   @Post(':id/append-sections')

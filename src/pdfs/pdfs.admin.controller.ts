@@ -124,9 +124,22 @@ export class PdfsAdminController {
     @Query('page') page = '1',
     @Query('limit') limit = '10',
     @Query('isActive') isActive?: string,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('year') year?: string,
   ): Promise<any> {
     const parsed = typeof isActive === 'string' ? isActive === 'true' : undefined;
-    return this.pdfsService.findAll({ page: parseInt(page), limit: parseInt(limit), isActive: parsed });
+    const filters: Record<string, any> = {};
+    if (search?.trim()) filters.search = search.trim();
+    if (category?.trim()) filters.category = category.trim();
+    if (year && !Number.isNaN(parseInt(year, 10))) filters.year = parseInt(year, 10);
+
+    return this.pdfsService.findAll({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      isActive: parsed,
+      filters,
+    });
   }
 
   @Get(':id')
