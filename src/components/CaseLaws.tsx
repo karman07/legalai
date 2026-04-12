@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Scale, Search, FileText, X, Download, Eye, ChevronLeft, ChevronRight, Building2, File, Image, Calendar } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 function PDFSkeletonCard() {
   return (
@@ -26,9 +27,18 @@ function PDFSkeletonCard() {
 }
 import pdfService, { PDF } from '../services/pdfService';
 import CustomPDFViewer from './CustomPDFViewer';
+import { incrementDashboardMetric } from '../lib/dashboardMetrics';
+
+type YearBucket = {
+  year: number;
+  count: number;
+};
 
 export default function CaseLaws() {
+  const { user } = useAuth();
   const [pdfs, setPdfs] = useState<PDF[]>([]);
+  const [years, setYears] = useState<YearBucket[]>([]);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,20 +64,35 @@ export default function CaseLaws() {
     if (type === 'pdf') return FileText;
     return File;
   };
-
-
+  useEffect(() => {
+    fetchYears();
+  }, []);
 
   useEffect(() => {
-    fetchDocs(page, activeSearch);
-  }, [page, activeSearch]);
+    if (selectedYear === null) return;
+    fetchDocs(page, activeSearch, selectedYear);
+  }, [page, activeSearch, selectedYear]);
 
-  const fetchDocs = async (pg: number, query: string) => {
+  const fetchYears = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await pdfService.getYears();
+      setYears(response.items || []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load years');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDocs = async (pg: number, query: string, year: number) => {
     setLoading(true);
     setError('');
     try {
       const response = query.trim()
-        ? await pdfService.searchPDFs(query, { page: pg, limit: 12 })
-        : await pdfService.getPDFs({ page: pg, limit: 12 });
+        ? await pdfService.searchPDFs(query, { page: pg, limit: 12, year })
+        : await pdfService.getPDFs({ page: pg, limit: 12, year });
       setPdfs(response.items);
       setTotalPages(response.totalPages);
     } catch (err: any) {
@@ -88,6 +113,31 @@ export default function CaseLaws() {
     setActiveSearch('');
   };
 
+  const handleSelectYear = (year: number) => {
+    setSelectedYear(year);
+    setPage(1);
+    setSearchTerm('');
+    setActiveSearch('');
+    setPdfs([]);
+  };
+
+  const handleBackToYears = () => {
+    setSelectedYear(null);
+    setPage(1);
+    setSearchTerm('');
+    setActiveSearch('');
+    setPdfs([]);
+    setTotalPages(1);
+  };
+
+  const handleOpenDocument = (pdf: PDF) => {
+    setSelectedPDF(pdf);
+    const userId = user?.id || user?._id;
+    if (userId) {
+      incrementDashboardMetric(userId, 'casesViewed', 1);
+    }
+  };
+
 
 
   return (
@@ -100,39 +150,51 @@ export default function CaseLaws() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-brand-900 dark:text-brand-100">Case Laws & Documents</h1>
-            <p className="text-brand-500 dark:text-brand-400 text-sm">Browse legal documents, case laws and study materials</p>
+            <p className="text-brand-500 dark:text-brand-400 text-sm">
+              {selectedYear === null
+                ? 'Choose a year to view corresponding cases'
+                : `Showing cases for ${selectedYear}`}
+            </p>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="flex gap-3 mb-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search by title, case number, keywords…"
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-            />
-          </div>
-          <button
-            onClick={handleSearch}
-            className="px-5 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 text-white font-semibold rounded-xl transition-all text-sm"
-          >
-            Search
-          </button>
-          {searchTerm && (
+        {selectedYear !== null && (
+          <div className="flex flex-col sm:flex-row gap-3 mb-3">
             <button
-              onClick={clearFilters}
-              className="px-4 py-2.5 bg-brand-100 dark:bg-brand-800 hover:bg-brand-200 dark:hover:bg-brand-700 text-brand-600 dark:text-brand-300 rounded-xl transition-colors flex items-center gap-1.5 text-sm"
+              onClick={handleBackToYears}
+              className="px-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-700 dark:text-brand-200 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm"
             >
-              <X className="w-4 h-4" />
-              Clear
+              <ChevronLeft className="w-4 h-4" />
+              Years
             </button>
-          )}
-        </div>
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder={`Search ${selectedYear} cases by title, case number, keywords...`}
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={handleSearch}
+              className="px-5 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 text-white font-semibold rounded-xl transition-all text-sm"
+            >
+              Search
+            </button>
+            {searchTerm && (
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2.5 bg-brand-100 dark:bg-brand-800 hover:bg-brand-200 dark:hover:bg-brand-700 text-brand-600 dark:text-brand-300 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm"
+              >
+                <X className="w-4 h-4" />
+                Clear
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Error Message */}
@@ -144,14 +206,48 @@ export default function CaseLaws() {
       )}
 
       {/* Skeleton grid on initial load */}
-      {loading && pdfs.length === 0 && (
+      {loading && selectedYear === null && (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-brand-800 rounded-2xl border border-brand-200 dark:border-brand-700 p-5 animate-pulse">
+              <div className="h-5 w-16 bg-brand-200 dark:bg-brand-700 rounded mb-3" />
+              <div className="h-3 w-20 bg-brand-100 dark:bg-brand-700/60 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {loading && selectedYear !== null && pdfs.length === 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {Array.from({ length: 12 }).map((_, i) => <PDFSkeletonCard key={i} />)}
         </div>
       )}
 
+      {!loading && selectedYear === null && years.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+          {years.map((item) => (
+            <button
+              key={item.year}
+              onClick={() => handleSelectYear(item.year)}
+              className="text-left bg-white dark:bg-brand-800 rounded-2xl border border-brand-200 dark:border-brand-700 p-5 hover:border-gold-400 hover:shadow-card transition-all"
+            >
+              <p className="text-2xl font-bold text-brand-900 dark:text-brand-100">{item.year}</p>
+              <p className="text-sm text-brand-500 dark:text-brand-400 mt-1">{item.count} case{item.count === 1 ? '' : 's'}</p>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Empty State */}
-      {!loading && pdfs.length === 0 && (
+      {!loading && selectedYear === null && years.length === 0 && (
+        <div className="text-center py-12">
+          <Calendar className="w-16 h-16 text-brand-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-brand-600 dark:text-brand-300 mb-2">No years available</h3>
+          <p className="text-brand-500 dark:text-brand-400">Add case documents with year or judgment date metadata</p>
+        </div>
+      )}
+
+      {!loading && selectedYear !== null && pdfs.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-16 h-16 text-brand-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-brand-600 dark:text-brand-300 mb-2">No documents found</h3>
@@ -160,13 +256,13 @@ export default function CaseLaws() {
       )}
 
       {/* Document Grid – keep visible with reduced opacity while loading next page */}
-      {pdfs.length > 0 && (
+      {selectedYear !== null && pdfs.length > 0 && (
         <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
           {pdfs.map((pdf) => {
             const fileName = pdf.file || pdf.fileUrl?.split('/').pop() || 'document.pdf';
             const FileIcon = getFileIcon(fileName);
             const fileType = getFileType(fileName);
-            const fileUrlToUse = pdf.fileUrl || `/uploads/${pdf.file}`;
+            const fileUrlToUse = pdf.fileUrl || `/uploads/documents/${pdf.file}`;
 
             return (
               <div
@@ -329,7 +425,7 @@ export default function CaseLaws() {
                   {(pdf.file || pdf.fileUrl) && (
                     <>
                       <button
-                        onClick={() => setSelectedPDF(pdf)}
+                        onClick={() => handleOpenDocument(pdf)}
                         className="flex-1 bg-gold-500 hover:bg-gold-600 text-white font-bold py-3 px-5 rounded-xl transition-all flex items-center justify-center gap-2 group"
                       >
                         <Eye className="w-4 h-4" />
@@ -353,7 +449,7 @@ export default function CaseLaws() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {selectedYear !== null && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}

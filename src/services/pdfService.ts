@@ -13,6 +13,10 @@ export interface Court {
 export interface PDF {
   _id: string;
   title?: string;
+  caseTitle?: string;
+  citation?: string;
+  fileName?: string;
+  year?: number;
   diary_no?: string;
   case_no?: string;
   pet?: string;
@@ -36,6 +40,11 @@ export interface PDFListResponse {
   totalPages: number;
 }
 
+export interface PDFYearsResponse {
+  items: Array<{ year: number; count: number }>;
+  total: number;
+}
+
 class PDFService {
   /**
    * Get list of active PDFs with optional filters
@@ -43,10 +52,12 @@ class PDFService {
   async getPDFs(params?: {
     page?: number;
     limit?: number;
+    year?: number;
   }): Promise<PDFListResponse> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.year) queryParams.append('year', params.year.toString());
 
     const queryString = queryParams.toString();
     const endpoint = `/pdfs${queryString ? `?${queryString}` : ''}`;
@@ -71,11 +82,13 @@ class PDFService {
   async searchPDFs(query: string, params?: {
     page?: number;
     limit?: number;
+    year?: number;
   }): Promise<PDFListResponse> {
     const queryParams = new URLSearchParams();
     queryParams.append('q', query);
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.year) queryParams.append('year', params.year.toString());
 
     const endpoint = `/pdfs/search?${queryParams.toString()}`;
 
@@ -89,6 +102,12 @@ class PDFService {
      */
   async getCaseNumbers(): Promise<{ caseNumbers: string[] }> {
     return apiClient<{ caseNumbers: string[] }>('/pdfs/case-numbers', {
+      method: 'GET',
+    });
+  }
+
+  async getYears(): Promise<PDFYearsResponse> {
+    return apiClient<PDFYearsResponse>('/pdfs/years', {
       method: 'GET',
     });
   }

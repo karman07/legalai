@@ -11,6 +11,13 @@ type Language = 'english' | 'hindi';
 type TextMode = 'government' | 'easy';
 type ViewMode = 'sections' | 'subsections' | 'player';
 type PlaybackSpeed = 0.5 | 0.75 | 1 | 1.25 | 1.5 | 2;
+type PlayerContentMode = 'single' | 'combined';
+
+type CombinedSegment = {
+  title: string;
+  text: string;
+  audioUrl?: string;
+};
 
 const SECTIONS_PER_PAGE = 20;
 
@@ -51,6 +58,11 @@ export default function AudioPlayer() {
   const [currentSubsectionIndex, setCurrentSubsectionIndex] = useState(-1);
   const [showNotes, setShowNotes] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string>('');
+  const [playerContentMode, setPlayerContentMode] = useState<PlayerContentMode>('single');
+  const [combinedSegments, setCombinedSegments] = useState<CombinedSegment[]>([]);
+  const [isPreparingCombined, setIsPreparingCombined] = useState(false);
+  const [queueUrls, setQueueUrls] = useState<string[]>([]);
+  const [queueIndex, setQueueIndex] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
@@ -109,6 +121,7 @@ export default function AudioPlayer() {
 
   useEffect(() => {
     if (viewMode !== 'player') return;
+    if (playerContentMode === 'combined') return;
 
     let audioFile;
     if (currentSubsectionIndex >= 0 && currentSubsectionDetail) {
@@ -129,7 +142,7 @@ export default function AudioPlayer() {
       setAudioUrl(`${baseUrl}${audioFile.url}`);
       setIsPlaying(false);
     }
-  }, [currentSectionDetail, currentSubsectionDetail, selectedLanguage, textMode, viewMode, currentSubsectionIndex]);
+  }, [currentSectionDetail, currentSubsectionDetail, selectedLanguage, textMode, viewMode, currentSubsectionIndex, playerContentMode]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -201,6 +214,119 @@ export default function AudioPlayer() {
     }
   };
 
+  const resolveAudioUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai/api';
+    const baseUrl = apiBaseUrl.endsWith('/api') ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
+    return `${baseUrl}${url}`;
+  };
+
+  const pickContentText = (content: AudioSectionDetail | AudioSubsectionDetail): string => {
+    if (textMode === 'government') {
+      return (selectedLanguage === 'english' ? content.englishText : content.hindiText) || '';
+    }
+    return (selectedLanguage === 'english' ? content.easyEnglishText : content.easyHindiText) || '';
+  };
+
+  const pickContentAudioUrl = (content: AudioSectionDetail | AudioSubsectionDetail): string | undefined => {
+    const audioMeta = textMode === 'easy'
+      ? (selectedLanguage === 'english' ? content.easyEnglishAudio : content.easyHindiAudio)
+      : (selectedLanguage === 'english' ? content.englishAudio : content.hindiAudio);
+    return resolveAudioUrl(audioMeta?.url);
+  };
+
+  const buildCombinedSegments = (
+    section: AudioSectionDetail,
+    subDetails: AudioSubsectionDetail[]
+  ): CombinedSegment[] => {
+    const segments: CombinedSegment[] = [];
+
+    const sectionText = pickContentText(section);
+    const sectionAudio = pickContentAudioUrl(section);
+    if (sectionText || sectionAudio) {
+      segments.push({
+        title: section.title || `Section ${currentSectionIndex + 1}`,
+        text: sectionText,
+        audioUrl: sectionAudio,
+      });
+    }
+
+    const sorted = [...subDetails].sort((a, b) => a._index - b._index);
+    sorted.forEach((sub) => {
+      const text = pickContentText(sub);
+      const audioUrl = pickContentAudioUrl(sub);
+      if (!text && !audioUrl) return;
+      segments.push({
+        title: sub.title || `Subsection ${currentSectionIndex + 1}.${sub._index + 1}`,
+        text,
+        audioUrl,
+      });
+    });
+
+    return segments;
+  };
+
+  const openCombinedMode = async (autoPlayQueue: boolean) => {
+    if (!id || !currentSectionDetail) return;
+
+    setIsPreparingCombined(true);
+    setPlayerContentMode('combined');
+    setCurrentSubsectionDetail(null);
+    setCurrentSubsectionIndex(-1);
+
+    try {
+      const allSubsections: AudioSubsectionSlim[] = [];
+      const seen = new Set<number>();
+
+      const appendUnique = (items: AudioSubsectionSlim[]) => {
+        items.forEach((item) => {
+          if (seen.has(item._index)) return;
+          seen.add(item._index);
+          allSubsections.push(item);
+        });
+      };
+
+      appendUnique(subsections);
+
+      if (allSubsections.length < (currentSectionDetail.totalSubsections || 0)) {
+        let page = 1;
+        let totalPages = 1;
+        do {
+          const res = await audioLessonsAPI.getSubsections(id, currentSectionIndex, page, 50);
+          appendUnique(res.items || []);
+          totalPages = res.totalPages || 1;
+          page += 1;
+        } while (page <= totalPages);
+      }
+
+      const details = await Promise.all(
+        allSubsections
+          .sort((a, b) => a._index - b._index)
+          .map((sub) => audioLessonsAPI.getSubsectionDetail(id, currentSectionIndex, sub._index).catch(() => null))
+      );
+
+      const validDetails = details.filter((d): d is AudioSubsectionDetail => d !== null);
+      const merged = buildCombinedSegments(currentSectionDetail, validDetails);
+
+      setCombinedSegments(merged);
+      setViewMode('player');
+
+      const queue = merged.map((s) => s.audioUrl).filter((u): u is string => !!u);
+      setQueueUrls(queue);
+      setQueueIndex(0);
+
+      if (autoPlayQueue && queue.length > 0) {
+        setAudioUrl(queue[0]);
+        setIsPlaying(true);
+      } else {
+        setAudioUrl('');
+        setIsPlaying(false);
+      }
+    } finally {
+      setIsPreparingCombined(false);
+    }
+  };
+
   const togglePlayPause = () => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -211,6 +337,14 @@ export default function AudioPlayer() {
       setIsPlaying(!isPlaying);
     }
   };
+
+  useEffect(() => {
+    if (!audioRef.current || !audioUrl) return;
+    audioRef.current.load();
+    if (isPlaying) {
+      audioRef.current.play().catch(() => setIsPlaying(false));
+    }
+  }, [audioUrl]);
 
   const handleSkip = (seconds: number) => {
     if (audioRef.current) {
@@ -360,6 +494,10 @@ export default function AudioPlayer() {
   };
 
   const startPlayer = async (sectionIndex: number, subsectionIndex: number = -1) => {
+    setPlayerContentMode('single');
+    setCombinedSegments([]);
+    setQueueUrls([]);
+    setQueueIndex(0);
     setCurrentSectionIndex(sectionIndex);
     setCurrentSubsectionIndex(subsectionIndex);
     setCurrentSubsectionDetail(null);
@@ -442,6 +580,7 @@ export default function AudioPlayer() {
         selectedLanguage={selectedLanguage}
         onSelectSubsection={(subIdx) => startPlayer(currentSectionIndex, subIdx)}
         onPlaySection={() => startPlayer(currentSectionIndex, -1)}
+        onPlayCombinedAudio={() => openCombinedMode(true)}
         onLanguageChange={setSelectedLanguage}
         onBack={() => setViewMode('sections')}
       />
@@ -456,7 +595,16 @@ export default function AudioPlayer() {
         ref={audioRef}
         src={audioUrl}
         onTimeUpdate={handleTimeUpdate}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={() => {
+          if (playerContentMode === 'combined' && queueUrls.length > 0 && queueIndex < queueUrls.length - 1) {
+            const nextIndex = queueIndex + 1;
+            setQueueIndex(nextIndex);
+            setAudioUrl(queueUrls[nextIndex]);
+            setIsPlaying(true);
+          } else {
+            setIsPlaying(false);
+          }
+        }}
         onLoadedMetadata={handleTimeUpdate}
       />
 
@@ -468,13 +616,17 @@ export default function AudioPlayer() {
             </button>
             <div className="flex-1 min-w-0">
               <h1 className="text-sm sm:text-base font-bold text-brand-900 truncate">
-                {currentSubsectionIndex >= 0
+                {playerContentMode === 'combined'
+                  ? `${currentSectionDetail?.title} • Combined Playback`
+                  : currentSubsectionIndex >= 0
                   ? `${currentSectionDetail?.title} › ${currentSectionDetail?.subsections?.[currentSubsectionIndex]?.title}`
                   : currentSectionDetail?.title}
               </h1>
               <div className="flex items-center gap-3 mt-1">
                 <p className="text-xs text-brand-500">
-                  {currentSubsectionIndex >= 0
+                  {playerContentMode === 'combined'
+                    ? `Combined view (${combinedSegments.length} text blocks)`
+                    : currentSubsectionIndex >= 0
                     ? `Subsection ${currentSectionIndex + 1}.${currentSubsectionIndex + 1}`
                     : `Section ${currentSectionIndex + 1}`}
                 </p>
@@ -518,7 +670,9 @@ export default function AudioPlayer() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-brand-900 mb-6">
-                  {currentSubsectionIndex >= 0
+                    {playerContentMode === 'combined'
+                      ? `${currentSectionDetail.title} - Full Combined Text`
+                      : currentSubsectionIndex >= 0
                     ? (currentSubsectionDetail?.title ?? '...')
                     : currentSectionDetail.title}
                 </h2>
@@ -531,18 +685,40 @@ export default function AudioPlayer() {
                   </button>
                 </div>
                 <div className="p-6 bg-brand-50 rounded-xl select-text" onMouseUp={handleTextMouseUp}>
-                  <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">
-                    {(() => {
-                      // Use subsection detail text when playing a subsection
-                      const content = currentSubsectionIndex >= 0 ? currentSubsectionDetail : currentSectionDetail;
-                      if (!content) return 'Loading...';
-                      if (textMode === 'government') {
-                        return (selectedLanguage === 'english' ? content.englishText : content.hindiText) || 'No transcription available';
-                      } else {
-                        return (selectedLanguage === 'english' ? content.easyEnglishText : content.easyHindiText) || 'No easy transcription available';
-                      }
-                    })()}
-                  </p>
+                  {playerContentMode === 'combined' ? (
+                    isPreparingCombined ? (
+                      <div className="flex items-center gap-2 text-brand-600">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Preparing combined text and audio...
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {combinedSegments.length === 0 ? (
+                          <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">No combined text available for this language/mode.</p>
+                        ) : (
+                          combinedSegments.map((segment, idx) => (
+                            <div key={`${segment.title}-${idx}`} className="border border-brand-200 bg-white rounded-xl p-4">
+                              <h3 className="text-sm font-bold text-brand-700 mb-2">{idx + 1}. {segment.title}</h3>
+                              <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">{segment.text}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )
+                  ) : (
+                    <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">
+                      {(() => {
+                        // Use subsection detail text when playing a subsection
+                        const content = currentSubsectionIndex >= 0 ? currentSubsectionDetail : currentSectionDetail;
+                        if (!content) return 'Loading...';
+                        if (textMode === 'government') {
+                          return (selectedLanguage === 'english' ? content.englishText : content.hindiText) || 'No transcription available';
+                        } else {
+                          return (selectedLanguage === 'english' ? content.easyEnglishText : content.easyHindiText) || 'No easy transcription available';
+                        }
+                      })()}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -557,6 +733,12 @@ export default function AudioPlayer() {
             <div className="flex items-center justify-between text-sm font-bold mb-3">
               <span className="text-gold-600">{formatTime(currentTime)}</span>
               <div className="flex items-center gap-2 text-xs text-brand-500">
+                  {playerContentMode === 'combined' && queueUrls.length > 0 && (
+                    <>
+                      <span>Track {Math.min(queueIndex + 1, queueUrls.length)} / {queueUrls.length}</span>
+                      <span>•</span>
+                    </>
+                  )}
                 <span>{playbackSpeed}x</span>
                 <span>•</span>
                 <span>{formatTime(duration)}</span>

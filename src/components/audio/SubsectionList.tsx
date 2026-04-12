@@ -1,4 +1,4 @@
-import { ArrowLeft, Play, Headphones, Languages, Grid3X3, List, Loader2 } from 'lucide-react';
+import { ArrowLeft, Play, Headphones, Languages, Grid3X3, List, Loader2, Layers } from 'lucide-react';
 import { AudioLesson, AudioSectionDetail, AudioSubsectionSlim } from '../../services/api';
 import { useState } from 'react';
 
@@ -16,6 +16,7 @@ interface SubsectionListProps {
   selectedLanguage: 'english' | 'hindi';
   onSelectSubsection: (subsectionIndex: number) => void;
   onPlaySection: () => void;
+  onPlayCombinedAudio: () => void;
   onLanguageChange: (lang: 'english' | 'hindi') => void;
   onBack: () => void;
 }
@@ -32,6 +33,7 @@ export default function SubsectionList({
   selectedLanguage,
   onSelectSubsection,
   onPlaySection,
+  onPlayCombinedAudio,
   onLanguageChange,
   onBack,
 }: SubsectionListProps) {
@@ -159,14 +161,25 @@ export default function SubsectionList({
             </div>
           )}
 
-          {hasSectionAudio && (
-            <button
-              onClick={onPlaySection}
-              className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 transform hover:scale-105"
-            >
-              <Play className="w-5 h-5" fill="white" />
-              Play Section Audio
-            </button>
+          {(hasSectionAudio || sectionHead.totalSubsections > 0) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                onClick={onPlayCombinedAudio}
+                className="w-full px-6 py-4 bg-brand-900 hover:bg-brand-800 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <Layers className="w-5 h-5" />
+                Play All Audio
+              </button>
+
+              <button
+                onClick={onPlaySection}
+                disabled={!hasSectionAudio}
+                className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 transform hover:scale-105"
+              >
+                <Play className="w-5 h-5" fill="white" />
+                Play Section Audio
+              </button>
+            </div>
           )}
         </div>
 

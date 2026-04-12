@@ -3,16 +3,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { BookMarked, Plus, Search, Heart, Tag, Edit2, Trash2, X, Save, Bookmark } from 'lucide-react';
 import notesService, { Note as ApiNote } from '../services/notesService';
 import DeleteConfirmDialog from './DeleteConfirmDialog';
+import { incrementDashboardMetric } from '../lib/dashboardMetrics';
 
 type Note = ApiNote;
 
 export default function Notes() {
   const { user } = useAuth();
+  const ALL_NOTES_FOLDER = '__ALL__';
+  const UNTAGGED_FOLDER = '__UNTAGGED__';
+
   const [notes, setNotes] = useState<Note[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -32,7 +36,7 @@ export default function Notes() {
 
   useEffect(() => {
     filterNotes();
-  }, [notes, searchTerm, selectedCategory, showFavoritesOnly]);
+  }, [notes, searchTerm, activeFolder, showFavoritesOnly]);
 
   const loadNotes = async () => {
     if (!user) return;
@@ -50,7 +54,20 @@ export default function Notes() {
   };
 
   const filterNotes = () => {
+    if (activeFolder === null) {
+      setFilteredNotes([]);
+      return;
+    }
+
     let filtered = [...notes];
+
+    if (activeFolder !== ALL_NOTES_FOLDER) {
+      if (activeFolder === UNTAGGED_FOLDER) {
+        filtered = filtered.filter((note) => !note.tags || note.tags.length === 0);
+      } else {
+        filtered = filtered.filter((note) => note.tags?.includes(activeFolder));
+      }
+    }
 
     if (searchTerm) {
       filtered = filtered.filter(
@@ -58,10 +75,6 @@ export default function Notes() {
           note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           note.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-
-    if (selectedCategory) {
-      filtered = filtered.filter((note) => note.tags?.includes(selectedCategory));
     }
 
     if (showFavoritesOnly) {
@@ -87,6 +100,11 @@ export default function Notes() {
         reference: { type: 'pdf', id: 'general' },
         tags: tagsArray,
       });
+
+      const userId = user.id || user._id;
+      if (userId) {
+        incrementDashboardMetric(userId, 'notesCreated', 1);
+      }
 
       setFormData({ title: '', content: '', tags: '' });
       setIsCreating(false);
@@ -185,6 +203,26 @@ export default function Notes() {
   };
 
   const categories = Array.from(new Set(notes.flatMap((n) => n.tags || []).filter(Boolean)));
+  const untaggedNotesCount = notes.filter((n) => !n.tags || n.tags.length === 0).length;
+  const folderCards: Array<{ key: string; label: string; count: number }> = [
+    { key: ALL_NOTES_FOLDER, label: 'All Notes', count: notes.length },
+    ...categories.map((cat) => ({
+      key: cat,
+      label: cat,
+      count: notes.filter((n) => n.tags?.includes(cat)).length,
+    })),
+  ];
+
+  if (untaggedNotesCount > 0) {
+    folderCards.push({ key: UNTAGGED_FOLDER, label: 'Untagged', count: untaggedNotesCount });
+  }
+
+  const activeFolderLabel =
+    activeFolder === ALL_NOTES_FOLDER
+      ? 'All Notes'
+      : activeFolder === UNTAGGED_FOLDER
+      ? 'Untagged'
+      : activeFolder;
 
   return (
     <div>
@@ -211,45 +249,76 @@ export default function Notes() {
       </div>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-5">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search notes..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500 text-brand-700 dark:text-brand-200 text-sm"
-          >
-            <option value="">All Tags</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat || ''}>{cat}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium ${showFavoritesOnly
-              ? 'bg-brand-900 text-white'
-              : 'bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-700'
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-            <span>Favourites</span>
-          </button>
-        </div>
+        {activeFolder === null ? (
+          <div className="w-full bg-gold-50 border border-gold-200 rounded-xl px-4 py-3">
+            <p className="text-sm text-gold-800 font-medium">Select a tag folder to view corresponding notes.</p>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => {
+                setActiveFolder(null);
+                setSearchTerm('');
+                setShowFavoritesOnly(false);
+              }}
+              className="px-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-700 dark:text-brand-200 hover:bg-brand-50 dark:hover:bg-brand-700 text-sm font-medium"
+            >
+              Back to Tags
+            </button>
+
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={`Search in ${activeFolderLabel}...`}
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm"
+              />
+            </div>
+
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-colors text-sm font-medium ${showFavoritesOnly
+                ? 'bg-brand-900 text-white'
+                : 'bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-700'
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+              <span>Favourites</span>
+            </button>
+          </>
+        )}
       </div>
+
+      {!loading && activeFolder === null && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {folderCards.map((folder) => (
+            <button
+              key={folder.key}
+              onClick={() => setActiveFolder(folder.key)}
+              className="text-left bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-2xl p-5 hover:shadow-card hover:border-gold-400 transition-all"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-gold-600" />
+                  <p className="text-base font-semibold text-brand-900 dark:text-brand-100">{folder.label}</p>
+                </div>
+                <span className="px-2 py-0.5 text-xs font-semibold bg-brand-100 dark:bg-brand-700 text-brand-700 dark:text-brand-200 rounded-md">
+                  {folder.count}
+                </span>
+              </div>
+              <p className="text-sm text-brand-500 dark:text-brand-400 mt-2">Open folder</p>
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : filteredNotes.length === 0 ? (
+      ) : activeFolder !== null && filteredNotes.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-brand-800 border border-brand-100 dark:border-brand-700/60 rounded-2xl">
           <div className="w-16 h-16 bg-brand-100 dark:bg-brand-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <BookMarked className="w-8 h-8 text-brand-400" />
@@ -261,7 +330,7 @@ export default function Notes() {
             {notes.length === 0 ? 'Create your first note to get started' : 'Try different search terms or filters'}
           </p>
         </div>
-      ) : (
+      ) : activeFolder !== null ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {filteredNotes.map((note) => (
             <div
@@ -333,7 +402,7 @@ export default function Notes() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
 
       {(isCreating || editingNote) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">

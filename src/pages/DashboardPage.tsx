@@ -1,16 +1,56 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 //import { useTheme } from '../contexts/ThemeContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
   GraduationCap, BookMarked, ArrowRight,
-  LayoutGrid,
+  LayoutGrid, FolderKanban,
 } from 'lucide-react';
+import notesService from '../services/notesService';
+import { DashboardMetrics, getDashboardMetrics, setDashboardMetric, trackDailyActivity } from '../lib/dashboardMetrics';
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
   // const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardMetrics>({
+    questionsPracticed: 0,
+    notesCreated: 0,
+    casesViewed: 0,
+    studyStreak: 0,
+    lastUpdated: null,
+  });
+
+  useEffect(() => {
+    const userId = user?.id || user?._id;
+    if (!userId) return;
+
+    const localMetrics = trackDailyActivity(userId);
+    setStats(localMetrics);
+
+    let isMounted = true;
+
+    const loadNotesCount = async () => {
+      try {
+        const notesResponse = await notesService.getNotes({ page: 1, limit: 1 });
+        const merged = setDashboardMetric(userId, 'notesCreated', notesResponse.total || 0);
+        if (isMounted) {
+          setStats(merged);
+        }
+      } catch {
+        if (isMounted) {
+          setStats(getDashboardMetrics(userId));
+        }
+      }
+    };
+
+    void loadNotesCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id, user?._id]);
 
   const handleSignOut = async () => {
     try { await signOut(); } catch {}
@@ -26,6 +66,11 @@ export default function DashboardPage() {
       icon: Scale, title: 'Case Laws',
       description: 'Browse judgments by year, court, and legal category',
       path: '/cases', bg: 'bg-gold-50', iconColor: 'text-gold-600', border: 'hover:border-gold-200',
+    },
+    {
+      icon: FolderKanban, title: 'Resources',
+      description: 'Access admin-published PDF and Markdown study resources',
+      path: '/resources', bg: 'bg-indigo-50', iconColor: 'text-indigo-600', border: 'hover:border-indigo-200',
     },
     {
       icon: BookMarked, title: 'My Notes',
@@ -138,10 +183,10 @@ export default function DashboardPage() {
         {/* Quick stats strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Questions Practiced', value: '—', icon: BookOpen },
-            { label: 'Notes Created', value: '—', icon: BookMarked },
-            { label: 'Cases Viewed', value: '—', icon: Scale },
-            { label: 'Study Streak', value: '—', icon: LayoutGrid },
+            { label: 'Questions Practiced', value: stats.questionsPracticed.toLocaleString('en-IN'), icon: BookOpen },
+            { label: 'Notes Created', value: stats.notesCreated.toLocaleString('en-IN'), icon: BookMarked },
+            { label: 'Cases Viewed', value: stats.casesViewed.toLocaleString('en-IN'), icon: Scale },
+            { label: 'Study Streak', value: `${stats.studyStreak} day${stats.studyStreak === 1 ? '' : 's'}`, icon: LayoutGrid },
           ].map((s, i) => {
             const Icon = s.icon;
             return (

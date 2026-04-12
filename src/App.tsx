@@ -14,6 +14,7 @@ import AudioPage from './pages/AudioPage';
 import LibraryPage from './pages/LibraryPage';
 import AnswersPage from './pages/AnswersPage';
 import AudioPlayer from './components/AudioPlayer';
+import ResourcesPage from './pages/ResourcesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -125,6 +126,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AnswersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resources"
+        element={
+          <ProtectedRoute>
+            <ResourcesPage />
           </ProtectedRoute>
         }
       />

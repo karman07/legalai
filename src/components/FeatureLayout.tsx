@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
   GraduationCap, BookMarked, LayoutDashboard,
-  Menu, ChevronRight,
+  Menu, ChevronRight, FolderKanban,
 } from 'lucide-react';
 
 type FeatureLayoutProps = {
@@ -25,6 +25,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
     { icon: LayoutDashboard, title: 'Dashboard',      path: '/dashboard' },
     { icon: BookOpen,        title: 'MCQ Quiz',       path: '/mcq'       },
     { icon: Scale,           title: 'Case Laws',      path: '/cases'     },
+    { icon: FolderKanban,    title: 'Resources',      path: '/resources' },
     { icon: BookMarked,      title: 'My Notes',       path: '/notes'     },
     // { icon: HelpCircle,      title: 'Ask a Doubt',    path: '/doubts'    },  // HIDDEN
     { icon: MessageSquare,   title: 'Study Assistant',path: '/chatbot'   },

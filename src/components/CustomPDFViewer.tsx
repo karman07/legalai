@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw,
-  StickyNote, Menu, FileText, Volume2, VolumeX, Play, Pause, Square,
+  StickyNote, Menu, FileText, Volume2, Play, Pause, Square,
   Settings2, ChevronDown, Sparkles, Send, Loader2,
 } from 'lucide-react';
 import { PDF } from '../services/pdfService';
@@ -36,6 +36,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
   const [fileType, setFileType] = useState<'pdf' | 'markdown' | 'text'>('pdf');
   const [textContent, setTextContent] = useState('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const textLayerRef = useRef<HTMLDivElement>(null);
 
   // ── TTS state ──────────────────────────────────────────────
   const [ttsPlaying, setTtsPlaying] = useState(false);
@@ -44,6 +45,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
   const [ttsVoice, setTtsVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [ttsText, setTtsText] = useState('');
+  const [ttsCharIndex, setTtsCharIndex] = useState(0);
   const [showTtsPanel, setShowTtsPanel] = useState(false);
   const [ttsSupported] = useState(() => 'speechSynthesis' in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -124,7 +126,29 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
     window.speechSynthesis?.cancel();
     setTtsPlaying(false);
     setTtsPaused(false);
+    setTtsCharIndex(0);
   };
+
+  const readingFocus = useMemo(() => {
+    if (!ttsText) return null;
+
+    const safeIndex = Math.max(0, Math.min(ttsCharIndex, Math.max(0, ttsText.length - 1)));
+    const wordStart = Math.max(0, ttsText.lastIndexOf(' ', safeIndex - 1) + 1);
+    const nextSpace = ttsText.indexOf(' ', safeIndex);
+    const wordEnd = nextSpace === -1 ? ttsText.length : nextSpace;
+    const beforeStart = Math.max(0, wordStart - 90);
+    const afterEnd = Math.min(ttsText.length, wordEnd + 140);
+
+    const current = ttsText.slice(wordStart, Math.max(wordStart + 1, wordEnd));
+
+    return {
+      hasBeforeTrim: beforeStart > 0,
+      hasAfterTrim: afterEnd < ttsText.length,
+      before: ttsText.slice(beforeStart, wordStart),
+      current,
+      after: ttsText.slice(wordEnd, afterEnd),
+    };
+  }, [ttsText, ttsCharIndex]);
 
   const playTTS = async () => {
     if (!ttsSupported) return;
@@ -134,18 +158,25 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
       setTtsPaused(false);
       return;
     }
-    const text = await extractPageText();
+    const preferredText = selectedText.trim().length > 0 ? selectedText.trim() : await extractPageText();
+    const text = preferredText.slice(0, 5000);
     if (!text) return;
-    setTtsText(text.slice(0, 5000));
+    setTtsText(text);
+    setTtsCharIndex(0);
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text.slice(0, 5000));
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = ttsRate;
     utterance.lang = 'en-IN';
     if (ttsVoice) utterance.voice = ttsVoice;
     utterance.onstart = () => { setTtsPlaying(true); setTtsPaused(false); };
     utterance.onend = () => { setTtsPlaying(false); setTtsPaused(false); };
     utterance.onerror = () => { setTtsPlaying(false); setTtsPaused(false); };
+    utterance.onboundary = (event: SpeechSynthesisEvent) => {
+      if (typeof event.charIndex === 'number') {
+        setTtsCharIndex(event.charIndex);
+      }
+    };
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
   };
@@ -217,6 +248,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
       const page = await pdfDoc.getPage(currentPage);
       const canvas = canvasRef.current;
       const context = canvas!.getContext('2d');
+      const textLayer = textLayerRef.current;
 
       const viewport = page.getViewport({ scale, rotation });
       canvas!.height = viewport.height;
@@ -226,6 +258,20 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
         canvasContext: context,
         viewport: viewport,
       }).promise;
+
+      if (textLayer && (window as any).pdfjsLib?.renderTextLayer) {
+        textLayer.innerHTML = '';
+        textLayer.style.width = `${viewport.width}px`;
+        textLayer.style.height = `${viewport.height}px`;
+
+        const textContent = await page.getTextContent();
+        await (window as any).pdfjsLib.renderTextLayer({
+          textContentSource: textContent,
+          container: textLayer,
+          viewport,
+          textDivs: [],
+        }).promise;
+      }
     };
 
     renderPage();
@@ -465,11 +511,13 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
               </div>
             </div>
 
-            {ttsText && (
-              <p className="mt-2 text-xs text-brand-500 truncate">
-                <span className="text-brand-600 font-medium">Reading: </span>
-                {ttsText.slice(0, 120)}…
-              </p>
+            {readingFocus && (
+              <div className="mt-2 text-xs text-brand-500 leading-relaxed">
+                <span className="text-brand-600 font-medium">Reading focus: </span>
+                <span className="inline">{readingFocus.hasBeforeTrim ? '…' : ''}{readingFocus.before}</span>
+                <mark className="bg-gold-500/30 text-gold-200 px-1 py-0.5 rounded">{readingFocus.current}</mark>
+                <span className="inline">{readingFocus.after}{readingFocus.hasAfterTrim ? '…' : ''}</span>
+              </div>
             )}
           </div>
         )}
@@ -589,8 +637,9 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
                 </div>
               ) : fileType === 'pdf' ? (
                 <div className="flex justify-center">
-                  <div className="bg-white shadow-elevated rounded-xl overflow-hidden" style={{ width: 'fit-content' }}>
+                  <div className="bg-white shadow-elevated rounded-xl overflow-hidden relative" style={{ width: 'fit-content' }}>
                     <canvas ref={canvasRef} className="max-w-full h-auto" />
+                    <div ref={textLayerRef} className="pdf-text-layer absolute left-0 top-0" />
                   </div>
                 </div>
               ) : fileType === 'markdown' ? (

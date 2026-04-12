@@ -23,10 +23,13 @@ import quizService, { Quiz, QuizSubmitResponse } from '../services/quizService';
 import notesService, { Note } from '../services/notesService';
 import GenerateAIQuiz from './GenerateAIQuiz';
 import Dialog from './Dialog';
+import { useAuth } from '../contexts/AuthContext';
+import { incrementDashboardMetric } from '../lib/dashboardMetrics';
 
 type ViewState = 'list' | 'quiz' | 'result';
 
 export default function MCQQuiz() {
+  const { user } = useAuth();
 
   // State management
   const [viewState, setViewState] = useState<ViewState>('list');
@@ -165,6 +168,12 @@ export default function MCQQuiz() {
         selectedQuiz._id,
         userAnswers as number[]
       );
+
+      const userId = user?.id || user?._id;
+      if (userId) {
+        incrementDashboardMetric(userId, 'questionsPracticed', result.totalQuestions || userAnswers.length);
+      }
+
       setQuizResult(result);
       setViewState('result');
     } catch (err: any) {
