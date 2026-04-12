@@ -97,48 +97,78 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
 
       {/* ── Navbar ─────────────────────────────────────────── */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-b border-brand-100 shadow-sm">
+      <nav className="fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-gold-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
-                <Scale className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between h-[68px]">
+
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5 shrink-0">
+              <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shadow-sm">
+                <Scale className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold text-brand-900 tracking-tight">
-                LegalPadhai<span className="text-gold-500">.ai</span>
+              <span className="text-[17px] font-bold text-slate-900 tracking-tight">
+                LegalPadhai<span className="text-amber-500">.ai</span>
               </span>
+            </Link>
+
+            {/* Centre nav links */}
+            <div className="hidden lg:flex items-center gap-1">
+              {[
+                { label: 'Home', to: '/' },
+                { label: 'Blogs', to: '/blogs' },
+                { label: 'Privacy', to: '/privacy-policy' },
+                { label: 'Terms', to: '/terms-and-conditions' },
+                { label: 'Cookies', to: '/cookie-policy' },
+              ].map(({ label, to }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="relative px-3.5 py-2 text-[13.5px] font-semibold text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-50 transition-all duration-150"
+                >
+                  {label}
+                </Link>
+              ))}
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Right actions */}
+            <div className="flex items-center gap-2">
               {user ? (
                 <>
-                  <span className="hidden sm:block text-sm text-brand-500 truncate max-w-[160px]">
+                  <span className="hidden md:block text-[13px] text-slate-400 truncate max-w-[150px]">
                     {user.email}
                   </span>
                   <Link
                     to="/dashboard"
-                    className="px-4 py-2 bg-gold-500 hover:bg-gold-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[13.5px] font-bold rounded-xl transition-colors shadow-sm"
                   >
                     Dashboard
                   </Link>
                   <button
                     onClick={handleLogout}
                     title="Logout"
-                    className="p-2 text-brand-400 hover:text-brand-700 hover:bg-brand-100 rounded-lg transition-colors"
+                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/auth" className="hidden sm:block text-sm font-medium text-brand-600 hover:text-brand-900 transition-colors">
+                  <Link
+                    to="/auth"
+                    className="hidden sm:block px-4 py-2 text-[13.5px] font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                  >
                     Sign in
                   </Link>
-                  <Link to="/auth" className="px-4 py-2 bg-brand-900 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                  <Link
+                    to="/auth"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[13.5px] font-bold rounded-xl transition-colors shadow-sm"
+                  >
                     Get Started Free
                   </Link>
                 </>
               )}
             </div>
+
           </div>
         </div>
       </nav>
@@ -294,6 +324,12 @@ export default function LandingPage() {
           <p className="text-brand-500 text-xs max-w-xs mx-auto mb-3">
             India's first AI-empowered law education platform. Helping students crack judiciary exams since 2024.
           </p>
+          <div className="flex flex-wrap justify-center gap-4 mb-4 text-xs">
+            <Link to="/blogs" className="text-brand-400 hover:text-gold-400 transition-colors">Blogs</Link>
+            <Link to="/privacy-policy" className="text-brand-400 hover:text-gold-400 transition-colors">Privacy Policy</Link>
+            <Link to="/terms-and-conditions" className="text-brand-400 hover:text-gold-400 transition-colors">Terms & Conditions</Link>
+            <Link to="/cookie-policy" className="text-brand-400 hover:text-gold-400 transition-colors">Cookie Policy</Link>
+          </div>
           <p className="text-brand-600 text-xs">
             © {new Date().getFullYear()} LegalPadhai.ai · All rights reserved
           </p>

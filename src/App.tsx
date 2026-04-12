@@ -15,6 +15,11 @@ import LibraryPage from './pages/LibraryPage';
 import AnswersPage from './pages/AnswersPage';
 import AudioPlayer from './components/AudioPlayer';
 import ResourcesPage from './pages/ResourcesPage';
+import BlogsPage from './pages/BlogsPage';
+import BlogDetailPage from './pages/BlogDetailPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsConditionsPage from './pages/TermsConditionsPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -40,6 +45,11 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/blogs" element={<BlogsPage />} />
+      <Route path="/blogs/:slug" element={<BlogDetailPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
+      <Route path="/cookie-policy" element={<CookiePolicyPage />} />
       <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <Auth />} />
       <Route
         path="/dashboard"
