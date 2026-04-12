@@ -16,9 +16,9 @@ interface CustomPDFViewerProps {
 }
 
 const getFileType = (url: string, fileName?: string) => {
-  const name = fileName || url;
+  const name = (fileName || url).split('?')[0].split('#')[0].toLowerCase();
   if (name.endsWith('.pdf')) return 'pdf';
-  if (name.endsWith('.md')) return 'markdown';
+  if (name.endsWith('.md') || name.endsWith('.markdown')) return 'markdown';
   if (name.endsWith('.txt')) return 'text';
   return 'pdf';
 };
@@ -35,6 +35,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
   const [fileType, setFileType] = useState<'pdf' | 'markdown' | 'text'>('pdf');
   const [textContent, setTextContent] = useState('');
+  const [textLoadError, setTextLoadError] = useState('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textLayerRef = useRef<HTMLDivElement>(null);
 
@@ -129,36 +130,45 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
     setTtsCharIndex(0);
   };
 
-  const readingFocus = useMemo(() => {
-    if (!ttsText) return null;
+  const readProgress = useMemo(() => {
+    if (!ttsText) {
+      return {
+        read: '',
+        unread: '',
+      };
+    }
 
-    const safeIndex = Math.max(0, Math.min(ttsCharIndex, Math.max(0, ttsText.length - 1)));
-    const wordStart = Math.max(0, ttsText.lastIndexOf(' ', safeIndex - 1) + 1);
-    const nextSpace = ttsText.indexOf(' ', safeIndex);
-    const wordEnd = nextSpace === -1 ? ttsText.length : nextSpace;
-    const beforeStart = Math.max(0, wordStart - 90);
-    const afterEnd = Math.min(ttsText.length, wordEnd + 140);
-
-    const current = ttsText.slice(wordStart, Math.max(wordStart + 1, wordEnd));
-
+    const idx = Math.max(0, Math.min(ttsCharIndex, ttsText.length));
     return {
-      hasBeforeTrim: beforeStart > 0,
-      hasAfterTrim: afterEnd < ttsText.length,
-      before: ttsText.slice(beforeStart, wordStart),
-      current,
-      after: ttsText.slice(wordEnd, afterEnd),
+      read: ttsText.slice(0, idx),
+      unread: ttsText.slice(idx),
     };
   }, [ttsText, ttsCharIndex]);
 
   const playTTS = async () => {
     if (!ttsSupported) return;
+    if (textLoadError) return;
     if (ttsPaused) {
       window.speechSynthesis.resume();
       setTtsPlaying(true);
       setTtsPaused(false);
       return;
     }
-    const preferredText = selectedText.trim().length > 0 ? selectedText.trim() : await extractPageText();
+
+    let resolvedTextContent = textContent;
+    if (fileType !== 'pdf' && !resolvedTextContent.trim()) {
+      resolvedTextContent = await loadTextFile();
+    }
+
+    const preferredText = selectedText.trim().length > 0
+      ? selectedText.trim()
+      : (fileType === 'pdf' ? await extractPageText() : resolvedTextContent);
+
+    if (!preferredText || /^\s*\{"message"\s*:\s*"Cannot GET/i.test(preferredText.trim())) {
+      setTextLoadError('Unable to read this file. The source file could not be loaded.');
+      return;
+    }
+
     const text = preferredText.slice(0, 5000);
     if (!text) return;
     setTtsText(text);
@@ -179,6 +189,13 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
     };
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
+  };
+
+  const handleListenClick = () => {
+    setShowTtsPanel(true);
+    if (!ttsPlaying && !ttsPaused) {
+      void playTTS();
+    }
   };
 
   const pauseTTS = () => {
@@ -211,16 +228,45 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
     }
   }, []);
 
-  const loadTextFile = async () => {
+  const loadTextFile = async (): Promise<string> => {
     setLoading(true);
+    setTextLoadError('');
     try {
-      const response = await fetch(fileUrl);
-      const text = await response.text();
+      const tryFetchText = async (url: string): Promise<string> => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const contentType = response.headers.get('content-type') || '';
+        const text = await response.text();
+
+        if (contentType.includes('application/json') || /^\s*\{\s*"message"/i.test(text)) {
+          throw new Error('Invalid text file response');
+        }
+
+        return text;
+      };
+
+      let text = '';
+      try {
+        text = await tryFetchText(fileUrl);
+      } catch (primaryError) {
+        const canFallback = fileType === 'markdown' && fileUrl.includes('/uploads/documents/');
+        if (!canFallback) throw primaryError;
+
+        const fallbackUrl = fileUrl.replace('/uploads/documents/', '/uploads/resources/');
+        text = await tryFetchText(fallbackUrl);
+      }
+
       setTextContent(text);
       setLoading(false);
+      return text;
     } catch (error) {
       console.error('Error loading file:', error);
+      setTextContent('');
+      setTextLoadError('Unable to load file content. Please verify the uploaded file path and availability.');
       setLoading(false);
+      return '';
     }
   };
 
@@ -378,9 +424,9 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 ml-3 flex-shrink-0">
-            {ttsSupported && fileType === 'pdf' && (
+            {ttsSupported && (fileType === 'pdf' || fileType === 'markdown' || fileType === 'text') && (
               <button
-                onClick={() => setShowTtsPanel(v => !v)}
+                onClick={handleListenClick}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   showTtsPanel
                     ? 'bg-gold-500 text-white'
@@ -418,7 +464,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
         </div>
 
         {/* ── TTS Panel ──────────────────────────────────── */}
-        {showTtsPanel && ttsSupported && fileType === 'pdf' && (
+        {showTtsPanel && ttsSupported && (fileType === 'pdf' || fileType === 'markdown' || fileType === 'text') && (
           <div className="flex-shrink-0 bg-brand-900 border-b border-brand-700 px-3 sm:px-5 py-3">
             <div className="flex flex-wrap items-center gap-3">
               {/* Playback controls */}
@@ -429,7 +475,7 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
                     className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gold-500 hover:bg-gold-400 text-white rounded-lg text-xs font-semibold transition-all"
                   >
                     <Play className="w-3.5 h-3.5" />
-                    <span>Play Page {currentPage}</span>
+                    <span>{fileType === 'pdf' ? `Play Page ${currentPage}` : 'Play Reader'}</span>
                   </button>
                 ) : ttsPlaying ? (
                   <button
@@ -511,14 +557,6 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
               </div>
             </div>
 
-            {readingFocus && (
-              <div className="mt-2 text-xs text-brand-500 leading-relaxed">
-                <span className="text-brand-600 font-medium">Reading focus: </span>
-                <span className="inline">{readingFocus.hasBeforeTrim ? '…' : ''}{readingFocus.before}</span>
-                <mark className="bg-gold-500/30 text-gold-200 px-1 py-0.5 rounded">{readingFocus.current}</mark>
-                <span className="inline">{readingFocus.after}{readingFocus.hasAfterTrim ? '…' : ''}</span>
-              </div>
-            )}
           </div>
         )}
 
@@ -644,13 +682,31 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
                 </div>
               ) : fileType === 'markdown' ? (
                 <div className="max-w-4xl mx-auto bg-white shadow-card rounded-2xl p-8 border border-brand-200">
-                  <div className="prose prose-slate max-w-none prose-headings:text-brand-900 prose-h1:text-3xl prose-h1:font-bold prose-h2:text-xl prose-h2:font-semibold prose-p:text-brand-700 prose-a:text-gold-600 prose-strong:text-brand-900 prose-code:text-brand-700 prose-code:bg-brand-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-brand-900 prose-pre:text-brand-100 prose-blockquote:border-l-4 prose-blockquote:border-gold-500 prose-blockquote:bg-gold-50">
-                    <ReactMarkdown>{textContent}</ReactMarkdown>
-                  </div>
+                  {textLoadError ? (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{textLoadError}</div>
+                  ) : ttsText ? (
+                    <div className="text-base leading-relaxed text-brand-800 whitespace-pre-wrap">
+                      <span className="bg-gold-100 text-brand-900">{readProgress.read}</span>
+                      <span>{readProgress.unread}</span>
+                    </div>
+                  ) : (
+                    <div className="prose prose-slate max-w-none prose-headings:text-brand-900 prose-h1:text-3xl prose-h1:font-bold prose-h2:text-xl prose-h2:font-semibold prose-p:text-brand-700 prose-a:text-gold-600 prose-strong:text-brand-900 prose-code:text-brand-700 prose-code:bg-brand-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-brand-900 prose-pre:text-brand-100 prose-blockquote:border-l-4 prose-blockquote:border-gold-500 prose-blockquote:bg-gold-50">
+                      <ReactMarkdown>{textContent}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="max-w-4xl mx-auto bg-white shadow-card rounded-2xl p-8 border border-brand-200">
-                  <pre className="whitespace-pre-wrap font-mono text-sm text-brand-700 leading-relaxed">{textContent}</pre>
+                  {textLoadError ? (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{textLoadError}</div>
+                  ) : ttsText ? (
+                    <div className="whitespace-pre-wrap font-mono text-sm text-brand-700 leading-relaxed">
+                      <span className="bg-gold-100 text-brand-900">{readProgress.read}</span>
+                      <span>{readProgress.unread}</span>
+                    </div>
+                  ) : (
+                    <pre className="whitespace-pre-wrap font-mono text-sm text-brand-700 leading-relaxed">{textContent}</pre>
+                  )}
                 </div>
               )}
             </div>
