@@ -322,7 +322,7 @@ export default function LandingPage() {
             </span>
           </div>
           <p className="text-brand-500 text-xs max-w-xs mx-auto mb-3">
-            India's first AI-empowered law education platform. Helping students crack judiciary exams since 2024.
+            India's first AI-empowered law education platform. Helping students crack judiciary exams since 2026.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-4 text-xs">
             <Link to="/blogs" className="text-brand-400 hover:text-gold-400 transition-colors">Blogs</Link>
