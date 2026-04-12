@@ -16,6 +16,7 @@ import { AnswerCheckModule } from './answer-check/answer-check.module';
 import { SearchModule } from './search/search.module';
 import { ChatModule } from './chat/chat.module';
 import { ResourcesModule } from './resources/resources.module';
+import { BlogsModule } from './blogs/blogs.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ResourcesModule } from './resources/resources.module';
     SearchModule,
     ChatModule,
     ResourcesModule,
+    BlogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
