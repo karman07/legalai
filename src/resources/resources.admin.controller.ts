@@ -1,0 +1,148 @@
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { Request } from 'express';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums/user-role.enum';
+import { ResourcesService } from './resources.service';
+import { CreateResourceDto } from './dto/create-resource.dto';
+import { UpdateResourceDto } from './dto/update-resource.dto';
+
+@Controller('admin/resources')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
+export class ResourcesAdminController {
+  constructor(private readonly resourcesService: ResourcesService) {}
+
+  @Post()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/resources',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `resource-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        const ext = extname(file.originalname).toLowerCase();
+        const allowedExt = ['.pdf', '.md'];
+        const allowedMime = ['application/pdf', 'text/markdown', 'text/plain'];
+
+        if (allowedExt.includes(ext) || allowedMime.includes(file.mimetype)) {
+          cb(null, true);
+          return;
+        }
+        cb(new BadRequestException('Only PDF and MD files are allowed'), false);
+      },
+      limits: { fileSize: 100 * 1024 * 1024 },
+    }),
+  )
+  async create(
+    @Body() dto: CreateResourceDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+
+    const uploadedBy = (req as any)?.user?.id || (req as any)?.user?._id;
+    return this.resourcesService.create(
+      {
+        ...dto,
+        title: dto.title || file.originalname,
+        fileName: file.filename,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+      },
+      uploadedBy,
+    );
+  }
+
+  @Get()
+  async list(
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+    @Query('search') search?: string,
+    @Query('fileType') fileType?: 'pdf' | 'md',
+    @Query('category') category?: string,
+    @Query('isActive') isActive?: string,
+  ) {
+    return this.resourcesService.findAll({
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      search,
+      fileType,
+      category,
+      isActive: typeof isActive === 'string' ? isActive === 'true' : undefined,
+    });
+  }
+
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    return this.resourcesService.findOne(id);
+  }
+
+  @Put(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/resources',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `resource-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        const ext = extname(file.originalname).toLowerCase();
+        const allowedExt = ['.pdf', '.md'];
+        const allowedMime = ['application/pdf', 'text/markdown', 'text/plain'];
+        if (allowedExt.includes(ext) || allowedMime.includes(file.mimetype)) {
+          cb(null, true);
+          return;
+        }
+        cb(new BadRequestException('Only PDF and MD files are allowed'), false);
+      },
+      limits: { fileSize: 100 * 1024 * 1024 },
+    }),
+  )
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateResourceDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const payload: any = { ...dto };
+    if (file) {
+      payload.fileName = file.filename;
+      payload.originalName = file.originalname;
+      payload.mimeType = file.mimetype;
+      payload.fileSize = file.size;
+    }
+
+    return this.resourcesService.update(id, payload);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return this.resourcesService.remove(id);
+  }
+}

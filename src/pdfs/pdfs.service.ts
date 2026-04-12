@@ -40,7 +40,7 @@ export class PdfsService {
     const validatedPage = Math.max(1, page);
     const validatedLimit = Math.min(Math.max(1, limit), 100);
 
-    const filter: Record<string, any> = { ...filters };
+    const filter: Record<string, any> = this.buildFilter(filters);
     if (typeof isActive === 'boolean') filter.isActive = isActive;
 
     const [items, total] = await Promise.all([
@@ -87,7 +87,7 @@ export class PdfsService {
 
     const searchRegex = new RegExp(query, 'i');
     const searchFilter = {
-      ...filters,
+      ...this.buildFilter(filters),
       $or: [
         { title: searchRegex },
         { pet: searchRegex },
@@ -137,8 +137,14 @@ export class PdfsService {
         { $sort: { count: -1 } }
       ]),
       this.pdfModel.aggregate([
-        { $match: { isActive: true, year: { $exists: true } } },
-        { $group: { _id: '$year', count: { $sum: 1 } } },
+        { $match: { isActive: true } },
+        {
+          $addFields: {
+            derivedYear: this.getDerivedYearExpression(),
+          },
+        },
+        { $match: { derivedYear: { $gte: 1800, $lte: 2200 } } },
+        { $group: { _id: '$derivedYear', count: { $sum: 1 } } },
         { $sort: { _id: -1 } }
       ]),
       this.pdfModel.aggregate([
@@ -164,6 +170,30 @@ export class PdfsService {
   async getCategories() {
     const categories = await this.pdfModel.distinct('category');
     return categories.filter(Boolean).sort(); // Remove null/undefined and sort
+  }
+
+  async getAvailableYears() {
+    const results = await this.pdfModel.aggregate([
+      { $match: { isActive: true } },
+      {
+        $addFields: {
+          derivedYear: this.getDerivedYearExpression(),
+        },
+      },
+      { $match: { derivedYear: { $gte: 1800, $lte: 2200 } } },
+      {
+        $group: {
+          _id: '$derivedYear',
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+
+    return {
+      items: results.map((item) => ({ year: item._id, count: item.count })),
+      total: results.length,
+    };
   }
 
   async findOne(id: string, includeFullText = false): Promise<any> {
@@ -227,7 +257,79 @@ export class PdfsService {
       // Only clean if the field exists or if we want to ensure it has a dummy value
       cleanedData[field] = this.cleanValue(cleanedData[field]);
     });
+
+    if (!cleanedData.year && cleanedData.judgment_dates) {
+      const parsedDate = new Date(cleanedData.judgment_dates);
+      if (!Number.isNaN(parsedDate.getTime())) {
+        cleanedData.year = parsedDate.getUTCFullYear();
+      }
+    }
+
     return cleanedData;
+  }
+
+  private buildFilter(filters: Record<string, any>): Record<string, any> {
+    const normalized = { ...filters };
+    const year = normalized.year;
+    delete normalized.year;
+
+    if (typeof year !== 'number' || Number.isNaN(year)) {
+      return normalized;
+    }
+
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+
+    return {
+      ...normalized,
+      $or: [
+        { year },
+        { judgment_dates: { $gte: yearStart, $lt: yearEnd } },
+        { case_no: new RegExp(`\\b${year}\\b`) },
+        { title: new RegExp(`\\b${year}\\b`) },
+      ],
+    };
+  }
+
+  private getDerivedYearExpression() {
+    return {
+      $ifNull: [
+        '$year',
+        {
+          $ifNull: [
+            { $year: '$judgment_dates' },
+            {
+              $toInt: {
+                $ifNull: [
+                  {
+                    $let: {
+                      vars: {
+                        fromCaseNo: {
+                          $regexFind: {
+                            input: { $ifNull: ['$case_no', ''] },
+                            regex: '(19|20)\\\\d{2}',
+                          },
+                        },
+                        fromTitle: {
+                          $regexFind: {
+                            input: { $ifNull: ['$title', ''] },
+                            regex: '(19|20)\\\\d{2}',
+                          },
+                        },
+                      },
+                      in: {
+                        $ifNull: ['$$fromCaseNo.match', '$$fromTitle.match'],
+                      },
+                    },
+                  },
+                  0,
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    };
   }
 
   async runCleanup() {

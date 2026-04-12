@@ -32,6 +32,9 @@ export class Pdf {
   @Prop()
   judgment_dates?: Date;
 
+  @Prop()
+  year?: number;
+
   @Prop({ trim: true })
   link?: string;
 

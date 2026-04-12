@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreatePdfDto {
   @IsOptional()
@@ -40,6 +40,12 @@ export class CreatePdfDto {
   @IsOptional()
   @IsDateString()
   judgment_dates?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1800)
+  @Max(2200)
+  year?: number;
 
   @IsOptional()
   @IsString()

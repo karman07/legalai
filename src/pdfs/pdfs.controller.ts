@@ -56,6 +56,11 @@ export class PdfsController {
     return this.pdfsService.getCategories();
   }
 
+  @Get('years')
+  async getYears() {
+    return this.pdfsService.getAvailableYears();
+  }
+
   @Get('search')
   async search(
     @Query('q') query: string,
