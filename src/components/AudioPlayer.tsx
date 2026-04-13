@@ -569,17 +569,7 @@ export default function AudioPlayer() {
         sectionHead={currentSectionDetail}
         sectionIndex={currentSectionIndex}
         subsections={subsections}
-        subsectionsPage={subsectionsPage}
-        subsectionsTotalPages={subsectionsTotalPages}
-        subsectionsLoading={subsectionsLoading}
-        onLoadMoreSubsections={() => {
-          const next = subsectionsPage + 1;
-          setSubsectionsPage(next);
-          fetchSubsections(currentSectionIndex, next);
-        }}
         selectedLanguage={selectedLanguage}
-        onSelectSubsection={(subIdx) => startPlayer(currentSectionIndex, subIdx)}
-        onPlaySection={() => startPlayer(currentSectionIndex, -1)}
         onPlayCombinedAudio={() => openCombinedMode(true)}
         onLanguageChange={setSelectedLanguage}
         onBack={() => setViewMode('sections')}

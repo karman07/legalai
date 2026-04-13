@@ -15,6 +15,7 @@ import LibraryPage from './pages/LibraryPage';
 import AnswersPage from './pages/AnswersPage';
 import AudioPlayer from './components/AudioPlayer';
 import ResourcesPage from './pages/ResourcesPage';
+import StudyMaterialsPage from './pages/StudyMaterialsPage';
 import BlogsPage from './pages/BlogsPage';
 import BlogDetailPage from './pages/BlogDetailPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
@@ -144,6 +145,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ResourcesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/study-materials"
+        element={
+          <ProtectedRoute>
+            <StudyMaterialsPage />
           </ProtectedRoute>
         }
       />

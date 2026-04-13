@@ -1,44 +1,78 @@
 import { useEffect, useState } from 'react';
-import { FileText, Search, Filter, Download, Eye, Loader2, FolderKanban } from 'lucide-react';
+import {
+  FileText,
+  Download,
+  Eye,
+  Loader2,
+  FolderKanban,
+  FolderOpen,
+  Layers,
+  CalendarDays,
+  Tag,
+  FileBadge,
+} from 'lucide-react';
 import resourcesService, { ResourceItem } from '../services/resourcesService';
 import CustomPDFViewer from './CustomPDFViewer';
 import { PDF } from '../services/pdfService';
 
 const PAGE_SIZE = 24;
 
-export default function ResourcesLibrary() {
+type ResourcesLibraryProps = {
+  contentKind?: 'resource' | 'study-material';
+  heading?: string;
+  subheading?: string;
+  emptyTitle?: string;
+};
+
+export default function ResourcesLibrary({
+  contentKind = 'resource',
+  heading = 'Resources Library',
+  subheading = 'Browse admin-published PDF and Markdown resources',
+  emptyTitle = 'No resources found',
+}: ResourcesLibraryProps) {
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeSearch, setActiveSearch] = useState('');
-  const [fileType, setFileType] = useState<'all' | 'pdf' | 'md'>('all');
-  const [category, setCategory] = useState('all');
+  const [category, setCategory] = useState('');
   const [selectedResource, setSelectedResource] = useState<ResourceItem | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     void loadCategories();
-  }, []);
+  }, [contentKind]);
 
   useEffect(() => {
     setPage(1);
     void loadResources(1, true);
-  }, [activeSearch, fileType, category]);
+  }, [category, contentKind]);
 
   const loadCategories = async () => {
     try {
-      const res = await resourcesService.getCategories();
-      setCategories(res || []);
+      const res = await resourcesService.getCategories(contentKind);
+      const resolved = res || [];
+      setCategories(resolved);
+      if (!resolved.includes(category)) {
+        setCategory('');
+      }
     } catch {
       setCategories([]);
+      setCategory('');
     }
   };
 
   const loadResources = async (targetPage: number, replace = false) => {
+    if (!category) {
+      setResources([]);
+      setPage(1);
+      setTotalPages(1);
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
+
     if (replace) setLoading(true);
     else setLoadingMore(true);
 
@@ -47,9 +81,8 @@ export default function ResourcesLibrary() {
       const response = await resourcesService.getResources({
         page: targetPage,
         limit: PAGE_SIZE,
-        search: activeSearch || undefined,
-        fileType: fileType === 'all' ? undefined : fileType,
-        category: category === 'all' ? undefined : category,
+        category,
+        kind: contentKind,
       });
 
       setResources((prev) => (replace ? response.items : [...prev, ...response.items]));
@@ -61,17 +94,6 @@ export default function ResourcesLibrary() {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
-
-  const handleSearch = () => {
-    setActiveSearch(searchTerm.trim());
-  };
-
-  const handleReset = () => {
-    setSearchTerm('');
-    setActiveSearch('');
-    setFileType('all');
-    setCategory('all');
   };
 
   const viewerPdf: PDF | null = selectedResource
@@ -91,54 +113,41 @@ export default function ResourcesLibrary() {
             <FolderKanban className="w-5 h-5 text-brand-700 dark:text-gold-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-brand-900 dark:text-brand-100">Resources Library</h1>
-            <p className="text-brand-500 dark:text-brand-400 text-sm">Browse admin-published PDF and Markdown resources</p>
+            <h1 className="text-2xl font-bold text-brand-900 dark:text-brand-100">{heading}</h1>
+            <p className="text-brand-500 dark:text-brand-400 text-sm">{subheading}</p>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-3">
-          <div className="lg:col-span-2 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search by title, category, tags..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-brand-200 rounded-xl text-brand-800 placeholder:text-brand-400 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-            />
+        <div className="bg-white border border-brand-200 rounded-2xl p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="w-4 h-4 text-brand-600" />
+            <p className="text-sm font-semibold text-brand-700">Select Category First</p>
           </div>
-
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
-            <select
-              value={fileType}
-              onChange={(e) => setFileType(e.target.value as 'all' | 'pdf' | 'md')}
-              className="w-full pl-10 pr-3 py-2.5 bg-white border border-brand-200 rounded-xl text-brand-700 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-            >
-              <option value="all">All Types</option>
-              <option value="pdf">PDF</option>
-              <option value="md">Markdown</option>
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCategory(c)}
+                className={`text-left rounded-xl border p-3 transition-all ${
+                  category === c
+                    ? 'bg-brand-900 text-white border-brand-900 shadow-md'
+                    : 'bg-brand-50 text-brand-700 border-brand-100 hover:bg-brand-100 hover:border-brand-200'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold leading-tight">{c}</p>
+                    <p className={`text-xs mt-1 ${category === c ? 'text-brand-100' : 'text-brand-500'}`}>
+                      Open this category
+                    </p>
+                  </div>
+                  <FolderOpen className={`w-4 h-4 ${category === c ? 'text-white' : 'text-brand-500'}`} />
+                </div>
+              </button>
+            ))}
           </div>
-
-          <div>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2.5 bg-white border border-brand-200 rounded-xl text-brand-700 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-            >
-              <option value="all">All Categories</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex gap-2">
-            <button onClick={handleSearch} className="flex-1 px-4 py-2.5 bg-brand-900 hover:bg-brand-800 text-white rounded-xl text-sm font-semibold">Search</button>
-            <button onClick={handleReset} className="px-4 py-2.5 bg-brand-100 hover:bg-brand-200 text-brand-700 rounded-xl text-sm font-medium">Reset</button>
-          </div>
+          {!category && categories.length > 0 && (
+            <p className="mt-3 text-xs text-brand-500">Choose one category to view files.</p>
+          )}
         </div>
       </div>
 
@@ -158,10 +167,18 @@ export default function ResourcesLibrary() {
         </div>
       )}
 
-      {!loading && resources.length === 0 && (
+      {!loading && !category && categories.length > 0 && (
         <div className="text-center py-16 bg-white border border-brand-200 rounded-2xl">
           <FileText className="w-14 h-14 text-brand-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-brand-600 mb-2">No resources found</h3>
+          <h3 className="text-xl font-semibold text-brand-600 mb-2">Select a category first</h3>
+          <p className="text-brand-500">Resources will appear after category selection.</p>
+        </div>
+      )}
+
+      {!loading && category && resources.length === 0 && (
+        <div className="text-center py-16 bg-white border border-brand-200 rounded-2xl">
+          <FileText className="w-14 h-14 text-brand-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-brand-600 mb-2">{emptyTitle}</h3>
           <p className="text-brand-500">Try changing filters or search query</p>
         </div>
       )}
@@ -174,7 +191,10 @@ export default function ResourcesLibrary() {
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <h3 className="text-base font-bold text-brand-900 line-clamp-2">{item.title}</h3>
                   <span className={`text-xs px-2 py-1 rounded-md font-semibold ${item.fileType === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                    {item.fileType.toUpperCase()}
+                    <span className="inline-flex items-center gap-1">
+                      <FileBadge className="w-3 h-3" />
+                      {item.fileType.toUpperCase()}
+                    </span>
                   </span>
                 </div>
 
@@ -182,9 +202,17 @@ export default function ResourcesLibrary() {
                   <p className="text-sm text-brand-600 line-clamp-3 mb-3">{item.description}</p>
                 )}
 
-                <div className="flex items-center justify-between text-xs text-brand-500 mb-4">
-                  <span>{item.category || 'General'}</span>
-                  <span>{new Date(item.createdAt).toLocaleDateString('en-IN')}</span>
+                <div className="space-y-2 text-xs text-brand-500 mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5" />
+                      {item.category || 'General'}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      {new Date(item.createdAt).toLocaleDateString('en-IN')}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -34,6 +34,7 @@ class ResourcesService {
     search?: string;
     fileType?: 'pdf' | 'md';
     category?: string;
+    kind?: 'resource' | 'study-material';
   }): Promise<ResourceListResponse> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
@@ -41,6 +42,7 @@ class ResourcesService {
     if (params?.search) queryParams.append('search', params.search);
     if (params?.fileType) queryParams.append('fileType', params.fileType);
     if (params?.category) queryParams.append('category', params.category);
+    if (params?.kind) queryParams.append('kind', params.kind);
 
     const queryString = queryParams.toString();
     return apiClient<ResourceListResponse>(`/resources${queryString ? `?${queryString}` : ''}`, {
@@ -48,8 +50,8 @@ class ResourcesService {
     });
   }
 
-  async getCategories(): Promise<string[]> {
-    return apiClient<string[]>('/resources/categories', {
+  async getCategories(kind: 'resource' | 'study-material' = 'resource'): Promise<string[]> {
+    return apiClient<string[]>(`/resources/categories?kind=${kind}`, {
       method: 'GET',
     });
   }

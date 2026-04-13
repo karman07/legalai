@@ -73,6 +73,11 @@ export default function DashboardPage() {
       path: '/resources', bg: 'bg-indigo-50', iconColor: 'text-indigo-600', border: 'hover:border-indigo-200',
     },
     {
+      icon: BookMarked, title: 'Study Materials',
+      description: 'Open curated category-wise study materials from admins',
+      path: '/study-materials', bg: 'bg-amber-50', iconColor: 'text-amber-600', border: 'hover:border-amber-200',
+    },
+    {
       icon: BookMarked, title: 'My Notes',
       description: 'Create and organize personal study notes with tags',
       path: '/notes', bg: 'bg-emerald-50', iconColor: 'text-emerald-600', border: 'hover:border-emerald-200',
