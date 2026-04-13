@@ -5,6 +5,9 @@ export type ResourceDocument = HydratedDocument<Resource>;
 
 @Schema({ timestamps: true })
 export class Resource {
+  @Prop({ required: true, trim: true, enum: ['resource', 'study-material'], default: 'resource' })
+  kind: 'resource' | 'study-material';
+
   @Prop({ required: true, trim: true })
   title: string;
 

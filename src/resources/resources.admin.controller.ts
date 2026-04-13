@@ -21,7 +21,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../common/enums/user-role.enum';
-import { ResourceListResponse, ResourceResponse, ResourcesService } from './resources.service';
+import {
+  ResourceCategoryResponse,
+  ResourceListResponse,
+  ResourceResponse,
+  ResourcesService,
+} from './resources.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 
@@ -30,6 +35,42 @@ import { UpdateResourceDto } from './dto/update-resource.dto';
 @Roles(UserRole.ADMIN)
 export class ResourcesAdminController {
   constructor(private readonly resourcesService: ResourcesService) {}
+
+  @Get('categories')
+  async listCategories(
+    @Query('isActive') isActive?: string,
+    @Query('kind') kind: 'resource' | 'study-material' = 'resource',
+  ): Promise<ResourceCategoryResponse[]> {
+    return this.resourcesService.getCategoryDetails(
+      typeof isActive === 'string' ? isActive === 'true' : undefined,
+      kind,
+    );
+  }
+
+  @Post('categories')
+  async createCategory(
+    @Body('name') name: string,
+    @Body('kind') kind: 'resource' | 'study-material' = 'resource',
+  ): Promise<ResourceCategoryResponse> {
+    return this.resourcesService.createCategory(name, kind);
+  }
+
+  @Put('categories/:id')
+  async updateCategory(
+    @Param('id') id: string,
+    @Body('name') name: string,
+    @Body('kind') kind: 'resource' | 'study-material' = 'resource',
+  ): Promise<ResourceCategoryResponse> {
+    return this.resourcesService.updateCategory(id, name, kind);
+  }
+
+  @Delete('categories/:id')
+  async removeCategory(
+    @Param('id') id: string,
+    @Query('kind') kind: 'resource' | 'study-material' = 'resource',
+  ): Promise<{ message: string; id: string }> {
+    return this.resourcesService.removeCategory(id, kind);
+  }
 
   @Post()
   @UseInterceptors(
@@ -68,6 +109,7 @@ export class ResourcesAdminController {
     return this.resourcesService.create(
       {
         ...dto,
+        kind: dto.kind || 'resource',
         title: dto.title || file.originalname,
         fileName: file.filename,
         originalName: file.originalname,
@@ -86,6 +128,7 @@ export class ResourcesAdminController {
     @Query('fileType') fileType?: 'pdf' | 'md',
     @Query('category') category?: string,
     @Query('isActive') isActive?: string,
+    @Query('kind') kind: 'resource' | 'study-material' = 'resource',
   ): Promise<ResourceListResponse> {
     return this.resourcesService.findAll({
       page: parseInt(page, 10),
@@ -94,6 +137,7 @@ export class ResourcesAdminController {
       fileType,
       category,
       isActive: typeof isActive === 'string' ? isActive === 'true' : undefined,
+      kind,
     });
   }
 

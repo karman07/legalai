@@ -14,6 +14,7 @@ export class ResourcesController {
     @Query('search') search?: string,
     @Query('fileType') fileType?: 'pdf' | 'md',
     @Query('category') category?: string,
+    @Query('kind') kind: 'resource' | 'study-material' = 'resource',
   ): Promise<ResourceListResponse> {
     return this.resourcesService.findAll({
       page: parseInt(page, 10),
@@ -22,12 +23,13 @@ export class ResourcesController {
       fileType,
       category,
       isActive: true,
+      kind,
     });
   }
 
   @Get('categories')
-  async categories(): Promise<string[]> {
-    return this.resourcesService.getCategories();
+  async categories(@Query('kind') kind: 'resource' | 'study-material' = 'resource'): Promise<string[]> {
+    return this.resourcesService.getCategories(kind);
   }
 
   @Get(':id')
