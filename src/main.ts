@@ -16,15 +16,9 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10gb' }));
   app.use(bodyParser.urlencoded({ limit: '10gb', extended: true }));
 
-  // Enable CORS for specific origins
+  // Enable CORS for all origins
   app.enableCors({
-    origin: [
-      "https://legalpadhai.ai",
-      "https://admin.legalpadhai.ai",
-      "http://localhost:3001",
-      "http://localhost:5173",
-      "http://localhost:5174"
-    ],
+    origin: true,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization,Accept,Origin,X-Requested-With,X-Api-Key',
