@@ -54,7 +54,7 @@ const sections: LegalSection[] = [
       'Right to rectification: request correction of inaccurate or incomplete data.',
       'Right to erasure: request deletion of your account and associated personal data.',
       'Right to portability: receive your data in a structured, machine-readable format.',
-      'To exercise any right, contact us at legal@legalpadhai.ai with verification details.',
+      'To exercise any right, contact us at info@aiforjob.ai with verification details.',
     ],
   },
   {

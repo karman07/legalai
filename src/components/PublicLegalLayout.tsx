@@ -218,8 +218,8 @@ export default function PublicLegalLayout({
               <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm">
                 <p className="text-[13px] text-slate-400">
                   For questions about this document, contact us at{' '}
-                  <a href="mailto:legal@legalpadhai.ai" className="text-amber-600 font-semibold hover:underline">
-                    legal@legalpadhai.ai
+                  <a href="mailto:info@aiforjob.ai" className="text-amber-600 font-semibold hover:underline">
+                    info@aiforjob.ai
                   </a>
                 </p>
               </div>
