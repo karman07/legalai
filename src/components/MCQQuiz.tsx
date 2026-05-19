@@ -91,7 +91,7 @@ export default function MCQQuiz() {
     if (!quiz) return;
     setTimedOut(true);
     setSubmitting(true);
-    quizService.submitQuiz(quiz._id, answers.map(a => a ?? 0))
+    quizService.submitQuiz(quiz._id, answers.map(a => a ?? -1))
       .then(r => { setQuizResult(r); setViewState('result'); })
       .catch(() => setViewState('result'))
       .finally(() => setSubmitting(false));
@@ -216,7 +216,7 @@ export default function MCQQuiz() {
     setSubmitting(true);
     setError('');
     try {
-      const result = await quizService.submitQuiz(selectedQuiz._id, userAnswers.map(a => a ?? 0));
+      const result = await quizService.submitQuiz(selectedQuiz._id, userAnswers.map(a => a ?? -1));
       const uid = user?.id || user?._id;
       if (uid) incrementDashboardMetric(uid, 'questionsPracticed', result.totalQuestions);
       setQuizResult(result);
@@ -1081,34 +1081,48 @@ export default function MCQQuiz() {
 
             <div className="space-y-3">
               {quizResult.details.map((detail, i) => {
-                const yourAnswer = selectedQuiz.questions[i]?.options[detail.selectedIndex] ?? 'Not answered';
+                const wasSkipped = skipped[i] || userAnswers[i] === null;
                 const correctAnswer = selectedQuiz.questions[i]?.options[detail.correctIndex];
+                const yourAnswer = wasSkipped
+                  ? null
+                  : selectedQuiz.questions[i]?.options[detail.selectedIndex] ?? 'Not answered';
                 const optLetter = (idx: number) => String.fromCharCode(65 + idx);
+
+                // A skipped question is never correct regardless of what backend says
+                const isCorrect = !wasSkipped && detail.correct;
 
                 return (
                   <div
                     key={i}
                     className={`bg-white dark:bg-brand-900 rounded-2xl border shadow-sm overflow-hidden ${
-                      detail.correct
+                      wasSkipped
+                        ? 'border-amber-200 dark:border-amber-800/60'
+                        : isCorrect
                         ? 'border-emerald-200 dark:border-emerald-800/60'
                         : 'border-rose-200 dark:border-rose-800/60'
                     }`}
                   >
                     {/* Card header */}
                     <div className={`flex items-center gap-3 px-4 py-3 border-b ${
-                      detail.correct
+                      wasSkipped
+                        ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-800/40'
+                        : isCorrect
                         ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-800/40'
                         : 'bg-rose-50 dark:bg-rose-950/30 border-rose-100 dark:border-rose-800/40'
                     }`}>
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold ${
-                        detail.correct ? 'bg-emerald-500' : 'bg-rose-500'
+                        wasSkipped ? 'bg-amber-500' : isCorrect ? 'bg-emerald-500' : 'bg-rose-500'
                       }`}>
                         {i + 1}
                       </div>
                       <span className={`text-xs font-bold uppercase tracking-widest ${
-                        detail.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                        wasSkipped
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : isCorrect
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-rose-600 dark:text-rose-400'
                       }`}>
-                        {detail.correct ? '✓ Correct' : '✗ Incorrect'}
+                        {wasSkipped ? '— Skipped' : isCorrect ? '✓ Correct' : '✗ Incorrect'}
                       </span>
                     </div>
 
@@ -1121,37 +1135,57 @@ export default function MCQQuiz() {
 
                     {/* Answer comparison */}
                     <div className={`mx-4 mb-3 rounded-xl overflow-hidden border ${
-                      detail.correct ? 'border-emerald-200 dark:border-emerald-800/50' : 'border-brand-200 dark:border-brand-700'
+                      wasSkipped
+                        ? 'border-amber-200 dark:border-amber-800/50'
+                        : isCorrect
+                        ? 'border-emerald-200 dark:border-emerald-800/50'
+                        : 'border-brand-200 dark:border-brand-700'
                     }`}>
                       {/* Your answer row */}
                       <div className={`flex items-center gap-3 px-4 py-3 ${
-                        detail.correct
+                        wasSkipped
+                          ? 'bg-amber-50 dark:bg-amber-950/20'
+                          : isCorrect
                           ? 'bg-emerald-50 dark:bg-emerald-950/20'
                           : 'bg-rose-50 dark:bg-rose-950/20'
                       }`}>
                         <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-[10px] font-black ${
-                          detail.correct
+                          wasSkipped
+                            ? 'bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200'
+                            : isCorrect
                             ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200'
                             : 'bg-rose-200 dark:bg-rose-800 text-rose-800 dark:text-rose-200'
                         }`}>
-                          {optLetter(detail.selectedIndex)}
+                          {wasSkipped ? '—' : optLetter(detail.selectedIndex)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <span className={`text-[10px] font-bold uppercase tracking-wide block mb-0.5 ${
-                            detail.correct ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
+                            wasSkipped
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : isCorrect
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-rose-500 dark:text-rose-400'
                           }`}>Your answer</span>
-                          <span className={`text-sm font-medium leading-snug ${
-                            detail.correct ? 'text-emerald-900 dark:text-emerald-200' : 'text-rose-900 dark:text-rose-200'
-                          }`}>{yourAnswer}</span>
+                          <span className={`text-sm font-medium leading-snug italic ${
+                            wasSkipped
+                              ? 'text-amber-700 dark:text-amber-300'
+                              : isCorrect
+                              ? 'text-emerald-900 dark:text-emerald-200'
+                              : 'text-rose-900 dark:text-rose-200'
+                          }`}>
+                            {wasSkipped ? 'Skipped — not answered' : yourAnswer}
+                          </span>
                         </div>
-                        {detail.correct
+                        {wasSkipped
+                          ? <FastForward className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                          : isCorrect
                           ? <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                           : <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
                         }
                       </div>
 
-                      {/* Correct answer row — only shown when wrong */}
-                      {!detail.correct && (
+                      {/* Correct answer row — shown when wrong or skipped */}
+                      {(!isCorrect) && (
                         <>
                           <div className="h-px bg-brand-100 dark:bg-brand-800" />
                           <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-950/20">
@@ -1199,7 +1233,7 @@ export default function MCQQuiz() {
                             try {
                               const note = await notesService.createNote({
                                 title: `Q${i + 1}: ${selectedQuiz.title}`,
-                                content: `${detail.question}\n\nYour answer: ${yourAnswer}\nCorrect: ${correctAnswer}${detail.explanation ? `\n\nExplanation: ${detail.explanation}` : ''}`,
+                                content: `${detail.question}\n\n${wasSkipped ? 'Skipped (not answered)' : `Your answer: ${yourAnswer}`}\nCorrect: ${correctAnswer}${detail.explanation ? `\n\nExplanation: ${detail.explanation}` : ''}`,
                                 reference: { type: 'quiz', id: selectedQuiz._id, metadata: { question: i } },
                                 tags: [selectedQuiz.topic],
                               });
