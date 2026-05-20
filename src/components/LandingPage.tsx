@@ -1,14 +1,94 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Scale, BookOpen, HelpCircle, BookMarked, MessageSquare, Brain, Volume2,
   FileText, ArrowRight, Users, Award, LogOut, GraduationCap, Shield,
-  Sparkles, Star, Library, ChevronDown
+  Sparkles, Star, Library, ChevronDown, Play, Pause, VolumeX, Volume2 as VolumeOn
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { motion } from 'framer-motion';
+
+const VideoTestimonial = ({ src, name, subtitle, index }: { src: string; name: string; subtitle: string; index: number }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    if (playing) {
+      videoRef.current.pause();
+      setPlaying(false);
+    } else {
+      videoRef.current.play().catch(() => {});
+      setPlaying(true);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) return;
+    videoRef.current.muted = !muted;
+    setMuted(!muted);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="flex flex-col items-center"
+    >
+      <div
+        className="relative w-full rounded-2xl overflow-hidden bg-black cursor-pointer shadow-xl hover:shadow-2xl transition-shadow group"
+        style={{ aspectRatio: '9/16' }}
+        onClick={togglePlay}
+      >
+        <video
+          ref={videoRef}
+          src={src}
+          className="w-full h-full object-cover"
+          playsInline
+          loop
+          muted
+          preload="metadata"
+          onEnded={() => setPlaying(false)}
+        />
+
+        {/* Play/Pause centre overlay — visible when paused, fades on hover when playing */}
+        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 bg-black/30 ${playing ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+          <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+            {playing
+              ? <Pause className="w-5 h-5 text-brand-900" />
+              : <Play className="w-5 h-5 text-brand-900 ml-1" />
+            }
+          </div>
+        </div>
+
+        {/* Mute toggle — bottom-right */}
+        <button
+          onClick={toggleMute}
+          className="absolute bottom-14 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors z-10"
+        >
+          {muted
+            ? <VolumeX className="w-4 h-4" />
+            : <VolumeOn className="w-4 h-4" />
+          }
+        </button>
+
+        {/* Bottom gradient + name */}
+        <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+        <div className="absolute bottom-3 left-4 right-12 pointer-events-none">
+          <p className="text-white font-bold text-sm leading-tight">{name}</p>
+          <p className="text-white/70 text-xs">{subtitle}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const FaqItem = ({ question, answer, index }: { question: string, answer: string, index: number }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -449,6 +529,44 @@ export default function LandingPage() {
                 </motion.div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Video Testimonials ─────────────────────────────── */}
+      <section className="py-24 bg-white border-t border-brand-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="section-badge">Student Reviews</span>
+            <h2 className="section-heading">Hear It From Our Students</h2>
+            <p className="section-subtext">Real reviews from real students who cracked their exams with LegalPadhai.ai.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <VideoTestimonial
+              index={0}
+              src="/testimonial_bhavreen.mp4"
+              name="Bhavreen Arora"
+              subtitle="CLAT Coaching Review"
+            />
+            <VideoTestimonial
+              index={1}
+              src="/testimonial_lawex.mp4"
+              name="Law Ex Academy"
+              subtitle="Chandigarh Campus"
+            />
+            <VideoTestimonial
+              index={2}
+              src="/testimonial_parneet.mp4"
+              name="Parneet Dhillon"
+              subtitle="CLAT 2025 Student"
+            />
           </div>
         </div>
       </section>
