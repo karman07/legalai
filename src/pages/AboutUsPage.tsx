@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Target, Users, Eye, Scale, ArrowRight, ShieldCheck, Heart, Zap } from 'lucide-react';
+import { Target, Users, Eye, Scale, ArrowRight, ShieldCheck, Heart, Zap, BookOpen, Award, Instagram, Linkedin } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import { Link } from 'react-router-dom';
 
@@ -105,6 +105,33 @@ export default function AboutUsPage() {
           </div>
         </section>
 
+        {/* ── Stats Bar ─────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-px bg-brand-200 rounded-2xl overflow-hidden border border-brand-200 shadow-sm"
+          >
+            {[
+              { icon: Users, value: '10,000+', label: 'Active Students' },
+              { icon: BookOpen, value: '50,000+', label: 'MCQ Questions' },
+              { icon: Scale, value: '25,000+', label: 'Case Laws' },
+              { icon: Award, value: '95%', label: 'Success Rate' },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div key={i} className="bg-white px-6 py-8 text-center">
+                  <Icon className="w-6 h-6 text-gold-500 mx-auto mb-3" />
+                  <div className="text-3xl font-extrabold text-brand-900">{stat.value}</div>
+                  <div className="text-sm text-brand-500 mt-1">{stat.label}</div>
+                </div>
+              );
+            })}
+          </motion.div>
+        </section>
+
         {/* ── Founding Team ─────────────────────────────────────── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-24">
           <div className="text-center mb-16">
@@ -116,16 +143,23 @@ export default function AboutUsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
               className="bg-white rounded-2xl p-8 border border-brand-200 shadow-sm hover:shadow-md transition-shadow"
             >
-              <h3 className="text-2xl font-bold text-brand-900 mb-2">Harshdeep Singh Dahiya</h3>
-              <p className="text-gold-600 font-semibold mb-6">Co-Founder, Growth & Institutional Partnerships</p>
-              <div className="text-brand-600 space-y-4 leading-relaxed">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl font-extrabold text-amber-600">H</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-brand-900">Harshdeep Singh Dahiya</h3>
+                  <p className="text-gold-600 font-semibold text-sm">Co-Founder, Growth & Institutional Partnerships</p>
+                </div>
+              </div>
+              <div className="text-brand-600 space-y-4 leading-relaxed text-sm">
                 <p>
                   Harshdeep stewards the growth, market strategy, and institutional partnership functions of LegalPadhai.ai, with a mandate to embed the platform structurally within India's legal education ecosystem. A graduate of the National Law School of India University (NLSIU), Bangalore, he brings institutional fluency, intellectual rigour, and an expansive alumni network.
                 </p>
@@ -138,16 +172,23 @@ export default function AboutUsPage() {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="bg-white rounded-2xl p-8 border border-brand-200 shadow-sm hover:shadow-md transition-shadow"
             >
-              <h3 className="text-2xl font-bold text-brand-900 mb-2">Dronvir Sirohi</h3>
-              <p className="text-gold-600 font-semibold mb-6">Co-Founder, Legal and Technical Lead</p>
-              <div className="text-brand-600 space-y-4 leading-relaxed">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl font-extrabold text-blue-600">D</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-brand-900">Dronvir Sirohi</h3>
+                  <p className="text-gold-600 font-semibold text-sm">Co-Founder, Legal and Technical Lead</p>
+                </div>
+              </div>
+              <div className="text-brand-600 space-y-4 leading-relaxed text-sm">
                 <p>
                   Dronvir sits at the rare intersection of doctrinal legal scholarship and applied artificial intelligence engineering. With a B.A. LL.B. (magna cum laude) and an LL.M. concentrated on bail and remand jurisprudence, his academic breadth informs both the substance and the pedagogy embedded in the platform.
                 </p>
@@ -161,7 +202,7 @@ export default function AboutUsPage() {
             </motion.div>
           </div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -248,6 +289,49 @@ export default function AboutUsPage() {
               </motion.div>
             </div>
           </div>
+        </section>
+
+        {/* ── Community CTA ────────────────────────────────────── */}
+        <section className="bg-brand-900 py-20 relative overflow-hidden">
+          <div className="absolute top-0 left-1/3 w-72 h-72 bg-gold-500/8 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+          >
+            <span className="inline-block py-1 px-3 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs font-bold tracking-wider uppercase mb-6">
+              Stay Connected
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
+              Join Our Community
+            </h2>
+            <p className="text-brand-300 text-lg leading-relaxed mb-10">
+              Follow us for daily legal insights, exam tips, case law summaries, and updates straight from India's leading AI law education platform.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="https://www.instagram.com/lawexacademy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-7 py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] text-sm w-full sm:w-auto justify-center"
+              >
+                <Instagram className="w-5 h-5" />
+                <span>Follow on Instagram</span>
+              </a>
+              <a
+                href="https://www.linkedin.com/company/legapadhai-ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-7 py-3.5 bg-white/8 hover:bg-white/14 text-white font-semibold rounded-xl border border-white/20 transition-all text-sm w-full sm:w-auto justify-center"
+              >
+                <Linkedin className="w-5 h-5" />
+                <span>Connect on LinkedIn</span>
+              </a>
+            </div>
+          </motion.div>
         </section>
 
       </div>
