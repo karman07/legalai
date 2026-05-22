@@ -1,6 +1,6 @@
 import apiClient from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai/api';
 
 export interface Court {
   id: string;

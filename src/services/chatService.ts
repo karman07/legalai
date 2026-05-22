@@ -20,7 +20,7 @@ export interface SendMessageResponse {
 
 // Use environment variable for API URL if available, otherwise fallback to default
 const VITE_API_URL = import.meta.env.VITE_API_URL || '';
-const BASE_URL = VITE_API_URL ? VITE_API_URL.replace(/\/api$/, '') : 'http://api.legalpadhai.ai';
+const BASE_URL = VITE_API_URL ? VITE_API_URL.replace(/\/api$/, '') : 'https://api.legalpadhai.ai';
 const CHAT_API_URL = `${BASE_URL}/chat`;
 
 class ChatService {

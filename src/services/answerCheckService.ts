@@ -41,7 +41,7 @@ class AnswerCheckService {
     }
 
     const token = localStorage.getItem('accessToken');
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://api.legalpadhai.ai/api';
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.legalpadhai.ai/api';
     const response = await fetch(`${API_BASE_URL}/answer-check/check`, {
       method: 'POST',
       headers: {
