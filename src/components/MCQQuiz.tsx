@@ -205,6 +205,15 @@ export default function MCQQuiz() {
     }
   };
 
+  const handleNext = () => {
+    if (userAnswers[currentQuestion] === null) {
+      const s = [...skipped];
+      s[currentQuestion] = true;
+      setSkipped(s);
+    }
+    setCurrentQuestion(q => q + 1);
+  };
+
   const toggleMark = () => {
     const m = [...markedForReview];
     m[currentQuestion] = !m[currentQuestion];
@@ -800,32 +809,25 @@ export default function MCQQuiz() {
                     {markedForReview[currentQuestion] ? 'Unmark' : 'Mark'}
                   </button>
 
-                  <button
-                    onClick={skipCurrent}
-                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-amber-300 dark:border-amber-700 rounded-xl text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition"
-                  >
-                    <FastForward className="w-4 h-4" /> Skip
-                  </button>
-
-                  <div className="flex-1" />
-
-                  {isLast ? (
+                  {!isLast && (
                     <button
-                      onClick={handleSubmit}
-                      disabled={submitting}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition shadow-sm disabled:opacity-60"
-                    >
-                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                      Submit Quiz
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setCurrentQuestion(q => q + 1)}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-gold-500 hover:bg-gold-600 text-white font-semibold rounded-xl transition shadow-sm"
+                      onClick={handleNext}
+                      className="flex items-center gap-2 px-4 py-2.5 border-2 border-brand-200 dark:border-brand-700 rounded-xl text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800 transition"
                     >
                       Next <ChevronRight className="w-4 h-4" />
                     </button>
                   )}
+
+                  <div className="flex-1" />
+
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition shadow-sm disabled:opacity-60"
+                  >
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                    Submit Quiz
+                  </button>
                 </div>
               </div>
             </div>
@@ -876,14 +878,6 @@ export default function MCQQuiz() {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-60 text-sm shadow-sm"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  Submit Quiz
-                </button>
               </div>
             </aside>
           </div>
@@ -932,12 +926,14 @@ export default function MCQQuiz() {
                 <Flag className="w-4 h-4" />
               </button>
 
-              <button
-                onClick={skipCurrent}
-                className="p-2.5 rounded-xl border-2 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 transition active:scale-95"
-              >
-                <FastForward className="w-4 h-4" />
-              </button>
+              {!isLast && (
+                <button
+                  onClick={handleNext}
+                  className="p-2.5 rounded-xl border-2 border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-400 transition active:scale-95"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
 
               <button
                 onClick={() => setMobileNavOpen(true)}
@@ -948,23 +944,14 @@ export default function MCQQuiz() {
 
               <div className="flex-1" />
 
-              {isLast ? (
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition text-sm disabled:opacity-60 active:scale-95"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  Submit
-                </button>
-              ) : (
-                <button
-                  onClick={() => setCurrentQuestion(q => q + 1)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-gold-500 hover:bg-gold-600 text-white font-semibold rounded-xl transition text-sm active:scale-95"
-                >
-                  Next <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition text-sm disabled:opacity-60 active:scale-95"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Submit
+              </button>
             </div>
           </div>
           {/* Dialog lives INSIDE the z-[100] stacking context so it appears above the quiz overlay */}

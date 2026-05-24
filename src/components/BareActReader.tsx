@@ -525,7 +525,7 @@ export default function BareActReader() {
       {audioLessons.length > 0 && (
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <h3 className="text-xl font-bold text-brand-900 mb-5">Audio Lessons</h3>
+            <h3 className="text-xl font-bold text-brand-900 mb-5">Audiobooks</h3>
             <div className="space-y-3">
               {audioLessons.map((lesson) => (
                 <button

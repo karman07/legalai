@@ -46,7 +46,7 @@ export default function LessonCard({ lesson, viewMode = 'grid', onClick }: Lesso
                     {lesson.title}
                   </h3>
                   <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
-                    {lesson.description || 'Listen to this comprehensive audio lesson'}
+                    {lesson.description || 'Listen to an unabridged recording of this Bare Act.'}
                   </p>
                   
                   <div className="flex items-center gap-4 text-xs text-slate-600 mb-3">
@@ -121,7 +121,7 @@ export default function LessonCard({ lesson, viewMode = 'grid', onClick }: Lesso
         </div>
 
         <p className="text-sm text-slate-600 line-clamp-3 mb-4 leading-relaxed">
-          {lesson.description || 'Listen to this comprehensive audio lesson'}
+          {lesson.description || 'Listen to an unabridged recording of this Bare Act.'}
         </p>
 
         <div className="flex items-center gap-3 text-xs text-slate-600 mb-4">

@@ -120,7 +120,7 @@ export default function AudioLessons() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-brand-900 mb-2">Audio Lessons</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-brand-900 mb-2">Audiobooks</h1>
               <p className="text-brand-600 dark:text-brand-300">Explore our comprehensive collection of legal audio content</p>
             </div>
             <div className="flex items-center gap-3">
