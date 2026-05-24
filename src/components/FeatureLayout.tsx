@@ -175,20 +175,6 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
           {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
           <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
         </button> */}
-        <a
-          href="https://www.instagram.com/lawexacademy/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`w-full flex items-center ${compact ? 'justify-center px-2' : 'gap-2.5 px-3'} py-2.5 text-brand-600 dark:text-brand-400 hover:text-pink-500 dark:hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-500/8 rounded-xl transition-all text-sm font-medium mb-1`}
-          title="Follow us on Instagram"
-        >
-          <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-            <circle cx="12" cy="12" r="4" />
-            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-          </svg>
-          {!compact && <span>@lawexacademy</span>}
-        </a>
         <button
           onClick={handleSignOut}
           className={`w-full flex items-center ${compact ? 'justify-center px-2' : 'gap-2.5 px-3'} py-2.5 text-brand-600 dark:text-brand-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/8 rounded-xl transition-all text-sm font-medium`}

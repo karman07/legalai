@@ -726,13 +726,20 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
         </div>
       </div>
 
-      {/* ── Text-Selection AI Popup Bubble ─────────────────── */}
+      {/* ── Text-Selection Popup Bubble (Speak + Ask AI) ──── */}
       {selectionPopup && (
         <div
           data-ai-popup="true"
           style={{ position: 'fixed', left: selectionPopup.x, top: selectionPopup.y, transform: 'translate(-50%, -100%)' }}
-          className="z-[200]"
+          className="z-[200] flex items-center gap-1.5 pb-1"
         >
+          <button
+            onClick={() => { void playTTS(); setShowTtsPanel(true); setSelectionPopup(null); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-full shadow-lg text-xs font-semibold border border-emerald-500 transition-all whitespace-nowrap"
+          >
+            <Volume2 className="w-3.5 h-3.5" />
+            Speak
+          </button>
           <button
             onClick={openAiChat}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-900 hover:bg-brand-700 text-white rounded-full shadow-lg text-xs font-semibold border border-brand-600 transition-all whitespace-nowrap"
