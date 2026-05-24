@@ -25,8 +25,8 @@ async function bootstrap() {
   });
 
   // Serve static files from uploads directory
-  // process.cwd() = backend root (where the process is started), not the compiled dist dir
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  // __dirname in compiled output = dist/src, so go up two levels to reach backend root
+  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
     prefix: '/uploads',
   });
 
