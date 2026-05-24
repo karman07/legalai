@@ -69,7 +69,8 @@ export default function CaseLaws() {
   }, []);
 
   useEffect(() => {
-    if (selectedYear === null) return;
+    // show year grid when no year selected and no active search
+    if (selectedYear === null && !activeSearch) return;
     fetchDocs(page, activeSearch, selectedYear);
   }, [page, activeSearch, selectedYear]);
 
@@ -86,13 +87,15 @@ export default function CaseLaws() {
     }
   };
 
-  const fetchDocs = async (pg: number, query: string, year: number) => {
+  // year === null → search / list across ALL years
+  const fetchDocs = async (pg: number, query: string, year: number | null) => {
     setLoading(true);
     setError('');
     try {
+      const yearParam = year ? { year } : {};
       const response = query.trim()
-        ? await pdfService.searchPDFs(query, { page: pg, limit: 12, year })
-        : await pdfService.getPDFs({ page: pg, limit: 12, year });
+        ? await pdfService.searchPDFs(query, { page: pg, limit: 12, ...yearParam })
+        : await pdfService.getPDFs({ page: pg, limit: 12, ...yearParam });
       setPdfs(response.items);
       setTotalPages(response.totalPages);
     } catch (err: any) {
@@ -103,6 +106,7 @@ export default function CaseLaws() {
   };
 
   const handleSearch = () => {
+    if (!searchTerm.trim()) return;
     setPage(1);
     setActiveSearch(searchTerm);
   };
@@ -111,6 +115,7 @@ export default function CaseLaws() {
     setSearchTerm('');
     setPage(1);
     setActiveSearch('');
+    setPdfs([]);
   };
 
   const handleSelectYear = (year: number) => {
@@ -129,6 +134,9 @@ export default function CaseLaws() {
     setPdfs([]);
     setTotalPages(1);
   };
+
+  // true when showing global (cross-year) search results
+  const isGlobalSearch = selectedYear === null && !!activeSearch;
 
   const handleOpenDocument = (pdf: PDF) => {
     setSelectedPDF(pdf);
@@ -151,49 +159,70 @@ export default function CaseLaws() {
           <div>
             <h1 className="text-2xl font-bold text-brand-900 dark:text-brand-100">Case Laws & Documents</h1>
             <p className="text-brand-500 dark:text-brand-400 text-sm">
-              {selectedYear === null
-                ? 'Choose a year to view corresponding cases'
-                : `Showing cases for ${selectedYear}`}
+              {isGlobalSearch
+                ? `Showing results for "${activeSearch}" across all years`
+                : selectedYear !== null
+                  ? `Showing cases for ${selectedYear}`
+                  : 'Search across all years or choose a year below'}
             </p>
           </div>
         </div>
 
-        {selectedYear !== null && (
-          <div className="flex flex-col sm:flex-row gap-3 mb-3">
+        {/* ── Search bar — always visible ─────────────────────── */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+          {/* Back button: show when inside a year OR showing global results */}
+          {(selectedYear !== null || isGlobalSearch) && (
             <button
               onClick={handleBackToYears}
-              className="px-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-700 dark:text-brand-200 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm"
+              className="px-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 text-brand-700 dark:text-brand-200 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm flex-shrink-0"
             >
               <ChevronLeft className="w-4 h-4" />
               Years
             </button>
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder={`Search ${selectedYear} cases by title, case number, keywords...`}
-                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-              />
-            </div>
-            <button
-              onClick={handleSearch}
-              className="px-5 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 text-white font-semibold rounded-xl transition-all text-sm"
-            >
-              Search
-            </button>
-            {searchTerm && (
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2.5 bg-brand-100 dark:bg-brand-800 hover:bg-brand-200 dark:hover:bg-brand-700 text-brand-600 dark:text-brand-300 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm"
-              >
-                <X className="w-4 h-4" />
-                Clear
-              </button>
-            )}
+          )}
+
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder={
+                selectedYear !== null
+                  ? `Search ${selectedYear} cases — title, case no., bench, petitioner…`
+                  : 'Search all years — case name, number, bench, petitioner…'
+              }
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 rounded-xl text-brand-800 dark:text-brand-100 placeholder:text-brand-400 dark:placeholder:text-brand-500 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+            />
           </div>
+
+          <button
+            onClick={handleSearch}
+            disabled={!searchTerm.trim()}
+            className="px-5 py-2.5 bg-brand-900 dark:bg-brand-700 hover:bg-brand-800 dark:hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all text-sm flex-shrink-0"
+          >
+            Search
+          </button>
+
+          {(searchTerm || activeSearch) && (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2.5 bg-brand-100 dark:bg-brand-800 hover:bg-brand-200 dark:hover:bg-brand-700 text-brand-600 dark:text-brand-300 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-sm flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Global search result count badge */}
+        {isGlobalSearch && !loading && (
+          <p className="text-xs text-brand-500 dark:text-brand-400">
+            {pdfs.length === 0
+              ? 'No results found'
+              : `Page ${page} of ${totalPages} — searching across all years`}
+          </p>
         )}
       </div>
 
@@ -205,8 +234,8 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {/* Skeleton grid on initial load */}
-      {loading && selectedYear === null && (
+      {/* Skeleton — year grid loading */}
+      {loading && selectedYear === null && !isGlobalSearch && (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="bg-white dark:bg-brand-800 rounded-2xl border border-brand-200 dark:border-brand-700 p-5 animate-pulse">
@@ -217,13 +246,15 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {loading && selectedYear !== null && pdfs.length === 0 && (
+      {/* Skeleton — doc grid loading (year view OR global search) */}
+      {loading && (selectedYear !== null || isGlobalSearch) && pdfs.length === 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {Array.from({ length: 12 }).map((_, i) => <PDFSkeletonCard key={i} />)}
         </div>
       )}
 
-      {!loading && selectedYear === null && years.length > 0 && (
+      {/* Year grid */}
+      {!loading && selectedYear === null && !isGlobalSearch && years.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
           {years.map((item) => (
             <button
@@ -238,8 +269,8 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {/* Empty State */}
-      {!loading && selectedYear === null && years.length === 0 && (
+      {/* Empty States */}
+      {!loading && selectedYear === null && !isGlobalSearch && years.length === 0 && (
         <div className="text-center py-12">
           <Calendar className="w-16 h-16 text-brand-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-brand-600 dark:text-brand-300 mb-2">No years available</h3>
@@ -247,16 +278,18 @@ export default function CaseLaws() {
         </div>
       )}
 
-      {!loading && selectedYear !== null && pdfs.length === 0 && (
+      {!loading && (selectedYear !== null || isGlobalSearch) && pdfs.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-16 h-16 text-brand-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-brand-600 dark:text-brand-300 mb-2">No documents found</h3>
-          <p className="text-brand-500 dark:text-brand-400">Try adjusting your search or filters</p>
+          <p className="text-brand-500 dark:text-brand-400">
+            {isGlobalSearch ? `No cases matched "${activeSearch}" across any year` : 'Try adjusting your search or filters'}
+          </p>
         </div>
       )}
 
-      {/* Document Grid – keep visible with reduced opacity while loading next page */}
-      {selectedYear !== null && pdfs.length > 0 && (
+      {/* Document Grid — year view or global search results */}
+      {(selectedYear !== null || isGlobalSearch) && pdfs.length > 0 && (
         <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
           {pdfs.map((pdf) => {
             const fileName = pdf.file || pdf.fileUrl?.split('/').pop() || 'document.pdf';
@@ -279,9 +312,18 @@ export default function CaseLaws() {
                       <h3 className="text-base font-bold text-brand-900 dark:text-brand-100 mb-1 line-clamp-2 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors leading-tight">
                         {pdf.title || pdf.case_no || 'Case Document'}
                       </h3>
-                      {pdf.citation && (
-                        <p className="text-xs font-mono text-brand-500 dark:text-brand-400 truncate">{pdf.citation}</p>
-                      )}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {pdf.citation && (
+                          <p className="text-xs font-mono text-brand-500 dark:text-brand-400 truncate">{pdf.citation}</p>
+                        )}
+                        {/* Show year badge when searching across all years */}
+                        {isGlobalSearch && pdf.year && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gold-100 dark:bg-gold-900/30 text-gold-700 dark:text-gold-400 rounded-full text-[10px] font-bold flex-shrink-0">
+                            <Calendar className="w-2.5 h-2.5" />
+                            {pdf.year}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -449,7 +491,7 @@ export default function CaseLaws() {
       )}
 
       {/* Pagination */}
-      {selectedYear !== null && totalPages > 1 && (
+      {(selectedYear !== null || isGlobalSearch) && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-8">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
