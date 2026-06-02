@@ -6,7 +6,6 @@ export interface RegisterPersonalRequest {
   password: string;
   registrationType: 'personal';
   phoneNumber?: string;
-  address?: string;
 }
 
 export interface RegisterInstituteRequest {
@@ -17,7 +16,6 @@ export interface RegisterInstituteRequest {
   instituteId: string;
   instituteName?: string;
   phoneNumber?: string;
-  address?: string;
 }
 
 export type RegisterRequest = RegisterPersonalRequest | RegisterInstituteRequest;
@@ -61,7 +59,6 @@ export interface UserProfile {
   instituteId?: string;
   instituteName?: string;
   phoneNumber?: string;
-  address?: string;
   firebaseUid?: string;
   createdAt: string;
   lastLogin?: string;

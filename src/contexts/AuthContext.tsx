@@ -13,8 +13,7 @@ type AuthContextType = {
     registrationType: 'personal' | 'institute',
     instituteName?: string,
     instituteId?: string,
-    phoneNumber?: string,
-    address?: string
+    phoneNumber?: string
   ) => Promise<{ requiresLogin: boolean; message: string }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -57,8 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     registrationType: 'personal' | 'institute',
     instituteName?: string,
     instituteId?: string,
-    phoneNumber?: string,
-    address?: string
+    phoneNumber?: string
   ) => {
     setLoading(true);
     try {
@@ -71,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           instituteId: instituteId || '',
           instituteName,
           phoneNumber,
-          address,
         }
         : {
           name: fullName,
@@ -79,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password,
           registrationType: 'personal',
           phoneNumber,
-          address,
         };
 
       // Register returns message and userId, user must login separately

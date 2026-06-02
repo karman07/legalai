@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Scale, Mail, Lock, User, Building2, Phone, MapPin, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Scale, Mail, Lock, User, Building2, Phone, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
 import authService from '../services/authService';
@@ -18,7 +18,7 @@ export default function Auth() {
   const [instituteId, setInstituteId] = useState('');
   const [instituteName, setInstituteName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [address, setAddress] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,8 +62,7 @@ export default function Auth() {
           registrationType,
           instituteName || undefined,
           instituteId || undefined,
-          phoneNumber || undefined,
-          address || undefined
+          phoneNumber || undefined
         );
         if (result.requiresLogin) {
           setSuccess(result.message);
@@ -73,7 +72,6 @@ export default function Auth() {
           setInstituteName('');
           setInstituteId('');
           setPhoneNumber('');
-          setAddress('');
         }
       }
     } catch (err: any) {
@@ -335,14 +333,7 @@ export default function Auth() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="label">Address</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 w-4 h-4 text-brand-400" />
-                      <textarea value={address} onChange={(e) => setAddress(e.target.value)}
-                        rows={2} className="input-field pl-10 resize-none" placeholder="Your address" />
-                    </div>
-                  </div>
+
                 </>
               )}
 
