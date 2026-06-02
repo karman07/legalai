@@ -54,8 +54,7 @@ export class User {
   @Prop() // Phone number
   phoneNumber?: string;
 
-  @Prop() // Address
-  address?: string;
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

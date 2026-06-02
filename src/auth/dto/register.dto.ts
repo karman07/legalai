@@ -32,7 +32,5 @@ export class RegisterDto {
   @IsString()
   phoneNumber?: string;
 
-  @IsOptional()
-  @IsString()
-  address?: string;
+
 }

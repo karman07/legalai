@@ -148,7 +148,6 @@ export class AdminService {
       instituteId: user.instituteId,
       instituteName: user.instituteName,
       phoneNumber: user.phoneNumber,
-      address: user.address,
       lastLogin: user.lastLogin,
       createdAt: user['createdAt'],
       updatedAt: user['updatedAt'],
