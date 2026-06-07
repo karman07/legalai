@@ -97,6 +97,16 @@ class AuthService {
   }
 
   /**
+   * Google Sign-In — creates user if not found, then returns JWT
+   */
+  async googleSignIn(data: FirebaseSignInRequest): Promise<AuthResponse> {
+    return apiClient<AuthResponse>('/auth/google-signin', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
    * Trigger themed LegalAI HTML reset email
    */
   async forgotPassword(email: string): Promise<{ message: string }> {

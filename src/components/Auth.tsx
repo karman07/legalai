@@ -25,7 +25,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showVerificationAction, setShowVerificationAction] = useState(false);
 
-  const { signIn, signUp, firebaseSignIn, sendVerificationEmail, verifyResetCode } = useAuth();
+  const { signIn, signUp, firebaseSignIn, googleSignIn, sendVerificationEmail, verifyResetCode } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,7 +121,7 @@ export default function Auth() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
-      await firebaseSignIn(idToken);
+      await googleSignIn(idToken);
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Google sign-in error:', err);

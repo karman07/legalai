@@ -18,6 +18,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   firebaseSignIn: (idToken: string) => Promise<void>;
+  googleSignIn: (idToken: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
   sendVerificationEmail: (email: string, password: string) => Promise<void>;
   sendPasswordResetLink: (email: string) => Promise<void>;
@@ -132,6 +133,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const googleSignIn = async (idToken: string) => {
+    setLoading(true);
+    try {
+      const response = await authService.googleSignIn({ idToken });
+      authService.saveToken(response.accessToken);
+      setUser({ ...response.user, id: response.user.id, _id: response.user.id } as UserProfile);
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     authService.removeToken();
     setUser(null);
@@ -187,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, firebaseSignIn, refreshProfile, sendVerificationEmail, sendPasswordResetLink, verifyResetCode }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, firebaseSignIn, googleSignIn, refreshProfile, sendVerificationEmail, sendPasswordResetLink, verifyResetCode }}>
       {children}
     </AuthContext.Provider>
   );
