@@ -28,6 +28,7 @@ function PDFSkeletonCard() {
 import pdfService, { PDF } from '../services/pdfService';
 import CustomPDFViewer from './CustomPDFViewer';
 import { incrementDashboardMetric } from '../lib/dashboardMetrics';
+import progressService from '../services/progressService';
 
 type YearBucket = {
   year: number;
@@ -144,6 +145,7 @@ export default function CaseLaws() {
     if (userId) {
       incrementDashboardMetric(userId, 'casesViewed', 1);
     }
+    void progressService.track('law_read', 1);
   };
 
 

@@ -10,6 +10,7 @@ import notesService, { Note } from '../services/notesService';
 import Dialog from './Dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { incrementDashboardMetric } from '../lib/dashboardMetrics';
+import progressService from '../services/progressService';
 
 type ViewState = 'list' | 'quiz' | 'result';
 
@@ -228,6 +229,7 @@ export default function MCQQuiz() {
       const result = await quizService.submitQuiz(selectedQuiz._id, userAnswers.map(a => a ?? -1));
       const uid = user?.id || user?._id;
       if (uid) incrementDashboardMetric(uid, 'questionsPracticed', result.totalQuestions);
+      void progressService.track('quiz_taken', result.totalQuestions);
       setQuizResult(result);
       setViewState('result');
     } catch (e: any) {

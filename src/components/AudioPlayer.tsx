@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Pause, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2, Sparkles, Send, X, Rewind, FastForward } from 'lucide-react';
 import { audioLessonsAPI, AudioLesson, AudioSectionSlim, AudioSectionDetail, AudioSubsectionSlim, AudioSubsectionDetail } from '../services/api';
 import chatService from '../services/chatService';
+import progressService from '../services/progressService';
 import SectionList from './audio/SectionList';
 import SubsectionList from './audio/SubsectionList';
 import NotesPanel from './NotesPanel';
@@ -836,6 +837,7 @@ export default function AudioPlayer() {
   };
 
   const startPlayer = async (sectionIndex: number, subsectionIndex: number = -1) => {
+    void progressService.track('law_read', 1);
     setPlayerBackTarget('subsections');
     setPlayerContentMode('single');
     setCombinedSegments([]);
@@ -937,6 +939,7 @@ export default function AudioPlayer() {
         src={audioUrl}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => {
+          void progressService.track('audio_listened', 1);
           if (playerContentMode === 'combined' && queueUrls.length > 0 && queueIndex < queueUrls.length - 1) {
             const nextIndex = queueIndex + 1;
             setCompletedDuration(prev => prev + (trackDurations[queueIndex] ?? duration));
