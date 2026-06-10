@@ -48,10 +48,14 @@ export default function SectionList({
     });
   };
 
-  const playableSections = filteredSections.filter(sectionHasAudio);
+  const allSelected = filteredSections.length > 0 && filteredSections.every(s => selectedSections.has(s._index));
 
-  const selectAll = () => {
-    setSelectedSections(new Set(filteredSections.map(s => s._index)));
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedSections(new Set());
+    } else {
+      setSelectedSections(new Set(filteredSections.map(s => s._index)));
+    }
   };
 
   const exitSelection = () => {
@@ -76,11 +80,17 @@ export default function SectionList({
             selectionMode ? (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={selectAll}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                  onClick={toggleSelectAll}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all border ${
+                    allSelected
+                      ? 'text-amber-700 bg-amber-50 border-amber-300 hover:bg-amber-100'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
+                  }`}
                 >
-                  <Square className="w-3.5 h-3.5" />
-                  All ({playableSections.length})
+                  {allSelected
+                    ? <CheckSquare className="w-3.5 h-3.5" />
+                    : <Square className="w-3.5 h-3.5" />}
+                  All ({filteredSections.length})
                 </button>
                 <button
                   onClick={exitSelection}
