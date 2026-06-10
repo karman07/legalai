@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, Pause, SkipBack, SkipForward, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2, Sparkles, Send, X } from 'lucide-react';
+import { Play, Pause, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2, Sparkles, Send, X } from 'lucide-react';
 import { audioLessonsAPI, AudioLesson, AudioSectionSlim, AudioSectionDetail, AudioSubsectionSlim, AudioSubsectionDetail } from '../services/api';
 import chatService from '../services/chatService';
 import SectionList from './audio/SectionList';
@@ -1096,36 +1096,11 @@ export default function AudioPlayer() {
 
           {/* Main Controls */}
           <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3">
-            <button onClick={() => handleSkip(-10)} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
-              <SkipBack className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
-            </button>
-            {currentSubsectionIndex === -1 && (currentSectionDetail?.totalSubsections ?? 0) > 0 && (
-              <button
-                onClick={() => setCurrentSubsectionIndex(0)}
-                className="p-3 hover:bg-brand-100 rounded-full transition-all group"
-                title="Go to first subsection"
-              >
-                <SkipForward className="w-4 h-4 text-brand-700 group-hover:text-gold-600" />
-              </button>
-            )}
-            {currentSubsectionIndex >= 0 && (
-              <button onClick={handlePrevSection} disabled={currentSectionIndex === 0 && currentSubsectionIndex <= 0} className="p-3 hover:bg-brand-100 rounded-full transition-all disabled:opacity-30 group">
-                <SkipBack className="w-4 h-4 text-brand-700 group-hover:text-gold-600" />
-              </button>
-            )}
             <button onClick={resetAudio} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
               <RotateCcw className="w-4 h-4 text-brand-700 group-hover:text-gold-600" />
             </button>
             <button onClick={togglePlayPause} className="p-6 bg-gold-500 hover:bg-gold-600 rounded-full transition-all shadow-xl transform hover:scale-105">
               {isPlaying ? <Pause className="w-8 h-8 text-white" fill="white" /> : <Play className="w-8 h-8 text-white" fill="white" />}
-            </button>
-            {currentSubsectionIndex >= 0 && (
-              <button onClick={handleNextSection} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
-                <SkipForward className="w-4 h-4 text-brand-700 group-hover:text-gold-600" />
-              </button>
-            )}
-            <button onClick={() => handleSkip(10)} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
-              <SkipForward className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
             </button>
           </div>
 
