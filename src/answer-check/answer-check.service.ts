@@ -1,36 +1,30 @@
 import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { ConfigService } from '@nestjs/config';
 import { AnswerCheck, AnswerCheckDocument } from '../schemas/answer-check.schema';
 import { CheckAnswerDto } from './dto/check-answer.dto';
+import { AiConfigService } from '../ai-config/ai-config.service';
 import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class AnswerCheckService {
-  private apiKey: string;
-  private model: string;
-
   constructor(
     @InjectModel(AnswerCheck.name) private answerCheckModel: Model<AnswerCheckDocument>,
-    private readonly config: ConfigService,
-  ) {
-    this.apiKey = this.config.get<string>('GEMINI_API_KEY');
-    this.model = this.config.get<string>('GEMINI_MODEL') || 'gemini-2.0-flash';
-  }
+    private readonly aiConfigService: AiConfigService,
+  ) {}
 
   async checkAnswer(
     userId: string,
     dto: CheckAnswerDto,
     file: Express.Multer.File,
   ): Promise<any> {
-    if (!this.apiKey) {
-      throw new InternalServerErrorException('GEMINI_API_KEY not configured');
+    const apiKey = await this.aiConfigService.getGeminiApiKey();
+    if (!apiKey) {
+      throw new InternalServerErrorException('GEMINI_API_KEY not configured. Set it in AI Settings.');
     }
 
     const fileContent = await this.processFile(file);
-    const result = await this.evaluateWithGemini(dto, fileContent, file);
+    const result = await this.evaluateWithGemini(dto, fileContent, file, apiKey);
     
     const answerCheck = new this.answerCheckModel({
       userId: new Types.ObjectId(userId),
@@ -77,7 +71,9 @@ export class AnswerCheckService {
     dto: CheckAnswerDto,
     fileContent: string,
     file: Express.Multer.File,
+    apiKey: string,
   ): Promise<any> {
+    const model = await this.aiConfigService.getGeminiModel();
     const prompt = `You are an expert evaluator. Evaluate the student's answer based on the following:
 
 Question: ${dto.question}
@@ -94,7 +90,7 @@ Please analyze the provided answer and return a JSON response with:
 
 Be fair, constructive, and provide specific feedback.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     
     let body: any;
     

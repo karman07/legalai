@@ -4,6 +4,7 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { Chat, ChatSchema } from '../schemas/chat.schema';
 import { Conversation, ConversationSchema } from '../schemas/conversation.schema';
+import { AiConfigModule } from '../ai-config/ai-config.module';
 
 @Module({
     imports: [
@@ -11,6 +12,7 @@ import { Conversation, ConversationSchema } from '../schemas/conversation.schema
             { name: Chat.name, schema: ChatSchema },
             { name: Conversation.name, schema: ConversationSchema },
         ]),
+        AiConfigModule,
     ],
     controllers: [ChatController],
     providers: [ChatService],

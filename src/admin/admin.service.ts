@@ -8,6 +8,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { AiConfig, AiConfigDocument } from '../schemas/ai-config.schema';
+import { AiConfigService } from '../ai-config/ai-config.service';
 import { User, UserDocument } from '../schemas/user.schema';
 import { Quiz, QuizDocument } from '../schemas/quiz.schema';
 import { Pdf, PdfDocument } from '../schemas/pdf.schema';
@@ -26,6 +28,7 @@ import { RegistrationType, UserRole } from '../common/enums/user-role.enum';
 @Injectable()
 export class AdminService {
   constructor(
+    @InjectModel(AiConfig.name) private aiConfigModel: Model<AiConfigDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Quiz.name) private quizModel: Model<QuizDocument>,
     @InjectModel(Pdf.name) private pdfModel: Model<PdfDocument>,
@@ -38,6 +41,7 @@ export class AdminService {
     @InjectModel(AnswerCheck.name) private answerCheckModel: Model<AnswerCheckDocument>,
     private firebaseService: FirebaseService,
     private emailService: EmailService,
+    private aiConfigService: AiConfigService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -445,5 +449,64 @@ export class AdminService {
         ],
       },
     };
+  }
+
+  async getAiConfig() {
+    const config = await this.aiConfigModel.findOne({ configKey: 'default' });
+    if (!config) {
+      return {
+        gcpProjectId: '',
+        gcpDatastoreId: '',
+        gcpVertexLocation: 'global',
+        gcpDiscoveryLocation: 'global',
+        serviceAccountJson: '',
+        geminiApiKey: '',
+        geminiModel: 'gemini-2.0-flash',
+      };
+    }
+    return {
+      gcpProjectId: config.gcpProjectId || '',
+      gcpDatastoreId: config.gcpDatastoreId || '',
+      gcpVertexLocation: config.gcpVertexLocation || 'global',
+      gcpDiscoveryLocation: config.gcpDiscoveryLocation || 'global',
+      serviceAccountJson: config.serviceAccountJson ? '***saved***' : '',
+      geminiApiKey: config.geminiApiKey ? '***saved***' : '',
+      geminiModel: config.geminiModel || 'gemini-2.0-flash',
+    };
+  }
+
+  async saveAiConfig(dto: {
+    gcpProjectId?: string;
+    gcpDatastoreId?: string;
+    gcpVertexLocation?: string;
+    gcpDiscoveryLocation?: string;
+    serviceAccountJson?: string;
+    geminiApiKey?: string;
+    geminiModel?: string;
+  }) {
+    const existing = await this.aiConfigModel.findOne({ configKey: 'default' });
+    const update: any = { configKey: 'default' };
+
+    if (dto.gcpProjectId !== undefined) update.gcpProjectId = dto.gcpProjectId;
+    if (dto.gcpDatastoreId !== undefined) update.gcpDatastoreId = dto.gcpDatastoreId;
+    if (dto.gcpVertexLocation !== undefined) update.gcpVertexLocation = dto.gcpVertexLocation;
+    if (dto.gcpDiscoveryLocation !== undefined) update.gcpDiscoveryLocation = dto.gcpDiscoveryLocation;
+    if (dto.serviceAccountJson && dto.serviceAccountJson !== '***saved***') {
+      update.serviceAccountJson = dto.serviceAccountJson;
+    }
+    if (dto.geminiApiKey && dto.geminiApiKey !== '***saved***') {
+      update.geminiApiKey = dto.geminiApiKey;
+    }
+    if (dto.geminiModel !== undefined) update.geminiModel = dto.geminiModel;
+
+    if (existing) {
+      await this.aiConfigModel.updateOne({ configKey: 'default' }, { $set: update });
+    } else {
+      await this.aiConfigModel.create(update);
+    }
+
+    this.aiConfigService.invalidateCache();
+
+    return { message: 'AI configuration saved successfully' };
   }
 }

@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { AiConfigModule } from './ai-config/ai-config.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { EmailModule } from './email/email.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
@@ -37,6 +38,7 @@ import { BlogsModule } from './blogs/blogs.module';
     }),
 
     // Feature Modules
+    AiConfigModule,
     AuthModule,
     AdminModule,
     FirebaseModule,

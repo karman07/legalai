@@ -3,12 +3,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AnswerCheckController } from './answer-check.controller';
 import { AnswerCheckService } from './answer-check.service';
 import { AnswerCheck, AnswerCheckSchema } from '../schemas/answer-check.schema';
+import { AiConfigModule } from '../ai-config/ai-config.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: AnswerCheck.name, schema: AnswerCheckSchema },
     ]),
+    AiConfigModule,
   ],
   controllers: [AnswerCheckController],
   providers: [AnswerCheckService],

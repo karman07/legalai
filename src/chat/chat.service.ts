@@ -4,20 +4,16 @@ import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Chat } from '../schemas/chat.schema';
 import { Conversation } from '../schemas/conversation.schema';
+import { AiConfigService } from '../ai-config/ai-config.service';
 
 @Injectable()
 export class ChatService {
-    private apiKey: string;
-    private model: string;
-
     constructor(
         @InjectModel(Chat.name) private readonly chatModel: Model<Chat>,
         @InjectModel(Conversation.name) private readonly conversationModel: Model<Conversation>,
         private readonly config: ConfigService,
-    ) {
-        this.apiKey = this.config.get<string>('GEMINI_API_KEY');
-        this.model = this.config.get<string>('GEMINI_MODEL') || 'gemini-1.5-flash';
-    }
+        private readonly aiConfigService: AiConfigService,
+    ) {}
 
     async getConversationList(userId: string) {
         return this.conversationModel.find({ userId }).sort({ updatedAt: -1 }).exec();
@@ -49,8 +45,10 @@ export class ChatService {
             await conversation.save();
         }
 
+        const apiKey = await this.aiConfigService.getGeminiApiKey();
+        const geminiModel = await this.aiConfigService.getGeminiModel();
         const configUrl = this.config.get<string>('CHAT_AI_URL');
-        const url = configUrl || `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+        const url = configUrl || `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
         let body: any;
         if (configUrl) {

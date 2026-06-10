@@ -92,4 +92,24 @@ export class AdminController {
   async deleteUser(@Param('id') id: string) {
     return this.adminService.deleteUser(id);
   }
+
+  @Get('ai-config')
+  async getAiConfig() {
+    return this.adminService.getAiConfig();
+  }
+
+  @Put('ai-config')
+  async saveAiConfig(
+    @Body() body: {
+      gcpProjectId?: string;
+      gcpDatastoreId?: string;
+      gcpVertexLocation?: string;
+      gcpDiscoveryLocation?: string;
+      serviceAccountJson?: string;
+      geminiApiKey?: string;
+      geminiModel?: string;
+    },
+  ) {
+    return this.adminService.saveAiConfig(body);
+  }
 }
