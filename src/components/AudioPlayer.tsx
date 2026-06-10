@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, Pause, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2, Sparkles, Send, X } from 'lucide-react';
+import { Play, Pause, Loader2, ArrowLeft, StickyNote, Volume2, VolumeX, RotateCcw, Settings, Bookmark, Share2, Sparkles, Send, X, Rewind, FastForward } from 'lucide-react';
 import { audioLessonsAPI, AudioLesson, AudioSectionSlim, AudioSectionDetail, AudioSubsectionSlim, AudioSubsectionDetail } from '../services/api';
 import chatService from '../services/chatService';
 import SectionList from './audio/SectionList';
@@ -1099,8 +1099,16 @@ export default function AudioPlayer() {
             <button onClick={resetAudio} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
               <RotateCcw className="w-4 h-4 text-brand-700 group-hover:text-gold-600" />
             </button>
+            <button onClick={() => handleSkip(-10)} className="relative p-3 hover:bg-brand-100 rounded-full transition-all group">
+              <Rewind className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
+              <span className="absolute bottom-0.5 right-0.5 text-[9px] font-bold text-brand-500 group-hover:text-gold-600 leading-none">10</span>
+            </button>
             <button onClick={togglePlayPause} className="p-6 bg-gold-500 hover:bg-gold-600 rounded-full transition-all shadow-xl transform hover:scale-105">
               {isPlaying ? <Pause className="w-8 h-8 text-white" fill="white" /> : <Play className="w-8 h-8 text-white" fill="white" />}
+            </button>
+            <button onClick={() => handleSkip(10)} className="relative p-3 hover:bg-brand-100 rounded-full transition-all group">
+              <FastForward className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
+              <span className="absolute bottom-0.5 right-0.5 text-[9px] font-bold text-brand-500 group-hover:text-gold-600 leading-none">10</span>
             </button>
           </div>
 
