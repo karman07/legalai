@@ -11,7 +11,6 @@ interface SectionListProps {
   selectedLanguage?: 'english' | 'hindi';
   onLoadMoreSections: () => void;
   onSelectSection: (sectionIndex: number) => void;
-  onPlaySection?: (sectionIndex: number) => void;
   onPlayAll?: () => void;
   onPlaySelected?: (indices: number[]) => void;
   onLanguageChange?: (lang: 'english' | 'hindi') => void;
@@ -21,7 +20,7 @@ interface SectionListProps {
 export default function SectionList({
   lesson, sections, sectionsPage, sectionsTotalPages, sectionsLoading,
   selectedLanguage = 'english', onLoadMoreSections, onSelectSection,
-  onPlaySection, onPlayAll, onPlaySelected, onLanguageChange, onBack,
+  onPlayAll, onPlaySelected, onLanguageChange, onBack,
 }: SectionListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectionMode, setSelectionMode] = useState(false);
@@ -247,31 +246,13 @@ export default function SectionList({
                             {partCount} {partCount === 1 ? 'part' : 'parts'}
                           </span>
                         )}
-                        {hasAudio && (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">
-                            <Headphones className="w-3 h-3" />
-                            Audio
-                          </span>
-                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Right actions — hidden in selection mode */}
+                  {/* Right chevron — hidden in selection mode */}
                   {!selectionMode && (
-                    <div className="flex items-center gap-1.5 pt-1 flex-shrink-0">
-                      {onPlaySection && hasAudio && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPlaySection(section._index);
-                          }}
-                          className="p-2 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-100 transition-colors"
-                          title="Play this section"
-                        >
-                          <Play className="w-3.5 h-3.5 text-amber-600 fill-amber-600" />
-                        </button>
-                      )}
+                    <div className="flex items-center pt-1 flex-shrink-0">
                       <button
                         onClick={() => onSelectSection(section._index)}
                         className="p-1.5"

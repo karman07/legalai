@@ -895,7 +895,6 @@ export default function AudioPlayer() {
         }}
         selectedLanguage={selectedLanguage}
         onLanguageChange={setSelectedLanguage}
-        onPlaySection={(sectionIdx) => openCombinedMode(true, sectionIdx, 'sections')}
         onPlayAll={() => playAllSections()}
         onPlaySelected={(indices) => playSelectedSections(indices)}
         onBack={() => navigate('/audio')}
