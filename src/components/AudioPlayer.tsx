@@ -68,6 +68,12 @@ export default function AudioPlayer() {
   const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
   const [showSettings, setShowSettings] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [combinedTotalDuration, setCombinedTotalDuration] = useState(0);
+  const [completedDuration, setCompletedDuration] = useState(0);
+  const [trackDurations, setTrackDurations] = useState<number[]>([]);
+  const [isLoadingAllSections, setIsLoadingAllSections] = useState(false);
+  const [playerBackTarget, setPlayerBackTarget] = useState<'sections' | 'subsections'>('subsections');
+  const isLoadingAllRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Text-selection AI chat state
@@ -103,6 +109,11 @@ export default function AudioPlayer() {
   useEffect(() => {
     localStorage.setItem(chatStorageKey, JSON.stringify({ aiMessages, aiConversationId, aiQuery }));
   }, [chatStorageKey, aiMessages, aiConversationId, aiQuery]);
+
+  // Cancel background section loading on unmount
+  useEffect(() => {
+    return () => { isLoadingAllRef.current = false; };
+  }, []);
 
   // Load lesson head on mount
   useEffect(() => {
@@ -235,9 +246,34 @@ export default function AudioPlayer() {
     return resolveAudioUrl(audioMeta?.url);
   };
 
+  const preloadTrackDurations = (urls: string[]) => {
+    if (urls.length === 0) return;
+    const durations = new Array(urls.length).fill(0);
+    let loadedCount = 0;
+    const tryFinalize = () => {
+      loadedCount++;
+      if (loadedCount === urls.length) {
+        const total = durations.reduce((a: number, b: number) => a + b, 0);
+        setTrackDurations([...durations]);
+        setCombinedTotalDuration(total);
+      }
+    };
+    urls.forEach((url, idx) => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.addEventListener('loadedmetadata', () => {
+        durations[idx] = isFinite(audio.duration) ? audio.duration : 0;
+        tryFinalize();
+      }, { once: true });
+      audio.addEventListener('error', tryFinalize, { once: true });
+      audio.src = url;
+    });
+  };
+
   const buildCombinedSegments = (
     section: AudioSectionDetail,
-    subDetails: AudioSubsectionDetail[]
+    subDetails: AudioSubsectionDetail[],
+    sectionIdx: number
   ): CombinedSegment[] => {
     const segments: CombinedSegment[] = [];
 
@@ -245,7 +281,7 @@ export default function AudioPlayer() {
     const sectionAudio = pickContentAudioUrl(section);
     if (sectionText || sectionAudio) {
       segments.push({
-        title: section.title || `Section ${currentSectionIndex + 1}`,
+        title: section.title || `Section ${sectionIdx + 1}`,
         text: sectionText,
         audioUrl: sectionAudio,
       });
@@ -257,7 +293,7 @@ export default function AudioPlayer() {
       const audioUrl = pickContentAudioUrl(sub);
       if (!text && !audioUrl) return;
       segments.push({
-        title: sub.title || `Subsection ${currentSectionIndex + 1}.${sub._index + 1}`,
+        title: sub.title || `Subsection ${sectionIdx + 1}.${sub._index + 1}`,
         text,
         audioUrl,
       });
@@ -266,64 +302,370 @@ export default function AudioPlayer() {
     return segments;
   };
 
-  const openCombinedMode = async (autoPlayQueue: boolean) => {
-    if (!id || !currentSectionDetail) return;
+  const openCombinedMode = async (
+    autoPlayQueue: boolean,
+    sectionIdxOverride?: number,
+    backTarget: 'sections' | 'subsections' = 'subsections'
+  ) => {
+    if (!id) return;
 
-    setIsPreparingCombined(true);
+    const sectionIdx = sectionIdxOverride ?? currentSectionIndex;
+
+    setPlayerBackTarget(backTarget);
+
+    // Reset all playback state up front
     setPlayerContentMode('combined');
     setCurrentSubsectionDetail(null);
     setCurrentSubsectionIndex(-1);
+    setCurrentSectionIndex(sectionIdx);
+    setCombinedSegments([]);
+    setCombinedTotalDuration(0);
+    setCompletedDuration(0);
+    setTrackDurations([]);
+    setQueueUrls([]);
+    setQueueIndex(0);
+    setAudioUrl('');
+    setIsPlaying(false);
+    setIsPreparingCombined(true);
+    setViewMode('player');
+
+    // Local tracker — don't use state so we avoid stale closures
+    let hasStartedPlaying = false;
+
+    const enqueueAudio = (url: string) => {
+      setQueueUrls(prev => [...prev, url]);
+      // Preload duration and append to trackDurations in order
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.addEventListener('loadedmetadata', () => {
+        const dur = isFinite(audio.duration) ? audio.duration : 0;
+        setTrackDurations(prev => [...prev, dur]);
+        setCombinedTotalDuration(prev => prev + dur);
+      }, { once: true });
+      audio.addEventListener('error', () => {
+        setTrackDurations(prev => [...prev, 0]);
+      }, { once: true });
+      audio.src = url;
+
+      if (autoPlayQueue && !hasStartedPlaying) {
+        hasStartedPlaying = true;
+        setAudioUrl(url);
+        setIsPlaying(true);
+      }
+    };
 
     try {
-      const allSubsections: AudioSubsectionSlim[] = [];
-      const seen = new Set<number>();
+      // 1. Get section detail
+      let sectionDetail: AudioSectionDetail | null =
+        sectionIdxOverride === undefined ? currentSectionDetail : null;
 
-      const appendUnique = (items: AudioSubsectionSlim[]) => {
-        items.forEach((item) => {
-          if (seen.has(item._index)) return;
-          seen.add(item._index);
-          allSubsections.push(item);
-        });
-      };
+      if (!sectionDetail) {
+        sectionDetail = await audioLessonsAPI.getSectionDetail(id, sectionIdx);
+        setCurrentSectionDetail(sectionDetail);
+        setSubsections(sectionDetail.subsections ?? []);
+      }
 
-      appendUnique(subsections);
+      if (!sectionDetail) return;
 
-      if (allSubsections.length < (currentSectionDetail.totalSubsections || 0)) {
-        let page = 1;
-        let totalPages = 1;
+      // 2. Add section head segment immediately
+      const headText = pickContentText(sectionDetail);
+      const headAudio = pickContentAudioUrl(sectionDetail);
+      if (headText || headAudio) {
+        setCombinedSegments([{ title: sectionDetail.title, text: headText, audioUrl: headAudio }]);
+        if (headAudio) enqueueAudio(headAudio);
+      }
+
+      // 3. Collect all subsection slim records
+      const allSubsections: AudioSubsectionSlim[] = [...(sectionDetail.subsections ?? [])];
+      const seen = new Set(allSubsections.map(s => s._index));
+
+      if (allSubsections.length < (sectionDetail.totalSubsections || 0)) {
+        let page = 1, totalPages = 1;
         do {
-          const res = await audioLessonsAPI.getSubsections(id, currentSectionIndex, page, 50);
-          appendUnique(res.items || []);
+          const res = await audioLessonsAPI.getSubsections(id, sectionIdx, page, 50);
+          (res.items || []).forEach(item => {
+            if (!seen.has(item._index)) { seen.add(item._index); allSubsections.push(item); }
+          });
           totalPages = res.totalPages || 1;
-          page += 1;
+          page++;
         } while (page <= totalPages);
       }
 
-      const details = await Promise.all(
-        allSubsections
-          .sort((a, b) => a._index - b._index)
-          .map((sub) => audioLessonsAPI.getSubsectionDetail(id, currentSectionIndex, sub._index).catch(() => null))
-      );
+      allSubsections.sort((a, b) => a._index - b._index);
 
-      const validDetails = details.filter((d): d is AudioSubsectionDetail => d !== null);
-      const merged = buildCombinedSegments(currentSectionDetail, validDetails);
+      // Update subsections state so SubsectionList has full data when back is pressed
+      setSubsections(allSubsections);
 
-      setCombinedSegments(merged);
-      setViewMode('player');
+      // Hide the preparing spinner — content is already visible
+      setIsPreparingCombined(false);
 
-      const queue = merged.map((s) => s.audioUrl).filter((u): u is string => !!u);
-      setQueueUrls(queue);
-      setQueueIndex(0);
+      // 4. Load each subsection detail one by one (step by step)
+      for (const sub of allSubsections) {
+        const detail = await audioLessonsAPI
+          .getSubsectionDetail(id, sectionIdx, sub._index)
+          .catch(() => null);
+        if (!detail) continue;
 
-      if (autoPlayQueue && queue.length > 0) {
-        setAudioUrl(queue[0]);
-        setIsPlaying(true);
-      } else {
-        setAudioUrl('');
-        setIsPlaying(false);
+        const text = pickContentText(detail);
+        const subAudio = pickContentAudioUrl(detail);
+        if (!text && !subAudio) continue;
+
+        setCombinedSegments(prev => [
+          ...prev,
+          { title: sub.title || detail.title, text, audioUrl: subAudio },
+        ]);
+
+        if (subAudio) enqueueAudio(subAudio);
       }
     } finally {
       setIsPreparingCombined(false);
+    }
+  };
+
+  const appendSegmentsToQueue = (newSegments: CombinedSegment[]) => {
+    const newUrls = newSegments.map(s => s.audioUrl).filter((u): u is string => !!u);
+    setCombinedSegments(prev => [...prev, ...newSegments]);
+    setQueueUrls(prev => [...prev, ...newUrls]);
+    if (newUrls.length === 0) return;
+
+    const localDurations = new Array(newUrls.length).fill(0);
+    let loaded = 0;
+    const tryFinalize = () => {
+      loaded++;
+      if (loaded === newUrls.length) {
+        const batchTotal = localDurations.reduce((a: number, b: number) => a + b, 0);
+        setCombinedTotalDuration(prev => prev + batchTotal);
+        setTrackDurations(prev => [...prev, ...localDurations]);
+      }
+    };
+    newUrls.forEach((url, idx) => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.addEventListener('loadedmetadata', () => {
+        localDurations[idx] = isFinite(audio.duration) ? audio.duration : 0;
+        tryFinalize();
+      }, { once: true });
+      audio.addEventListener('error', tryFinalize, { once: true });
+      audio.src = url;
+    });
+  };
+
+  const playAllSections = async () => {
+    if (!id || !lesson) return;
+    const totalSects = lesson.totalSections ?? sections.length;
+
+    isLoadingAllRef.current = true;
+
+    // Start section 0 immediately — user hears audio right away
+    // Back from player returns to the SectionList (where Play All was triggered)
+    await openCombinedMode(true, 0, 'sections');
+
+    if (!isLoadingAllRef.current || totalSects <= 1) return;
+
+    setIsLoadingAllSections(true);
+    try {
+      for (let sIdx = 1; sIdx < totalSects; sIdx++) {
+        if (!isLoadingAllRef.current) break;
+
+        let sectionDetail: AudioSectionDetail;
+        try {
+          sectionDetail = await audioLessonsAPI.getSectionDetail(id, sIdx);
+        } catch {
+          continue;
+        }
+        if (!isLoadingAllRef.current) break;
+
+        const allSubs = [...(sectionDetail.subsections ?? [])];
+        if (allSubs.length < sectionDetail.totalSubsections) {
+          let page = 1, totalPages = 1;
+          do {
+            if (!isLoadingAllRef.current) break;
+            try {
+              const res = await audioLessonsAPI.getSubsections(id, sIdx, page, 50);
+              allSubs.push(...(res.items || []));
+              totalPages = res.totalPages || 1;
+            } catch { /* skip */ }
+            page++;
+          } while (page <= totalPages);
+        }
+
+        if (!isLoadingAllRef.current) break;
+
+        const subDetails = await Promise.all(
+          allSubs.map(sub => audioLessonsAPI.getSubsectionDetail(id, sIdx, sub._index).catch(() => null))
+        );
+        const validSubs = subDetails.filter((d): d is AudioSubsectionDetail => d !== null);
+        const segments = buildCombinedSegments(sectionDetail, validSubs, sIdx);
+        appendSegmentsToQueue(segments);
+      }
+    } finally {
+      setIsLoadingAllSections(false);
+    }
+  };
+
+  const playSelectedSubsections = async (subIndices: number[]) => {
+    if (!id || subIndices.length === 0) return;
+    const sorted = [...subIndices].sort((a, b) => a - b);
+
+    setPlayerContentMode('combined');
+    setCurrentSubsectionDetail(null);
+    setCurrentSubsectionIndex(-1);
+    setCombinedSegments([]);
+    setCombinedTotalDuration(0);
+    setCompletedDuration(0);
+    setTrackDurations([]);
+    setQueueUrls([]);
+    setQueueIndex(0);
+    setAudioUrl('');
+    setIsPlaying(false);
+    setIsPreparingCombined(false);
+    setPlayerBackTarget('subsections');
+    setViewMode('player');
+
+    let hasStartedPlaying = false;
+
+    const enqueueAudio = (url: string) => {
+      setQueueUrls(prev => [...prev, url]);
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.addEventListener('loadedmetadata', () => {
+        const dur = isFinite(audio.duration) ? audio.duration : 0;
+        setTrackDurations(prev => [...prev, dur]);
+        setCombinedTotalDuration(prev => prev + dur);
+      }, { once: true });
+      audio.addEventListener('error', () => { setTrackDurations(prev => [...prev, 0]); }, { once: true });
+      audio.src = url;
+      if (!hasStartedPlaying) {
+        hasStartedPlaying = true;
+        setAudioUrl(url);
+        setIsPlaying(true);
+      }
+    };
+
+    for (const subIdx of sorted) {
+      const detail = await audioLessonsAPI
+        .getSubsectionDetail(id, currentSectionIndex, subIdx)
+        .catch(() => null);
+      if (!detail) continue;
+      const text = pickContentText(detail);
+      const subAudio = pickContentAudioUrl(detail);
+      if (!text && !subAudio) continue;
+      setCombinedSegments(prev => [...prev, { title: detail.title, text, audioUrl: subAudio }]);
+      if (subAudio) enqueueAudio(subAudio);
+    }
+  };
+
+  const playSelectedSections = async (indices: number[]) => {
+    if (!id || !lesson || indices.length === 0) return;
+    const sorted = [...indices].sort((a, b) => a - b);
+
+    isLoadingAllRef.current = true;
+
+    // Reset all playback state up-front, then navigate to player
+    setPlayerContentMode('combined');
+    setPlayerBackTarget('sections');
+    setCurrentSubsectionDetail(null);
+    setCurrentSubsectionIndex(-1);
+    setCurrentSectionIndex(sorted[0]);
+    setCombinedSegments([]);
+    setCombinedTotalDuration(0);
+    setCompletedDuration(0);
+    setTrackDurations([]);
+    setQueueUrls([]);
+    setQueueIndex(0);
+    setAudioUrl('');
+    setIsPlaying(false);
+    setIsPreparingCombined(true);
+    setViewMode('player');
+
+    let hasStartedPlaying = false;
+
+    const enqueueAudio = (url: string) => {
+      setQueueUrls(prev => [...prev, url]);
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.addEventListener('loadedmetadata', () => {
+        const dur = isFinite(audio.duration) ? audio.duration : 0;
+        setTrackDurations(prev => [...prev, dur]);
+        setCombinedTotalDuration(prev => prev + dur);
+      }, { once: true });
+      audio.addEventListener('error', () => { setTrackDurations(prev => [...prev, 0]); }, { once: true });
+      audio.src = url;
+      if (!hasStartedPlaying) {
+        hasStartedPlaying = true;
+        setAudioUrl(url);
+        setIsPlaying(true);
+      }
+    };
+
+    setIsLoadingAllSections(true);
+    try {
+      for (const sIdx of sorted) {
+        if (!isLoadingAllRef.current) break;
+
+        let sectionDetail: AudioSectionDetail | null = null;
+        try {
+          sectionDetail = await audioLessonsAPI.getSectionDetail(id, sIdx);
+        } catch { continue; }
+        if (!sectionDetail || !isLoadingAllRef.current) break;
+
+        // For the first section, seed the section detail so back→subsections works
+        if (sIdx === sorted[0]) {
+          setCurrentSectionDetail(sectionDetail);
+          setSubsections(sectionDetail.subsections ?? []);
+          setIsPreparingCombined(false);
+        }
+
+        // Add section head segment immediately
+        const headText = pickContentText(sectionDetail);
+        const headAudio = pickContentAudioUrl(sectionDetail);
+        if (headText || headAudio) {
+          setCombinedSegments(prev => [
+            ...prev,
+            { title: sectionDetail!.title, text: headText, audioUrl: headAudio },
+          ]);
+          if (headAudio) enqueueAudio(headAudio);
+        }
+
+        // Collect all subsection slim records for this section
+        const allSubs: AudioSubsectionSlim[] = [...(sectionDetail.subsections ?? [])];
+        const seen = new Set(allSubs.map(s => s._index));
+        if (allSubs.length < (sectionDetail.totalSubsections || 0)) {
+          let page = 1, totalPages = 1;
+          do {
+            if (!isLoadingAllRef.current) break;
+            try {
+              const res = await audioLessonsAPI.getSubsections(id, sIdx, page, 50);
+              (res.items || []).forEach(item => {
+                if (!seen.has(item._index)) { seen.add(item._index); allSubs.push(item); }
+              });
+              totalPages = res.totalPages || 1;
+            } catch { /* skip */ }
+            page++;
+          } while (page <= totalPages);
+        }
+        allSubs.sort((a, b) => a._index - b._index);
+
+        // Load each subsection detail one-by-one and enqueue as it arrives
+        for (const sub of allSubs) {
+          if (!isLoadingAllRef.current) break;
+          const detail = await audioLessonsAPI
+            .getSubsectionDetail(id, sIdx, sub._index)
+            .catch(() => null);
+          if (!detail) continue;
+          const text = pickContentText(detail);
+          const subAudio = pickContentAudioUrl(detail);
+          if (!text && !subAudio) continue;
+          setCombinedSegments(prev => [
+            ...prev,
+            { title: sub.title || detail.title, text, audioUrl: subAudio },
+          ]);
+          if (subAudio) enqueueAudio(subAudio);
+        }
+      }
+    } finally {
+      setIsPreparingCombined(false);
+      setIsLoadingAllSections(false);
     }
   };
 
@@ -494,6 +836,7 @@ export default function AudioPlayer() {
   };
 
   const startPlayer = async (sectionIndex: number, subsectionIndex: number = -1) => {
+    setPlayerBackTarget('subsections');
     setPlayerContentMode('single');
     setCombinedSegments([]);
     setQueueUrls([]);
@@ -547,9 +890,14 @@ export default function AudioPlayer() {
           setSubsections([]);
           setSubsectionsPage(1);
           setCurrentSectionDetail(null);
-          fetchSectionDetail(idx);   // subsections come back inside this response
+          fetchSectionDetail(idx);
           setViewMode('subsections');
         }}
+        selectedLanguage={selectedLanguage}
+        onLanguageChange={setSelectedLanguage}
+        onPlaySection={(sectionIdx) => openCombinedMode(true, sectionIdx, 'sections')}
+        onPlayAll={() => playAllSections()}
+        onPlaySelected={(indices) => playSelectedSections(indices)}
         onBack={() => navigate('/audio')}
       />
     );
@@ -571,13 +919,17 @@ export default function AudioPlayer() {
         subsections={subsections}
         selectedLanguage={selectedLanguage}
         onPlayCombinedAudio={() => openCombinedMode(true)}
+        onSelectSubsection={(subIdx) => startPlayer(currentSectionIndex, subIdx)}
+        onPlaySelected={(indices) => playSelectedSubsections(indices)}
         onLanguageChange={setSelectedLanguage}
         onBack={() => setViewMode('sections')}
       />
     );
   }
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const displayCurrentTime = playerContentMode === 'combined' ? completedDuration + currentTime : currentTime;
+  const displayTotalDuration = playerContentMode === 'combined' && combinedTotalDuration > 0 ? combinedTotalDuration : duration;
+  const progress = displayTotalDuration > 0 ? (displayCurrentTime / displayTotalDuration) * 100 : 0;
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-brand-50 via-white to-slate-50">
@@ -588,6 +940,7 @@ export default function AudioPlayer() {
         onEnded={() => {
           if (playerContentMode === 'combined' && queueUrls.length > 0 && queueIndex < queueUrls.length - 1) {
             const nextIndex = queueIndex + 1;
+            setCompletedDuration(prev => prev + (trackDurations[queueIndex] ?? duration));
             setQueueIndex(nextIndex);
             setAudioUrl(queueUrls[nextIndex]);
             setIsPlaying(true);
@@ -598,101 +951,101 @@ export default function AudioPlayer() {
         onLoadedMetadata={handleTimeUpdate}
       />
 
-      <div className="bg-white/95 backdrop-blur-sm border-b border-brand-200 shadow-lg flex-shrink-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setViewMode('subsections')} className="p-2 hover:bg-brand-100 rounded-lg transition-colors">
+      <div className="bg-white/95 backdrop-blur-sm border-b border-brand-200 shadow-sm flex-shrink-0">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={() => setViewMode(playerBackTarget)} className="p-2 hover:bg-brand-100 rounded-lg transition-colors flex-shrink-0">
               <ArrowLeft className="w-5 h-5 text-brand-700" />
             </button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-sm sm:text-base font-bold text-brand-900 truncate">
+              <h1 className="text-sm font-bold text-brand-900 truncate leading-tight">
                 {playerContentMode === 'combined'
-                  ? `${currentSectionDetail?.title} • Combined Playback`
+                  ? `${currentSectionDetail?.title}`
                   : currentSubsectionIndex >= 0
-                  ? `${currentSectionDetail?.title} › ${currentSectionDetail?.subsections?.[currentSubsectionIndex]?.title}`
+                  ? `${currentSectionDetail?.title}${currentSubsectionDetail?.title ? ` › ${currentSubsectionDetail.title}` : ''}`
                   : currentSectionDetail?.title}
               </h1>
-              <div className="flex items-center gap-3 mt-1">
-                <p className="text-xs text-brand-500">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                <p className="text-[11px] text-brand-400">
                   {playerContentMode === 'combined'
-                    ? `Combined view (${combinedSegments.length} text blocks)`
+                    ? `${combinedSegments.length} parts`
                     : currentSubsectionIndex >= 0
-                    ? `Subsection ${currentSectionIndex + 1}.${currentSubsectionIndex + 1}`
-                    : `Section ${currentSectionIndex + 1}`}
+                    ? `§ ${currentSectionIndex + 1}.${currentSubsectionIndex + 1}`
+                    : `§ ${currentSectionIndex + 1}`}
                 </p>
+                {isLoadingAllSections && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gold-600">
+                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                    Loading more…
+                  </span>
+                )}
                 <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${selectedLanguage === 'english' ? 'bg-blue-500' : 'bg-green-500'}`} />
-                  <span className="text-xs font-medium text-brand-600 capitalize">{selectedLanguage}</span>
+                  <div className={`w-1.5 h-1.5 rounded-full ${selectedLanguage === 'english' ? 'bg-blue-500' : 'bg-green-500'}`} />
+                  <span className="text-[11px] font-medium text-brand-500 capitalize">{selectedLanguage}</span>
                 </div>
-                <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${textMode === 'easy'
-                  ? 'bg-gold-100 text-gold-700'
-                  : 'bg-brand-100 text-brand-700'
-                  }`}>
-                  {textMode === 'easy' ? 'Easy Mode' : 'Standard'}
-                </div>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${textMode === 'easy' ? 'bg-gold-100 text-gold-700' : 'bg-brand-100 text-brand-600'}`}>
+                  {textMode === 'easy' ? 'Easy' : 'Standard'}
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <button
                 onClick={toggleBookmark}
-                className={`p-2 rounded-lg transition-all ${isBookmarked
-                  ? 'bg-gold-100 text-gold-600 hover:bg-gold-200'
-                  : 'hover:bg-brand-100 text-brand-600'
-                  }`}
+                className={`p-2 rounded-lg transition-all ${isBookmarked ? 'bg-gold-100 text-gold-600' : 'hover:bg-brand-100 text-brand-500'}`}
               >
                 <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
               </button>
-              <button onClick={shareLesson} className="p-2 hover:bg-brand-100 text-brand-600 rounded-lg transition-colors">
+              <button onClick={shareLesson} className="p-2 hover:bg-brand-100 text-brand-500 rounded-lg transition-colors hidden sm:block">
                 <Share2 className="w-4 h-4" />
               </button>
-              <button onClick={() => setShowNotes(!showNotes)} className="flex items-center gap-2 px-4 py-2 bg-gold-500 hover:bg-gold-600 text-white rounded-lg transition-all shadow-md">
+              <button onClick={() => setShowNotes(!showNotes)} className="flex items-center gap-1.5 px-3 py-2 bg-gold-500 hover:bg-gold-600 text-white rounded-lg transition-all shadow-sm text-sm font-semibold">
                 <StickyNote className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:inline">Notes</span>
+                <span className="hidden sm:inline">Notes</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 sm:p-6">
+      <div className="flex-1 overflow-auto p-3 sm:p-6">
         <div className="max-w-4xl mx-auto">
           {currentSectionDetail && (
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="p-6 sm:p-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-brand-900 mb-6">
-                    {playerContentMode === 'combined'
-                      ? `${currentSectionDetail.title} - Full Combined Text`
-                      : currentSubsectionIndex >= 0
+            <div className="bg-white rounded-2xl shadow-sm border border-brand-100 overflow-hidden">
+              <div className="p-4 sm:p-8">
+                <h2 className="text-lg sm:text-2xl font-bold text-brand-900 mb-4 leading-snug">
+                  {playerContentMode === 'combined'
+                    ? currentSectionDetail.title
+                    : currentSubsectionIndex >= 0
                     ? (currentSubsectionDetail?.title ?? '...')
                     : currentSectionDetail.title}
                 </h2>
-                <div className="flex gap-2 mb-6">
-                  <button onClick={() => setTextMode('government')} className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${textMode === 'government' ? 'bg-slate-700 text-white shadow-md' : 'bg-brand-100 text-brand-700 hover:bg-brand-200'}`}>
+                <div className="flex gap-2 mb-4 p-1 bg-brand-50 rounded-xl">
+                  <button onClick={() => setTextMode('government')} className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${textMode === 'government' ? 'bg-slate-700 text-white shadow-sm' : 'text-brand-600 hover:text-brand-900'}`}>
                     Standard
                   </button>
-                  <button onClick={() => setTextMode('easy')} className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${textMode === 'easy' ? 'bg-brand-900 text-white shadow-md' : 'bg-brand-100 text-brand-700 hover:bg-brand-200'}`}>
+                  <button onClick={() => setTextMode('easy')} className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${textMode === 'easy' ? 'bg-brand-900 text-white shadow-sm' : 'text-brand-600 hover:text-brand-900'}`}>
                     Easy Mode
                   </button>
                 </div>
-                <div className="p-6 bg-brand-50 rounded-xl select-text" onMouseUp={handleTextMouseUp}>
+                <div className="p-4 sm:p-5 bg-brand-50 rounded-xl select-text" onMouseUp={handleTextMouseUp}>
                   {playerContentMode === 'combined' ? (
                     isPreparingCombined ? (
                       <div className="flex items-center gap-2 text-brand-600">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Preparing combined text and audio...
                       </div>
+                    ) : combinedSegments.length === 0 ? (
+                      <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">No combined text available for this language/mode.</p>
                     ) : (
-                      <div className="space-y-6">
-                        {combinedSegments.length === 0 ? (
-                          <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">No combined text available for this language/mode.</p>
-                        ) : (
-                          combinedSegments.map((segment, idx) => (
-                            <div key={`${segment.title}-${idx}`} className="border border-brand-200 bg-white rounded-xl p-4">
-                              <h3 className="text-sm font-bold text-brand-700 mb-2">{idx + 1}. {segment.title}</h3>
-                              <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">{segment.text}</p>
-                            </div>
-                          ))
-                        )}
+                      <div className="border border-brand-200 bg-white rounded-xl overflow-hidden">
+                        {combinedSegments.map((segment, idx) => (
+                          <div key={`${segment.title}-${idx}`} className={`p-4 sm:p-5 ${idx > 0 ? 'border-t border-brand-100' : ''}`}>
+                            {segment.title && (
+                              <p className="text-[11px] font-semibold text-brand-400 uppercase tracking-wider mb-2">{segment.title}</p>
+                            )}
+                            <p className="text-base leading-relaxed text-brand-900 whitespace-pre-wrap">{segment.text}</p>
+                          </div>
+                        ))}
                       </div>
                     )
                   ) : (
@@ -717,32 +1070,32 @@ export default function AudioPlayer() {
       </div>
 
       <div className="bg-white/95 backdrop-blur-sm border-t border-brand-200 shadow-2xl flex-shrink-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
           {/* Progress and Time */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between text-sm font-bold mb-3">
-              <span className="text-gold-600">{formatTime(currentTime)}</span>
-              <div className="flex items-center gap-2 text-xs text-brand-500">
-                  {playerContentMode === 'combined' && queueUrls.length > 0 && (
-                    <>
-                      <span>Track {Math.min(queueIndex + 1, queueUrls.length)} / {queueUrls.length}</span>
-                      <span>•</span>
-                    </>
-                  )}
+          <div className="mb-4 sm:mb-6">
+            <div className="flex items-center justify-between text-sm font-bold mb-2">
+              <span className="text-gold-600">{formatTime(displayCurrentTime)}</span>
+              <div className="flex items-center gap-1.5 text-xs text-brand-500">
+                {playerContentMode === 'combined' && queueUrls.length > 0 && (
+                  <>
+                    <span>Part {Math.min(queueIndex + 1, queueUrls.length)} of {queueUrls.length}</span>
+                    <span>•</span>
+                  </>
+                )}
                 <span>{playbackSpeed}x</span>
                 <span>•</span>
-                <span>{formatTime(duration)}</span>
+                <span>{formatTime(displayTotalDuration)}</span>
               </div>
             </div>
-            <div className="relative h-3 bg-brand-200 rounded-full overflow-hidden cursor-pointer group" onClick={handleSeek}>
-              <div className="absolute top-0 left-0 h-full bg-brand-900 transition-all" style={{ width: `${progress}%` }}>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity border-2 border-gold-500" />
+            <div className="relative h-2.5 bg-brand-200 rounded-full overflow-hidden cursor-pointer group" onClick={handleSeek}>
+              <div className="absolute top-0 left-0 h-full bg-brand-900 transition-all rounded-full" style={{ width: `${progress}%` }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity border-2 border-gold-500" />
               </div>
             </div>
           </div>
 
           {/* Main Controls */}
-          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3">
             <button onClick={() => handleSkip(-10)} className="p-3 hover:bg-brand-100 rounded-full transition-all group">
               <SkipBack className="w-5 h-5 text-brand-700 group-hover:text-gold-600" />
             </button>

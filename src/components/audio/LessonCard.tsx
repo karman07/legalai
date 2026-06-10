@@ -1,92 +1,84 @@
-import { FileText, Clock, BookOpen, List, Play, Calendar, Tag } from 'lucide-react';
+import { List, BookOpen, Play, Tag, Check } from 'lucide-react';
 import { AudioLesson } from '../../services/api';
 
 interface LessonCardProps {
   lesson: AudioLesson;
   viewMode?: 'grid' | 'list';
+  selectionMode?: boolean;
+  isSelected?: boolean;
   onClick: () => void;
 }
 
-export default function LessonCard({ lesson, viewMode = 'grid', onClick }: LessonCardProps) {
-  const totalSubsections = lesson.totalSubsections || 0;
+function getAbbreviation(title: string): string {
+  const cleaned = title.replace(/[()]/g, '');
+  const initials = cleaned.split(/\s+/).filter(w => /^[A-Z]/.test(w)).map(w => w[0]).join('').slice(0, 3);
+  return initials || title.slice(0, 2).toUpperCase();
+}
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+export default function LessonCard({ lesson, viewMode = 'grid', selectionMode, isSelected, onClick }: LessonCardProps) {
+  const totalSubsections = lesson.totalSubsections || 0;
+  const abbr = getAbbreviation(lesson.title);
+
+  const selectionRing = isSelected ? 'ring-2 ring-amber-400 border-amber-300' : '';
+
+  const CheckCircle = () => (
+    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${
+      isSelected ? 'bg-amber-500 border-amber-500' : 'bg-white border-slate-300'
+    }`}>
+      {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
+    </div>
+  );
 
   if (viewMode === 'list') {
     return (
       <div
         onClick={onClick}
-        className={`group bg-white border border-brand-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 ${
-          lesson.isActive ? 'cursor-pointer hover:border-gold-400' : 'cursor-not-allowed opacity-60'
-        }`}
+        className={`group bg-white border border-slate-100 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer ${
+          lesson.isActive || selectionMode ? 'hover:border-amber-200 hover:shadow-md' : 'opacity-50 cursor-not-allowed'
+        } ${selectionRing}`}
       >
-        <div className="p-4 sm:p-6">
-          <div className="flex items-start gap-4">
-            {/* Icon */}
-            <div className="w-12 h-12 bg-gold-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-              <FileText className="w-6 h-6 text-gold-600" />
-            </div>
-            
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="flex-1">
-                  {lesson.headTitle && (
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                      {lesson.headTitle}
-                    </div>
-                  )}
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 group-hover:text-gold-600 transition-colors leading-tight">
-                    {lesson.title}
-                  </h3>
-                  <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
-                    {lesson.description || 'Listen to an unabridged recording of this Bare Act.'}
-                  </p>
-                  
-                  <div className="flex items-center gap-4 text-xs text-slate-600 mb-3">
-                    {lesson.totalSections && lesson.totalSections > 0 && (
-                      <div className="flex items-center gap-1.5 bg-gradient-to-r bg-gold-50 px-3 py-1.5 rounded-lg border border-gold-200">
-                        <List className="w-3.5 h-3.5 text-gold-600" />
-                        <span className="font-medium text-gold-700">{lesson.totalSections} sections</span>
-                      </div>
-                    )}
-                    {totalSubsections > 0 && (
-                      <div className="flex items-center gap-1.5 bg-gradient-to-r bg-gold-50 px-3 py-1.5 rounded-lg border border-gold-200">
-                        <BookOpen className="w-3.5 h-3.5 text-gold-600" />
-                        <span className="font-medium text-gold-700">{totalSubsections} subsections</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1.5 bg-gradient-to-r from-brand-50 to-slate-100 px-3 py-1.5 rounded-lg border border-brand-200">
-                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                      <span className="text-slate-600">{formatDate(lesson.createdAt)}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Right side */}
-                <div className="flex flex-col items-end gap-3">
-                  {lesson.category && (
-                    <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-gradient-to-r bg-gold-50 text-gold-700 rounded-lg border border-gold-200 shadow-sm">
-                      <Tag className="w-3 h-3" />
-                      {lesson.category}
-                    </div>
-                  )}
-                  {lesson.isActive && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-md transform hover:scale-105">
-                      <Play className="w-4 h-4" fill="white" />
-                      <span>Play Lesson</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+        <div className="p-5 flex gap-4 items-center">
+          {selectionMode && <CheckCircle />}
+
+          <div className="w-[52px] h-[52px] bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-sm font-bold text-amber-700 tracking-tight">{abbr}</span>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {lesson.headTitle && (
+              <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-0.5">{lesson.headTitle}</p>
+            )}
+            <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-amber-700 transition-colors mb-2">
+              {lesson.title}
+            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              {lesson.totalSections && lesson.totalSections > 0 && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <List className="w-3 h-3" />
+                  {lesson.totalSections} sections
+                </span>
+              )}
+              {totalSubsections > 0 && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <BookOpen className="w-3 h-3" />
+                  {totalSubsections} subsections
+                </span>
+              )}
+              {lesson.category && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
+                  <Tag className="w-3 h-3" />
+                  {lesson.category}
+                </span>
+              )}
             </div>
           </div>
+
+          {!selectionMode && lesson.isActive && (
+            <button className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold transition-colors">
+              <Play className="w-3.5 h-3.5 fill-white" />
+              Play
+            </button>
+          )}
         </div>
       </div>
     );
@@ -96,68 +88,82 @@ export default function LessonCard({ lesson, viewMode = 'grid', onClick }: Lesso
   return (
     <div
       onClick={onClick}
-      className={`group relative border border-brand-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 bg-white transform hover:-translate-y-1 ${
-        lesson.isActive ? 'cursor-pointer hover:border-amber-400' : 'cursor-not-allowed opacity-60'
-      }`}
+      className={`group bg-white border border-slate-100 rounded-2xl overflow-hidden transition-all duration-200 flex flex-col cursor-pointer ${
+        lesson.isActive || selectionMode
+          ? 'hover:border-amber-200 hover:shadow-lg hover:-translate-y-0.5'
+          : 'opacity-50 cursor-not-allowed'
+      } ${selectionRing}`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-50/0 to-orange-50/0 group-hover:from-amber-50/50 group-hover:to-orange-50/30 transition-all duration-300 pointer-events-none" />
+      <div className="h-0.5 bg-gradient-to-r from-amber-400 to-orange-400 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      <div className="relative p-6">
-        {lesson.headTitle && (
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            {lesson.headTitle}
-          </div>
-        )}
-
+      <div className="p-6 flex-1 flex flex-col">
+        {/* Header */}
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-12 h-12 bg-gold-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-            <FileText className="w-6 h-6 text-gold-600" />
+          <div className="w-11 h-11 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-sm font-bold text-amber-700 tracking-tight">{abbr}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-slate-900 mb-1 line-clamp-2 group-hover:text-gold-600 transition-colors leading-tight">
+          <div className="flex-1 min-w-0 pt-0.5">
+            {lesson.headTitle && (
+              <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-0.5">
+                {lesson.headTitle}
+              </p>
+            )}
+            <h3 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors">
               {lesson.title}
             </h3>
           </div>
+          {selectionMode && (
+            <div className="flex-shrink-0 mt-0.5">
+              <CheckCircle />
+            </div>
+          )}
         </div>
 
-        <p className="text-sm text-slate-600 line-clamp-3 mb-4 leading-relaxed">
-          {lesson.description || 'Listen to an unabridged recording of this Bare Act.'}
+        {/* Description */}
+        <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mb-4 flex-1">
+          {lesson.description || 'Unabridged audio recording of this Bare Act.'}
         </p>
 
-        <div className="flex items-center gap-3 text-xs text-slate-600 mb-4">
+        {/* Stats */}
+        <div className="flex items-center gap-2 flex-wrap mb-5">
           {lesson.totalSections && lesson.totalSections > 0 && (
-            <div className="flex items-center gap-1.5 bg-gradient-to-r bg-gold-50 px-3 py-1.5 rounded-lg border border-gold-200">
-              <List className="w-3.5 h-3.5 text-gold-600" />
-              <span className="font-medium text-gold-700">{lesson.totalSections} sections</span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+              <List className="w-3 h-3" />
+              {lesson.totalSections} sections
+            </span>
           )}
           {totalSubsections > 0 && (
-            <div className="flex items-center gap-1.5 bg-gradient-to-r bg-gold-50 px-3 py-1.5 rounded-lg border border-gold-200">
-              <BookOpen className="w-3.5 h-3.5 text-gold-600" />
-              <span className="font-medium text-gold-700">{totalSubsections} subsections</span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+              <BookOpen className="w-3 h-3" />
+              {totalSubsections} subsections
+            </span>
           )}
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>{formatDate(lesson.createdAt)}</span>
-        </div>
-
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
           {lesson.category && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-gradient-to-r bg-gold-50 text-gold-700 rounded-lg border border-gold-200 shadow-sm">
-              <Tag className="w-3 h-3" />
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
               {lesson.category}
-            </div>
-          )}
-          {lesson.isActive && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium text-xs hover:from-amber-600 hover:to-orange-600 transition-all shadow-md transform hover:scale-105 ml-auto">
-              <Play className="w-3 h-3" fill="white" />
-              <span>Play</span>
-            </div>
+            </span>
           )}
         </div>
+
+        {/* Play button / Selected indicator */}
+        {selectionMode ? (
+          <div className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+            isSelected ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {isSelected ? (
+              <><Check className="w-3.5 h-3.5 stroke-[3]" /> Selected</>
+            ) : (
+              'Tap to select'
+            )}
+          </div>
+        ) : (
+          lesson.isActive && (
+            <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold transition-colors">
+              <Play className="w-3.5 h-3.5 fill-white" />
+              Start Listening
+            </button>
+          )
+        )}
       </div>
     </div>
   );
