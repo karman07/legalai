@@ -18,6 +18,7 @@ import { SearchModule } from './search/search.module';
 import { ChatModule } from './chat/chat.module';
 import { ResourcesModule } from './resources/resources.module';
 import { BlogsModule } from './blogs/blogs.module';
+import { UserProgressModule } from './user-progress/user-progress.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { BlogsModule } from './blogs/blogs.module';
     ChatModule,
     ResourcesModule,
     BlogsModule,
+    UserProgressModule,
   ],
   controllers: [AppController],
   providers: [AppService],

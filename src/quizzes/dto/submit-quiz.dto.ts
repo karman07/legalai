@@ -5,6 +5,6 @@ export class SubmitQuizDto {
   @ArrayMinSize(1)
   @ArrayMaxSize(100)
   @IsInt({ each: true })
-  @Min(0, { each: true })
+  @Min(-1, { each: true })
   answers: number[];
 }
