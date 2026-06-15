@@ -562,7 +562,26 @@ export default function CustomPDFViewer({ pdf, fileUrl, onClose }: CustomPDFView
                       key={rate}
                       onClick={() => {
                         setTtsRate(rate);
-                        if (utteranceRef.current) utteranceRef.current.rate = rate;
+                        if (ttsPlaying && ttsText) {
+                          const startOffset = ttsCharIndex;
+                          window.speechSynthesis.cancel();
+                          const remainingText = ttsText.slice(startOffset);
+                          if (!remainingText.trim()) return;
+                          const utterance = new SpeechSynthesisUtterance(remainingText);
+                          utterance.rate = rate;
+                          utterance.lang = 'en-IN';
+                          if (ttsVoice) utterance.voice = ttsVoice;
+                          utterance.onstart = () => { setTtsPlaying(true); setTtsPaused(false); };
+                          utterance.onend = () => { setTtsPlaying(false); setTtsPaused(false); };
+                          utterance.onerror = () => { setTtsPlaying(false); setTtsPaused(false); };
+                          utterance.onboundary = (event: SpeechSynthesisEvent) => {
+                            if (typeof event.charIndex === 'number') {
+                              setTtsCharIndex(startOffset + event.charIndex);
+                            }
+                          };
+                          utteranceRef.current = utterance;
+                          window.speechSynthesis.speak(utterance);
+                        }
                       }}
                       className={`px-2 py-0.5 rounded text-xs font-mono font-semibold transition-all ${
                         ttsRate === rate

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Scale, Search, FileText, X, Download, Eye, ChevronLeft, ChevronRight, Building2, File, Image, Calendar } from 'lucide-react';
+import { Scale, Search, FileText, X, Download, Eye, ChevronLeft, ChevronRight, File, Image, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 function PDFSkeletonCard() {
@@ -48,6 +48,12 @@ export default function CaseLaws() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [activeSearch, setActiveSearch] = useState('');
+
+  const hasData = (val: string | undefined | null): val is string => {
+    if (!val) return false;
+    const t = val.trim().toLowerCase();
+    return t !== '' && t !== 'information not available' && t !== 'n/a' && t !== 'na';
+  };
 
   const getFileType = (fileName: string): string => {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
@@ -331,137 +337,53 @@ export default function CaseLaws() {
                 </div>
 
                 {/* Content Section */}
-                <div className="p-4 space-y-2.5 flex-1">
-                  {/* Diary Number */}
-                  {pdf.diary_no && (
-                    <div className="flex items-start gap-2">
-                      <FileText className="w-3.5 h-3.5 text-brand-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider mb-0.5">Diary No.</p>
-                        <p className="text-sm font-mono text-brand-800 dark:text-brand-200">{pdf.diary_no}</p>
-                      </div>
+                <div className="px-5 py-4 flex-1 flex flex-col gap-3">
+                  {/* Petitioner — most important field, show prominently */}
+                  {hasData(pdf.pet) && (
+                    <div>
+                      <p className="text-[10px] font-bold text-gold-600 uppercase tracking-wider mb-1">Petitioner</p>
+                      <p className="text-sm font-semibold text-brand-900 dark:text-brand-100 leading-snug">{pdf.pet}</p>
                     </div>
                   )}
 
-                  {/* Case Number */}
-                  {pdf.case_no && (
-                    <div className="border-l-4 border-brand-400 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-4 h-4 text-brand-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Case Number</p>
-                      </div>
-                      <p className="text-sm font-mono text-brand-900 dark:text-brand-100 font-medium">{pdf.case_no}</p>
-                    </div>
-                  )}
-
-                  {/* Petitioner */}
-                  {pdf.pet && (
-                    <div className="border-l-4 border-gold-500 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Scale className="w-4 h-4 text-gold-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Petitioner</p>
-                      </div>
-                      <p className="text-sm text-brand-900 dark:text-brand-100 font-medium">{pdf.pet}</p>
-                    </div>
-                  )}
-
-                  {/* Petitioner Advocate */}
-                  {pdf.pet_adv && (
-                    <div className="border-l-4 border-brand-400 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Building2 className="w-4 h-4 text-brand-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Petitioner Advocate</p>
-                      </div>
-                      <p className="text-sm text-brand-900 dark:text-brand-100 font-medium">{pdf.pet_adv}</p>
-                    </div>
-                  )}
-
-                  {/* Respondent Advocate */}
-                  {pdf.res_adv && (
-                    <div className="border-l-4 border-brand-400 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Building2 className="w-4 h-4 text-brand-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Respondent Advocate</p>
-                      </div>
-                      <p className="text-sm text-brand-900 dark:text-brand-100 font-medium">{pdf.res_adv}</p>
-                    </div>
-                  )}
-
-                  {/* Bench */}
-                  {pdf.bench && (
-                    <div className="border-l-4 border-gold-500 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Scale className="w-4 h-4 text-gold-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Bench</p>
-                      </div>
-                      <p className="text-sm text-brand-900 dark:text-brand-100 font-medium">{pdf.bench}</p>
-                    </div>
-                  )}
-
-                  {/* Judgement By */}
-                  {pdf.judgement_by && (
-                    <div className="border-l-4 border-gold-500 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Scale className="w-4 h-4 text-gold-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Judgement By</p>
-                      </div>
-                      <p className="text-sm text-brand-900 dark:text-brand-100 font-medium">{pdf.judgement_by}</p>
-                    </div>
-                  )}
-
-                  {/* Judgment Date */}
-                  {pdf.judgment_dates && (
-                    <div className="border-l-4 border-brand-400 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Calendar className="w-4 h-4 text-brand-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">Judgment Date</p>
-                      </div>
-                      <p className="text-sm text-brand-900 dark:text-brand-100 font-medium">
-                        {new Date(pdf.judgment_dates).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Link */}
-                  {pdf.link && (
-                    <div className="border-l-4 border-brand-400 pl-4 py-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-4 h-4 text-brand-600" />
-                        <p className="text-xs text-brand-600 dark:text-brand-300 font-bold uppercase tracking-wide">External Link</p>
-                      </div>
-                      <a href={pdf.link} target="_blank" rel="noopener noreferrer" className="text-sm text-gold-600 hover:text-gold-700 font-medium underline break-all">
-                        {pdf.link}
-                      </a>
-                    </div>
-                  )}
-
-                  {/* File Info */}
-                  {pdf.createdAt && (
-                    <div className="pt-3 border-t border-brand-200 dark:border-brand-700">
-                      <div className="flex items-center justify-between text-xs text-brand-500 dark:text-brand-400">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1.5">
-                            <File className="w-3.5 h-3.5 text-brand-500" />
-                            <span className="font-medium uppercase">{fileName.split('.').pop()}</span>
+                  {/* Compact metadata grid — only show populated fields */}
+                  {(() => {
+                    const meta: { label: string; value: string }[] = [];
+                    if (hasData(pdf.case_no)) meta.push({ label: 'Case No.', value: pdf.case_no! });
+                    if (hasData(pdf.diary_no)) meta.push({ label: 'Diary No.', value: pdf.diary_no! });
+                    if (hasData(pdf.bench)) meta.push({ label: 'Bench', value: pdf.bench! });
+                    if (hasData(pdf.judgement_by)) meta.push({ label: 'Judgement By', value: pdf.judgement_by! });
+                    if (hasData(pdf.pet_adv)) meta.push({ label: 'Pet. Advocate', value: pdf.pet_adv! });
+                    if (hasData(pdf.res_adv)) meta.push({ label: 'Res. Advocate', value: pdf.res_adv! });
+                    if (pdf.judgment_dates) meta.push({ label: 'Judgment Date', value: new Date(pdf.judgment_dates).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) });
+                    if (!meta.length) return null;
+                    return (
+                      <div className="grid grid-cols-1 gap-2">
+                        {meta.map(({ label, value }) => (
+                          <div key={label} className="flex items-start gap-2">
+                            <span className="text-[10px] font-bold text-brand-400 dark:text-brand-500 uppercase tracking-wider whitespace-nowrap mt-0.5 w-24 flex-shrink-0">{label}</span>
+                            <span className="text-xs text-brand-800 dark:text-brand-200 leading-snug">{value}</span>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-brand-500" />
-                          <span className="font-medium">
-                            {new Date(pdf.createdAt).toLocaleDateString('en-IN', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        </div>
+                        ))}
                       </div>
-                    </div>
+                    );
+                  })()}
+
+                  {/* External link */}
+                  {hasData(pdf.link) && (
+                    <a href={pdf.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-gold-600 hover:text-gold-700 font-medium underline-offset-2 underline truncate">
+                      <FileText className="w-3 h-3 flex-shrink-0" />
+                      External source
+                    </a>
                   )}
+
+                  {/* Footer meta */}
+                  <div className="mt-auto pt-3 border-t border-brand-100 dark:border-brand-700/60 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-500">
+                    <span className="uppercase font-semibold">{fileName.split('.').pop()}</span>
+                    {pdf.createdAt && (
+                      <span>{new Date(pdf.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
