@@ -197,15 +197,6 @@ export default function MCQQuiz() {
     }
   };
 
-  const skipCurrent = () => {
-    const s = [...skipped];
-    s[currentQuestion] = true;
-    setSkipped(s);
-    if (selectedQuiz && currentQuestion < selectedQuiz.questions.length - 1) {
-      setCurrentQuestion(q => q + 1);
-    }
-  };
-
   const handleNext = () => {
     if (userAnswers[currentQuestion] === null) {
       const s = [...skipped];
@@ -743,7 +734,7 @@ export default function MCQQuiz() {
                         <p className="text-[11px] font-semibold text-brand-400 dark:text-brand-500 uppercase tracking-wide mb-2">
                           Question {currentQuestion + 1} of {totalQ}
                         </p>
-                        <p className="text-base sm:text-lg font-semibold text-brand-900 dark:text-brand-100 leading-relaxed">
+                        <p className="text-base sm:text-lg font-semibold text-brand-900 dark:text-brand-100 leading-relaxed whitespace-pre-wrap">
                           {currentQ.text}
                         </p>
                       </div>
@@ -1117,7 +1108,7 @@ export default function MCQQuiz() {
 
                     {/* Question text */}
                     <div className="px-4 pt-4 pb-3">
-                      <p className="text-sm lg:text-base font-semibold text-brand-900 dark:text-brand-100 leading-relaxed">
+                      <p className="text-sm lg:text-base font-semibold text-brand-900 dark:text-brand-100 leading-relaxed whitespace-pre-wrap">
                         {detail.question}
                       </p>
                     </div>
