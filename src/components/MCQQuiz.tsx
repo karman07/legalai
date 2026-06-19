@@ -197,6 +197,15 @@ export default function MCQQuiz() {
     }
   };
 
+  const skipCurrent = () => {
+    const s = [...skipped];
+    s[currentQuestion] = true;
+    setSkipped(s);
+    if (selectedQuiz && currentQuestion < selectedQuiz.questions.length - 1) {
+      setCurrentQuestion(q => q + 1);
+    }
+  };
+
   const handleNext = () => {
     if (userAnswers[currentQuestion] === null) {
       const s = [...skipped];
@@ -804,6 +813,15 @@ export default function MCQQuiz() {
 
                   {!isLast && (
                     <button
+                      onClick={skipCurrent}
+                      className="flex items-center gap-2 px-4 py-2.5 border-2 border-amber-300 dark:border-amber-700 rounded-xl text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition"
+                    >
+                      <FastForward className="w-4 h-4" /> Skip
+                    </button>
+                  )}
+
+                  {!isLast && (
+                    <button
                       onClick={handleNext}
                       className="flex items-center gap-2 px-4 py-2.5 border-2 border-brand-200 dark:border-brand-700 rounded-xl text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-800 transition"
                     >
@@ -918,6 +936,15 @@ export default function MCQQuiz() {
               >
                 <Flag className="w-4 h-4" />
               </button>
+
+              {!isLast && (
+                <button
+                  onClick={skipCurrent}
+                  className="p-2.5 rounded-xl border-2 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 transition active:scale-95"
+                >
+                  <FastForward className="w-4 h-4" />
+                </button>
+              )}
 
               {!isLast && (
                 <button
