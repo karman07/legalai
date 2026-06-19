@@ -190,11 +190,9 @@ export default function MCQQuiz() {
     const a = [...userAnswers];
     a[currentQuestion] = idx;
     setUserAnswers(a);
-    if (skipped[currentQuestion]) {
-      const s = [...skipped];
-      s[currentQuestion] = false;
-      setSkipped(s);
-    }
+    const s = [...skipped];
+    s[currentQuestion] = false;
+    setSkipped(s);
   };
 
   const skipCurrent = () => {
