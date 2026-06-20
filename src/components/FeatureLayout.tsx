@@ -5,6 +5,7 @@ import {
   Scale, BookOpen, MessageSquare, FileText, Volume2, LogOut,
   GraduationCap, BookMarked, LayoutDashboard,
   Menu, ChevronRight, FolderKanban, PanelLeftClose, PanelLeftOpen,
+  Grid3X3,
 } from 'lucide-react';
 
 type FeatureLayoutProps = {
@@ -249,10 +250,47 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
           {children}
         </main>
       </div>
+
+      {/* ── Mobile Bottom Navigation ─────────────────────── */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-brand-900/95 backdrop-blur-md border-t border-brand-200 dark:border-brand-800 shadow-[0_-4px_24px_rgba(0,0,0,0.10)]">
+        <div className="flex items-stretch h-16">
+          {([
+            { path: '/dashboard', label: 'Home',    Icon: LayoutDashboard },
+            { path: '/mcq',       label: 'MCQ',     Icon: BookOpen        },
+            { path: '/chatbot',   label: 'AI Chat', Icon: MessageSquare   },
+            { path: '/audio',     label: 'Bare Act', Icon: Volume2        },
+          ] as const).map(({ path, label, Icon }) => {
+            const isActive = location.pathname === path;
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
+                  isActive ? 'text-gold-600 dark:text-gold-400' : 'text-brand-400 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-300'
+                }`}
+              >
+                <div className={`p-1.5 rounded-xl transition-colors ${isActive ? 'bg-gold-50 dark:bg-gold-500/10' : ''}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] font-semibold">{label}</span>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-brand-400 dark:text-brand-500 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+          >
+            <div className="p-1.5 rounded-xl">
+              <Grid3X3 className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-semibold">More</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

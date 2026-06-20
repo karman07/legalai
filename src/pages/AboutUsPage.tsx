@@ -27,7 +27,7 @@ export default function AboutUsPage() {
                 Democratizing <span className="text-gold-400">Legal Education</span> for India
               </h1>
               <p className="text-lg sm:text-xl text-brand-300 leading-relaxed max-w-3xl mx-auto">
-                LegalPadhai.ai is an AI-first legal education platform built for India's vast and underserved community of law aspirants — students preparing for judiciary services, UGC NET Law, APO, and competitive legal examinations.
+                LegalPadhai.ai is an AI-powered legal education platform built for India's growing community of law aspirants — students preparing for judiciary services, UGC NET Law, APO, and competitive legal examinations.
               </p>
             </motion.div>
           </div>
@@ -115,10 +115,10 @@ export default function AboutUsPage() {
             className="grid grid-cols-2 md:grid-cols-4 gap-px bg-brand-200 rounded-2xl overflow-hidden border border-brand-200 shadow-sm"
           >
             {[
-              { icon: Users, value: '10,000+', label: 'Active Students' },
-              { icon: BookOpen, value: '50,000+', label: 'MCQ Questions' },
-              { icon: Scale, value: '25,000+', label: 'Case Laws' },
-              { icon: Award, value: '95%', label: 'Success Rate' },
+              { icon: BookOpen,  value: '8+',   label: 'Study Tools'       },
+              { icon: Scale,     value: '10+',  label: 'Law Subjects'       },
+              { icon: Zap,       value: '24/7', label: 'AI Assistance'      },
+              { icon: Award,     value: '100%', label: 'Exam Focused'       },
             ].map((stat, i) => {
               const Icon = stat.icon;
               return (
@@ -193,7 +193,7 @@ export default function AboutUsPage() {
                   Dronvir sits at the rare intersection of doctrinal legal scholarship and applied artificial intelligence engineering. With a B.A. LL.B. (magna cum laude) and an LL.M. concentrated on bail and remand jurisprudence, his academic breadth informs both the substance and the pedagogy embedded in the platform.
                 </p>
                 <p>
-                  On the technical side, Dronvir directs the engineering and product architecture. He designs and operationalises the platform's core AI systems, including RAG pipelines trained on 200,000+ pages of Indian legal material, structural digitisation of Bare Acts via OCR, and the neural text-to-speech infrastructure.
+                  On the technical side, Dronvir directs the engineering and product architecture. He designs and operationalises the platform's core AI systems, including RAG pipelines trained on extensive Indian legal material, structural digitisation of Bare Acts via OCR, and the neural text-to-speech infrastructure.
                 </p>
                 <p>
                   His ambition is to translate his own experience of preparing for law in non-metropolitan India into a product that dissolves the geographic and economic barriers separating aspirants from world-class preparation.
@@ -211,7 +211,7 @@ export default function AboutUsPage() {
           >
             <h3 className="text-2xl font-bold text-white mb-4">Complementary Strengths</h3>
             <p className="text-brand-300 leading-relaxed max-w-4xl mx-auto">
-              The founding team unites deep doctrinal scholarship and product engineering on one side with elite legal-academic credentials and policy-grade strategic acumen on the other. This pairing — a scholar-engineer extending his expertise into AI infrastructure, and an NLSIU-trained consultant directing institutional reach — reflects the dual capabilities required to build a credible AI-first legal education platform for India's expansive and historically underserved aspirant base.
+              The founding team unites deep doctrinal scholarship and product engineering on one side with elite legal-academic credentials and policy-grade strategic acumen on the other. This pairing — a scholar-engineer extending his expertise into AI infrastructure, and an NLSIU-trained consultant directing institutional reach — reflects the dual capabilities required to build a credible AI-powered legal education platform purpose-built for India's law aspirants.
             </p>
           </motion.div>
         </section>
@@ -352,7 +352,7 @@ export default function AboutUsPage() {
               </div>
               <p className="text-brand-400 text-sm leading-relaxed mb-6 max-w-md">
                 A product by <strong className="text-white">LegaPadhai AI</strong>.<br />
-                India's first AI-empowered law education platform. We are dedicated to helping law students crack judiciary exams with cutting-edge technology and expert-led curriculum.
+                An AI-powered law education platform dedicated to helping students crack judiciary exams with cutting-edge technology and expert-led curriculum.
               </p>
               <div className="flex items-center gap-4">
                 <a href="https://www.linkedin.com/company/legapadhai-ai/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-brand-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">

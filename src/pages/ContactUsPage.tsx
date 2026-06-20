@@ -220,7 +220,7 @@ export default function ContactUsPage() {
               </div>
               <p className="text-brand-400 text-sm leading-relaxed mb-6 max-w-md">
                 A product by <strong className="text-white">LegaPadhai AI</strong>.<br />
-                India's first AI-empowered law education platform. We are dedicated to helping law students crack judiciary exams with cutting-edge technology and expert-led curriculum.
+                An AI-powered law education platform dedicated to helping students crack judiciary exams with cutting-edge technology and expert-led curriculum.
               </p>
               <div className="flex items-center gap-4">
                 <a href="https://www.linkedin.com/company/legapadhai-ai/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-brand-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">

@@ -181,9 +181,9 @@ export default function Auth() {
           </div>
 
           <h1 className="text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4 tracking-tight">
-            India's First<br />
-            <span className="text-gold-400">AI-Powered</span><br />
-            Law Education
+            AI-Powered<br />
+            <span className="text-gold-400">Law Education</span><br />
+            for India
           </h1>
           <p className="text-brand-300 text-sm leading-relaxed mb-10 max-w-sm">
             Master Indian law with cutting-edge AI. Access case laws, intelligent assistants,

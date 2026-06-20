@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   Scale, BookOpen, HelpCircle, BookMarked, MessageSquare, Brain, Volume2,
   FileText, ArrowRight, Users, Award, LogOut, GraduationCap, Shield,
-  Sparkles, Star, Library, ChevronDown, Play, Pause, VolumeX, Volume2 as VolumeOn
+  Sparkles, Star, Library, ChevronDown, Play, Pause, VolumeX, Volume2 as VolumeOn,
+  UserPlus, TrendingUp, CheckCircle2, Zap,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
@@ -135,7 +136,7 @@ export default function LandingPage() {
   const features = [
     {
       icon: MessageSquare, title: 'AI-Powered Study Assistant',
-      description: 'A 24/7 intelligent tutor custom-trained on over 200,000 pages of Indian legal material to clarify doctrine and resolve doubts.',
+      description: 'A 24/7 intelligent tutor trained on comprehensive Indian legal material — Bare Acts, case law, and expert commentary — to clarify doctrine and resolve doubts.',
       path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600',
     },
     {
@@ -145,7 +146,7 @@ export default function LandingPage() {
     },
     {
       icon: Scale, title: 'Case Law Library',
-      description: 'A searchable repository of over 25,000 Indian judgments with integrated text-to-speech for audio consumption.',
+      description: 'A searchable repository of Indian Supreme Court and High Court judgments with integrated text-to-speech for audio consumption.',
       path: '/cases', bg: 'bg-blue-50', iconColor: 'text-blue-600',
     },
     {
@@ -160,7 +161,7 @@ export default function LandingPage() {
     },
     {
       icon: BookOpen, title: 'Adaptive MCQ Practice',
-      description: 'Over 50,000 multiple-choice questions with adaptive difficulty aligned with judicial and competitive examination patterns.',
+      description: 'Curated multiple-choice questions with adaptive difficulty, aligned with judicial and competitive examination patterns across all major law subjects.',
       path: '/mcq', bg: 'bg-teal-50', iconColor: 'text-teal-600',
     },
     {
@@ -171,10 +172,10 @@ export default function LandingPage() {
   ];
 
   const stats = [
-    { icon: Users,    label: 'Active Students',    value: '10,000+' },
-    { icon: BookOpen, label: 'Practice Questions', value: '50,000+' },
-    { icon: Scale,    label: 'Case Laws',          value: '25,000+' },
-    { icon: Award,    label: 'Success Rate',       value: '95%'     },
+    { icon: BookOpen,      label: 'Study Tools',        value: '8+'   },
+    { icon: Scale,         label: 'Law Subjects',        value: '10+'  },
+    { icon: MessageSquare, label: 'AI-Powered Support',  value: '24/7' },
+    { icon: GraduationCap, label: 'Exam-Focused',        value: '100%' },
   ];
 
   const benefits = [
@@ -222,25 +223,37 @@ export default function LandingPage() {
             {/* Centre nav links */}
             <div className="hidden lg:flex items-center gap-1">
               {[
-                { label: 'Home', to: '/' },
-                { label: 'About Us', to: '/about' },
-                { label: 'Blogs', to: '/blogs' },
-                { label: 'Contact Us', to: '/contact' },
-                { label: 'Privacy', to: '/privacy-policy' },
-                { label: 'Terms', to: '/terms-and-conditions' },
-                { label: 'Cookies', to: '/cookie-policy' },
+                { label: 'Home',       to: '/'       },
+                { label: 'About',      to: '/about'  },
+                { label: 'Features',   to: '#features' },
+                { label: 'Blogs',      to: '/blogs'  },
+                { label: 'Contact',    to: '/contact' },
               ].map(({ label, to }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`relative px-3.5 py-2 text-[13.5px] font-semibold rounded-lg transition-all duration-150 ${
-                    isScrolled 
-                      ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' 
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {label}
-                </Link>
+                to.startsWith('#') ? (
+                  <a
+                    key={to}
+                    href={to}
+                    className={`relative px-3.5 py-2 text-[13.5px] font-semibold rounded-lg transition-all duration-150 ${
+                      isScrolled
+                        ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <Link
+                    key={to}
+                    to={to}
+                    className={`relative px-3.5 py-2 text-[13.5px] font-semibold rounded-lg transition-all duration-150 ${
+                      isScrolled
+                        ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                )
               ))}
             </div>
 
@@ -315,7 +328,7 @@ export default function LandingPage() {
           >
             <Star className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />
             <span className="text-xs font-bold text-gold-300 tracking-widest uppercase">
-              India's #1 AI Law Education Platform
+              AI-Powered Legal Education for India
             </span>
           </motion.div>
 
@@ -382,6 +395,24 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Trust Bar ──────────────────────────────────────── */}
+      <section className="py-5 bg-white border-b border-brand-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+          {[
+            { icon: <GraduationCap className="w-4 h-4 text-brand-400" />, label: 'Expert-Curated Content'    },
+            { icon: <Scale className="w-4 h-4 text-brand-400" />,         label: 'Judiciary Exam Focused'    },
+            { icon: <Zap className="w-4 h-4 text-brand-400" />,           label: 'Available 24 × 7'          },
+            { icon: <BookOpen className="w-4 h-4 text-brand-400" />,      label: '10+ Law Subjects Covered'  },
+            { icon: <MessageSquare className="w-4 h-4 text-brand-400" />, label: 'AI Study Assistance'       },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-2 text-sm font-medium text-brand-700">
+              {item.icon}
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── About Us Snippet ───────────────────────────────────────── */}
       <section className="py-24 bg-brand-50 border-b border-brand-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -397,10 +428,10 @@ export default function LandingPage() {
                 Democratizing <span className="text-gold-600">Legal Education</span> for India
               </h2>
               <p className="text-brand-600 text-lg leading-relaxed mb-6">
-                LegalPadhai.ai is an AI-first legal education platform built for India's vast and underserved community of law aspirants — students preparing for judiciary services, UGC NET Law, APO, and competitive legal examinations.
+                LegalPadhai.ai is an AI-powered legal education platform built for India's growing community of law aspirants — students preparing for judiciary services, UGC NET Law, APO, and competitive legal examinations.
               </p>
               <p className="text-brand-600 text-lg leading-relaxed mb-8">
-                We combine custom-trained AI study assistants, neural-voice audiobooks of Bare Acts, and a 25,000+ case law repository into a single, affordable, accessible platform.
+                We combine AI study assistants, neural-voice audiobooks of Bare Acts, and an extensive case law repository into a single, affordable, accessible platform.
               </p>
               <Link
                 to="/about"
@@ -496,8 +527,71 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── How It Works ───────────────────────────────────── */}
+      <section className="py-24 bg-brand-50 border-t border-brand-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="section-badge">Simple Setup</span>
+            <h2 className="section-heading mt-3">Start Learning in 3 Steps</h2>
+            <p className="section-subtext">No steep learning curve. You'll be studying in under a minute.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Connector line */}
+            <div className="hidden md:block absolute top-10 left-[calc(16.6%+2rem)] right-[calc(16.6%+2rem)] h-px bg-gradient-to-r from-transparent via-brand-200 to-transparent pointer-events-none" />
+
+            {[
+              {
+                step: '01', Icon: UserPlus,
+                title: 'Create Free Account',
+                desc: 'Sign up in 30 seconds with email or Google. No credit card needed, ever.',
+                iconBg: 'bg-blue-50', iconColor: 'text-blue-600',
+              },
+              {
+                step: '02', Icon: BookOpen,
+                title: 'Choose Your Subject',
+                desc: 'Pick from Constitution, BNS, IPC, CPC and more. Start exactly where you need help.',
+                iconBg: 'bg-amber-50', iconColor: 'text-amber-600',
+              },
+              {
+                step: '03', Icon: TrendingUp,
+                title: 'Learn & Track Progress',
+                desc: 'Practice MCQs, listen to Bare Acts, get AI guidance, and watch your rank improve.',
+                iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600',
+              },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                className="relative z-10 flex flex-col items-center text-center"
+              >
+                <div className="relative mb-6">
+                  <div className={`w-20 h-20 rounded-2xl ${s.iconBg} flex items-center justify-center shadow-sm border border-white`}>
+                    <s.Icon className={`w-8 h-8 ${s.iconColor}`} />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-7 h-7 rounded-lg bg-brand-900 text-white text-xs font-extrabold flex items-center justify-center shadow">
+                    {s.step}
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold text-brand-900 mb-2">{s.title}</h3>
+                <p className="text-sm text-brand-500 leading-relaxed max-w-xs">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Benefits ───────────────────────────────────────── */}
-      <section className="py-24 bg-brand-50">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -643,19 +737,36 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
           className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
         >
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-gold-500/15 border border-gold-500/25 rounded-full mb-6">
+            <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+            <span className="text-xs font-bold text-gold-300 tracking-wide uppercase">Trusted by Law Students Across India</span>
+          </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
             Ready to Excel in Law?
           </h2>
           <p className="text-lg text-brand-300 mb-8">
-            Join 10,000+ law students already using LegalPadhai.ai to prepare smarter.
+            Start free. No credit card required. Join thousands already cracking judiciary exams.
           </p>
-          <Link
-            to={user ? '/dashboard' : '/auth'}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-glow-gold active:scale-[0.98] text-base"
-          >
-            <span>Get Started Free</span>
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+            <Link
+              to={user ? '/dashboard' : '/auth'}
+              className="flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-glow-gold active:scale-[0.98] text-base"
+            >
+              <span>Start Learning Free</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <a
+              href="#features"
+              className="flex items-center gap-2 px-8 py-4 bg-white/8 hover:bg-white/14 text-white font-semibold rounded-xl border border-white/20 transition-all text-base"
+            >
+              See All Features
+            </a>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-brand-400">
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Free to start</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> No credit card needed</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Cancel anytime</span>
+          </div>
         </motion.div>
       </section>
 
@@ -676,7 +787,7 @@ export default function LandingPage() {
               </div>
               <p className="text-brand-400 text-sm leading-relaxed mb-6 max-w-md">
                 A product by <strong className="text-white">LegaPadhai AI</strong>.<br />
-                India's first AI-empowered law education platform. We are dedicated to helping law students crack judiciary exams with cutting-edge technology and expert-led curriculum.
+                An AI-powered law education platform dedicated to helping students crack judiciary exams with cutting-edge technology and expert-led curriculum.
               </p>
               <div className="flex items-center gap-4">
                 <a href="https://www.linkedin.com/company/legapadhai-ai/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-brand-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   Scale, BookOpen, MessageSquare, FileText, Volume2,
   BookMarked, ArrowRight, LayoutGrid, FolderKanban,
+  Zap, Target, TrendingUp, ChevronRight,
 } from 'lucide-react';
 import notesService from '../services/notesService';
 import { DashboardMetrics, getDashboardMetrics, setDashboardMetric, trackDailyActivity } from '../lib/dashboardMetrics';
@@ -92,46 +93,81 @@ export default function DashboardPage() {
 
   return (
     <FeatureLayout>
-      {/* Welcome header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xl">👋</span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-brand-900 dark:text-brand-100 tracking-tight">
-            {greeting}, {user?.name?.split(' ')[0] || 'there'}!
-          </h1>
+
+      {/* ── Welcome Banner ──────────────────────────────── */}
+      <div className="relative bg-gradient-to-br from-brand-900 via-brand-800 to-brand-900 rounded-2xl p-6 sm:p-8 mb-6 overflow-hidden">
+        <div className="absolute top-0 right-0 w-56 h-56 bg-gold-500/15 rounded-full blur-3xl pointer-events-none -translate-y-1/3 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none translate-y-1/3 -translate-x-1/4" />
+
+        <div className="relative z-10 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-brand-400 text-sm font-medium mb-1">{greeting}</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+              {user?.name?.split(' ')[0] || 'there'}!
+            </h1>
+            <p className="text-brand-400 text-sm leading-relaxed max-w-sm">
+              {stats.studyStreak > 0
+                ? `You're on a ${stats.studyStreak}-day streak. Keep going!`
+                : 'Ready to study? Pick a tool below and get started.'}
+            </p>
+          </div>
+
+          {/* Streak pill */}
+          <div className="flex-shrink-0 flex flex-col items-center gap-1 bg-gold-500/15 border border-gold-500/25 rounded-2xl px-4 py-3">
+            <Zap className="w-5 h-5 text-gold-400" />
+            <span className="text-xl font-extrabold text-white leading-none">{stats.studyStreak}</span>
+            <span className="text-[10px] font-semibold text-gold-300 uppercase tracking-wider">Day{stats.studyStreak !== 1 ? 's' : ''}</span>
+          </div>
         </div>
-        <p className="text-brand-500 dark:text-brand-300 text-sm">
-          Choose a tool below to continue your legal education journey.
-        </p>
       </div>
 
-      {/* Quick stats strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      {/* ── Quick Stats ─────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: 'Questions Practiced', value: stats.questionsPracticed.toLocaleString('en-IN'), icon: BookOpen },
-          { label: 'Notes Created', value: stats.notesCreated.toLocaleString('en-IN'), icon: BookMarked },
-          { label: 'Cases Viewed', value: stats.casesViewed.toLocaleString('en-IN'), icon: Scale },
-          { label: 'Study Streak', value: `${stats.studyStreak} day${stats.studyStreak === 1 ? '' : 's'}`, icon: LayoutGrid },
-        ].map((s, i) => {
-          const Icon = s.icon;
-          return (
-            <div key={i} className="bg-white dark:bg-brand-800 rounded-xl border border-brand-200 dark:border-brand-700 p-4 shadow-card">
-              <Icon className="w-4 h-4 text-brand-400 mb-2" />
-              <div className="text-xl font-bold text-brand-900">{s.value}</div>
-              <div className="text-xs text-brand-400 mt-0.5">{s.label}</div>
+          {
+            label: 'Questions', value: stats.questionsPracticed.toLocaleString('en-IN'),
+            Icon: BookOpen, iconBg: 'bg-blue-50 dark:bg-blue-500/10', iconColor: 'text-blue-600 dark:text-blue-400',
+            border: 'border-blue-100 dark:border-blue-500/20',
+          },
+          {
+            label: 'Notes', value: stats.notesCreated.toLocaleString('en-IN'),
+            Icon: BookMarked, iconBg: 'bg-emerald-50 dark:bg-emerald-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400',
+            border: 'border-emerald-100 dark:border-emerald-500/20',
+          },
+          {
+            label: 'Cases Viewed', value: stats.casesViewed.toLocaleString('en-IN'),
+            Icon: Scale, iconBg: 'bg-gold-50 dark:bg-gold-500/10', iconColor: 'text-gold-600 dark:text-gold-400',
+            border: 'border-gold-100 dark:border-gold-500/20',
+          },
+          {
+            label: 'Day Streak', value: String(stats.studyStreak),
+            Icon: Zap, iconBg: 'bg-violet-50 dark:bg-violet-500/10', iconColor: 'text-violet-600 dark:text-violet-400',
+            border: 'border-violet-100 dark:border-violet-500/20',
+          },
+        ].map((s, i) => (
+          <div key={i} className={`bg-white dark:bg-brand-800 rounded-2xl border ${s.border} p-4 shadow-sm`}>
+            <div className={`w-9 h-9 ${s.iconBg} rounded-xl flex items-center justify-center mb-3`}>
+              <s.Icon className={`w-4.5 h-4.5 ${s.iconColor}`} />
             </div>
-          );
-        })}
+            <div className="text-2xl font-extrabold text-brand-900 dark:text-brand-100 leading-none">{s.value}</div>
+            <div className="text-xs text-brand-400 dark:text-brand-500 mt-1 font-medium">{s.label}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Progress Analytics */}
-      <div className="mb-8">
+      {/* ── Progress Analytics ──────────────────────────── */}
+      <div className="mb-6">
         <ProgressCharts />
       </div>
 
-      {/* Feature grid */}
+      {/* ── Learning Tools ──────────────────────────────── */}
       <div className="mb-4">
-        <h2 className="text-sm font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider mb-4">Learning Tools</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-bold text-brand-900 dark:text-brand-100">Learning Tools</h2>
+            <p className="text-xs text-brand-400 mt-0.5">Everything you need to prepare for judiciary exams</p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {features.map((f, idx) => {
             const Icon = f.icon;
@@ -139,18 +175,20 @@ export default function DashboardPage() {
               <button
                 key={idx}
                 onClick={() => navigate(f.path)}
-                className={`group bg-white border border-brand-200 ${f.border} rounded-2xl p-5 text-left hover:shadow-elevated transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98]`}
+                className={`group bg-white dark:bg-brand-800 border border-brand-200 dark:border-brand-700 ${f.border} rounded-2xl p-5 text-left hover:shadow-elevated transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98]`}
               >
-                <div className={`inline-flex items-center justify-center w-10 h-10 ${f.bg} rounded-xl mb-3`}>
+                <div className={`inline-flex items-center justify-center w-11 h-11 ${f.bg} rounded-xl mb-4`}>
                   <Icon className={`w-5 h-5 ${f.iconColor}`} />
                 </div>
-                <h3 className={`text-sm font-bold text-brand-900 mb-1.5 group-hover:${f.iconColor} transition-colors`}>
+                <h3 className="text-sm font-bold text-brand-900 dark:text-brand-100 mb-1.5">
                   {f.title}
                 </h3>
-                <p className="text-xs text-brand-500 leading-relaxed mb-3">{f.description}</p>
-                <div className={`flex items-center gap-1 text-xs font-semibold ${f.iconColor} group-hover:gap-2 transition-all`}>
-                  <span>Open</span>
-                  <ArrowRight className="w-3 h-3" />
+                <p className="text-xs text-brand-500 dark:text-brand-400 leading-relaxed mb-4">{f.description}</p>
+                <div className={`flex items-center justify-between`}>
+                  <span className={`text-xs font-semibold ${f.iconColor}`}>Open</span>
+                  <div className={`w-6 h-6 rounded-lg ${f.bg} flex items-center justify-center group-hover:translate-x-0.5 transition-transform`}>
+                    <ChevronRight className={`w-3.5 h-3.5 ${f.iconColor}`} />
+                  </div>
                 </div>
               </button>
             );

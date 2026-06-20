@@ -78,7 +78,7 @@ export default function Dashboard() {
                   LegalPadhai.ai
                 </span>
                 <p className="text-xs text-slate-500 hidden sm:block">
-                  India's First AI Empowered Law Education Platform
+                  AI-Powered Law Education Platform
                 </p>
               </div>
             </div>
