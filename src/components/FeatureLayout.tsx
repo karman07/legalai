@@ -68,7 +68,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
     // { icon: HelpCircle,      title: 'Ask a Doubt',    path: '/doubts'    },  // HIDDEN
     {
       icon: MessageSquare,
-      title: 'Legal AI Assistant',
+      title: 'Legal ai',
       path: '/chatbot',
       accent: 'text-cyan-600 dark:text-cyan-400',
       activeClass: 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30',
