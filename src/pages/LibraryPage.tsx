@@ -188,7 +188,7 @@ export default function LibraryPage() {
                         )}
                       </div>
                       <p className="text-sm text-slate-600 mb-3">
-                        {chat.chatbot_type === 'legal_expert' ? 'Legal Expert' : 'Legal ai'} • {' '}
+                        {chat.chatbot_type === 'legal_expert' ? 'Legal Expert' : 'Legal AI'} • {' '}
                         {chat.conversation_data?.length || 0} messages
                       </p>
                       {chat.tags && chat.tags.length > 0 && (

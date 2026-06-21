@@ -72,7 +72,7 @@ export default function DashboardPage() {
       path: '/notes', bg: 'bg-emerald-50', iconColor: 'text-emerald-600', border: 'hover:border-emerald-200',
     },
     {
-      icon: MessageSquare, title: 'Legal ai',
+      icon: MessageSquare, title: 'Legal AI',
       description: 'AI chatbot for general legal study and exam prep help',
       path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600', border: 'hover:border-cyan-200',
     },
