@@ -692,9 +692,30 @@ export default function AudioPlayer() {
   }, [audioUrl]);
 
   const handleSkip = (seconds: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime += seconds;
+    if (!audioRef.current) return;
+    const newTime = audioRef.current.currentTime + seconds;
+    if (newTime < 0 && playerContentMode === 'combined' && queueIndex > 0) {
+      // Seek backward into the previous track
+      const prevIndex = queueIndex - 1;
+      const prevDuration = trackDurations[prevIndex] ?? 0;
+      const newCompletedDuration = completedDuration - (trackDurations[queueIndex] ?? 0) - prevDuration;
+      setCompletedDuration(Math.max(0, newCompletedDuration));
+      setQueueIndex(prevIndex);
+      setAudioUrl(queueUrls[prevIndex]);
+      // After load, seek to near the end of the previous track
+      const seekTo = Math.max(0, prevDuration + newTime);
+      const onLoaded = () => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = seekTo;
+          audioRef.current.removeEventListener('canplay', onLoaded);
+        }
+      };
+      audioRef.current.addEventListener('canplay', onLoaded);
+      return;
     }
+    audioRef.current.currentTime = Math.max(0, newTime);
+    // Force UI update in case timeupdate doesn't fire (e.g. while paused)
+    setCurrentTime(audioRef.current.currentTime);
   };
 
   const handleTimeUpdate = () => {
@@ -941,6 +962,7 @@ export default function AudioPlayer() {
         ref={audioRef}
         src={audioUrl}
         onTimeUpdate={handleTimeUpdate}
+        onSeeked={handleTimeUpdate}
         onEnded={() => {
           void progressService.track('audio_listened', 1);
           if (playerContentMode === 'combined' && queueUrls.length > 0 && queueIndex < queueUrls.length - 1) {
