@@ -76,6 +76,7 @@ export default function AudioPlayer() {
   const [playerBackTarget, setPlayerBackTarget] = useState<'sections' | 'subsections'>('subsections');
   const isLoadingAllRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const playbackSpeedRef = useRef<PlaybackSpeed>(1);
 
   // Text-selection AI chat state
   const [selectionPopup, setSelectionPopup] = useState<{ x: number; y: number } | null>(null);
@@ -684,6 +685,7 @@ export default function AudioPlayer() {
   useEffect(() => {
     if (!audioRef.current || !audioUrl) return;
     audioRef.current.load();
+    audioRef.current.playbackRate = playbackSpeedRef.current;
     if (isPlaying) {
       audioRef.current.play().catch(() => setIsPlaying(false));
     }
@@ -722,6 +724,7 @@ export default function AudioPlayer() {
   };
 
   const handleSpeedChange = (speed: PlaybackSpeed) => {
+    playbackSpeedRef.current = speed;
     setPlaybackSpeed(speed);
     setShowSettings(false);
   };
