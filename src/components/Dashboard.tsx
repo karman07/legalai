@@ -55,7 +55,7 @@ export default function Dashboard() {
     // { id: "doubts" as Tab, name: "Ask a Doubt", icon: HelpCircle, description: "Get help" },  // HIDDEN
     { id: "chatbot" as Tab, name: "Study Bot", icon: MessageSquare, description: "General help" },
     // { id: "expert" as Tab, name: "Legal Expert", icon: Brain, description: "Expert guidance" },  // HIDDEN
-    { id: "tts" as Tab, name: "Bare Act Reader", icon: Volume2, description: "Immersive reading" },
+    { id: "tts" as Tab, name: "Audiobooks", icon: Volume2, description: "Immersive reading" },
     { id: "answers" as Tab, name: "Answer Review", icon: FileText, description: "Submit answers" },
     // { id: "library" as Tab, name: "My Library", icon: LibraryIcon, description: "Saved content" },  // HIDDEN
   ];

@@ -1,4 +1,4 @@
-import { ArrowLeft, Search, ChevronRight, Headphones, Play, Layers, Loader2, CheckSquare, Square, X, Check } from 'lucide-react';
+import { ArrowLeft, Search, ChevronRight, Headphones, Play, Layers, Loader2, CheckSquare, Square, X, Check, Hash } from 'lucide-react';
 import { AudioLesson, AudioSectionSlim } from '../../services/api';
 import { useState } from 'react';
 
@@ -25,6 +25,8 @@ export default function SectionList({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedSections, setSelectedSections] = useState<Set<number>>(new Set());
+  const [rangeInput, setRangeInput] = useState('');
+  const [rangeError, setRangeError] = useState('');
 
   const filteredSections = sections.filter(section =>
     searchQuery === '' || section.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -61,56 +63,135 @@ export default function SectionList({
   const exitSelection = () => {
     setSelectionMode(false);
     setSelectedSections(new Set());
+    setRangeInput('');
+    setRangeError('');
+  };
+
+  const applyRange = () => {
+    if (!rangeInput.trim()) return;
+    const newSelected = new Set(selectedSections);
+    const maxIndex = (lesson?.totalSections ?? sections.length);
+    let hadError = false;
+
+    for (const part of rangeInput.split(',')) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      const rangeMatch = trimmed.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+      const singleMatch = trimmed.match(/^(\d+)$/);
+
+      if (rangeMatch) {
+        const start = parseInt(rangeMatch[1], 10);
+        const end = parseInt(rangeMatch[2], 10);
+        if (start < 1 || end > maxIndex || start > end) { hadError = true; continue; }
+        for (let i = start; i <= end; i++) {
+          const sec = sections.find(s => s._index === i - 1);
+          if (sec) newSelected.add(sec._index);
+        }
+      } else if (singleMatch) {
+        const num = parseInt(singleMatch[1], 10);
+        if (num < 1 || num > maxIndex) { hadError = true; continue; }
+        const sec = sections.find(s => s._index === num - 1);
+        if (sec) newSelected.add(sec._index);
+      } else {
+        hadError = true;
+      }
+    }
+
+    setSelectedSections(newSelected);
+    setRangeError(hadError ? `Some numbers are out of range (1–${maxIndex}) or invalid.` : '');
+    if (!hadError) setRangeInput('');
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28">
-      {/* Sticky back header */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+      {/* Sticky header */}
+      <div className={`sticky top-0 z-10 transition-colors duration-200 ${selectionMode ? 'bg-slate-900' : 'bg-white border-b border-slate-100'}`}>
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-gold-600 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Lessons</span>
-          </button>
-
-          {onPlaySelected && (
-            selectionMode ? (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleSelectAll}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all border ${
-                    allSelected
-                      ? 'text-amber-700 bg-amber-50 border-amber-300 hover:bg-amber-100'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
-                  }`}
-                >
-                  {allSelected
-                    ? <CheckSquare className="w-3.5 h-3.5" />
-                    : <Square className="w-3.5 h-3.5" />}
-                  All ({filteredSections.length})
-                </button>
+          {selectionMode ? (
+            /* Selection mode header */
+            <>
+              <div className="flex items-center gap-3">
                 <button
                   onClick={exitSelection}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all border border-slate-200"
+                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-3.5 h-3.5" />
-                  Done
+                  <X className="w-4 h-4 text-slate-300" />
                 </button>
+                <span className="text-sm font-semibold text-white">
+                  {selectedSections.size > 0
+                    ? `${selectedSections.size} selected`
+                    : 'Select sections'}
+                </span>
               </div>
-            ) : (
               <button
-                onClick={() => setSelectionMode(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all border border-slate-200"
+                onClick={toggleSelectAll}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  allSelected
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                }`}
               >
-                <CheckSquare className="w-3.5 h-3.5" />
-                Select
+                {allSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                {allSelected ? 'Deselect all' : `Select all (${filteredSections.length})`}
               </button>
-            )
+            </>
+          ) : (
+            /* Normal header */
+            <>
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-gold-600 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Lessons</span>
+              </button>
+              {onPlaySelected && (
+                <button
+                  onClick={() => setSelectionMode(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all border border-slate-200"
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  Select
+                </button>
+              )}
+            </>
           )}
         </div>
+
+        {/* Range input bar — inside sticky header, only in selection mode */}
+        {selectionMode && (
+          <div className="border-t border-white/10 bg-slate-800">
+            <div className="max-w-3xl mx-auto px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={rangeInput}
+                    onChange={e => { setRangeInput(e.target.value); setRangeError(''); }}
+                    onKeyDown={e => e.key === 'Enter' && applyRange()}
+                    placeholder="Jump to range: e.g. 1-50, 71-100, 120"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-white/10 border border-white/15 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 placeholder:text-slate-500 transition-all"
+                  />
+                </div>
+                <button
+                  onClick={applyRange}
+                  disabled={!rangeInput.trim()}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap shadow-sm"
+                >
+                  Apply
+                </button>
+              </div>
+              {rangeError ? (
+                <p className="text-[11px] text-red-400 mt-1.5 pl-1">{rangeError}</p>
+              ) : (
+                <p className="text-[11px] text-slate-500 mt-1.5 pl-1">
+                  Comma-separated ranges or numbers · results add to current selection
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
@@ -307,34 +388,34 @@ export default function SectionList({
         )}
       </div>
 
-      {/* Floating selection bar */}
+      {/* Floating play bar */}
       {selectionMode && selectedSections.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3.5 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-bold">{selectedSections.size}</span>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm">
+          <div className="flex items-center gap-3 px-4 py-3 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/60 backdrop-blur-sm">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-slate-400 leading-none mb-0.5">Ready to play</p>
+              <p className="text-sm font-bold text-white leading-tight truncate">
+                {selectedSections.size} {selectedSections.size === 1 ? 'section' : 'sections'} selected
+              </p>
             </div>
-            <span className="text-sm font-semibold whitespace-nowrap">
-              {selectedSections.size === 1 ? 'section selected' : 'sections selected'}
-            </span>
+            <button
+              onClick={() => setSelectedSections(new Set())}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+              title="Clear selection"
+            >
+              <X className="w-4 h-4 text-slate-400" />
+            </button>
+            <button
+              onClick={() => {
+                onPlaySelected?.(Array.from(selectedSections));
+                exitSelection();
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-white rounded-xl text-sm font-bold transition-colors whitespace-nowrap shadow-lg flex-shrink-0"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              Play
+            </button>
           </div>
-          <div className="w-px h-5 bg-slate-700" />
-          <button
-            onClick={() => setSelectedSections(new Set())}
-            className="text-slate-400 hover:text-white text-xs font-medium transition-colors whitespace-nowrap"
-          >
-            Clear
-          </button>
-          <button
-            onClick={() => {
-              onPlaySelected?.(Array.from(selectedSections));
-              exitSelection();
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
-          >
-            <Play className="w-3.5 h-3.5 fill-white" />
-            Play Selected
-          </button>
         </div>
       )}
     </div>

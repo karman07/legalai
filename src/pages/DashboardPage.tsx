@@ -72,12 +72,12 @@ export default function DashboardPage() {
       path: '/notes', bg: 'bg-emerald-50', iconColor: 'text-emerald-600', border: 'hover:border-emerald-200',
     },
     {
-      icon: MessageSquare, title: 'Study Assistant',
+      icon: MessageSquare, title: 'Legal AI Assistant',
       description: 'AI chatbot for general legal study and exam prep help',
       path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600', border: 'hover:border-cyan-200',
     },
     {
-      icon: Volume2, title: 'Bare Act Reader',
+      icon: Volume2, title: 'Audiobooks',
       description: 'Read Indian laws with audio narration and simplified language',
       path: '/audio', bg: 'bg-gold-50', iconColor: 'text-gold-600', border: 'hover:border-gold-200',
     },

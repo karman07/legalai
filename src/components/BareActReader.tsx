@@ -284,7 +284,7 @@ export default function BareActReader() {
     return (
       <div>
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2"><div className="w-11 h-11 bg-brand-100 dark:bg-brand-900 rounded-xl flex items-center justify-center"><BookOpen className="w-5 h-5 text-brand-700 dark:text-gold-400" /></div><div><h2 className="text-2xl font-bold text-brand-900">Bare Act Reader</h2><p className="text-brand-500 text-sm mt-0.5">Listen to Indian laws in original and simplified language</p></div></div>
+          <div className="flex items-center gap-3 mb-2"><div className="w-11 h-11 bg-brand-100 dark:bg-brand-900 rounded-xl flex items-center justify-center"><BookOpen className="w-5 h-5 text-brand-700 dark:text-gold-400" /></div><div><h2 className="text-2xl font-bold text-brand-900">Audiobooks</h2><p className="text-brand-500 text-sm mt-0.5">Listen to Indian laws in original and simplified language</p></div></div>
           
         </div>
 

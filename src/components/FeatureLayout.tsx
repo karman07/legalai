@@ -68,7 +68,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
     // { icon: HelpCircle,      title: 'Ask a Doubt',    path: '/doubts'    },  // HIDDEN
     {
       icon: MessageSquare,
-      title: 'Study Assistant',
+      title: 'Legal AI Assistant',
       path: '/chatbot',
       accent: 'text-cyan-600 dark:text-cyan-400',
       activeClass: 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30',
@@ -76,7 +76,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
     // { icon: Brain,           title: 'Legal Expert',   path: '/expert'    },  // HIDDEN
     {
       icon: Volume2,
-      title: 'Bare Act Reader',
+      title: 'Audiobooks',
       path: '/audio',
       accent: 'text-orange-600 dark:text-orange-400',
       activeClass: 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30',

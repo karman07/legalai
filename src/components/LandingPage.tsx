@@ -135,12 +135,12 @@ export default function LandingPage() {
 
   const features = [
     {
-      icon: MessageSquare, title: 'AI-Powered Study Assistant',
+      icon: MessageSquare, title: 'AI-Powered Legal Assistant',
       description: 'A 24/7 intelligent tutor trained on comprehensive Indian legal material — Bare Acts, case law, and expert commentary — to clarify doctrine and resolve doubts.',
       path: '/chatbot', bg: 'bg-cyan-50', iconColor: 'text-cyan-600',
     },
     {
-      icon: Volume2, title: 'Bare Act Reader',
+      icon: Volume2, title: 'Audiobooks',
       description: 'Navigate exact statutory texts with an audiobook mode powered by ultra-realistic neural voices for hands-free learning.',
       path: '/audio', bg: 'bg-amber-50', iconColor: 'text-amber-600',
     },
