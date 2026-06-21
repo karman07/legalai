@@ -309,7 +309,7 @@ export default function AboutUsPage() {
               Join Our Community
             </h2>
             <p className="text-brand-300 text-lg leading-relaxed mb-10">
-              Follow us for daily legal insights, exam tips, case law summaries, and updates straight from India's leading AI law education platform.
+              Follow us for daily legal insights, exam tips, case law summaries, and updates from LegalPadhai.ai — your AI-powered law education platform.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
