@@ -187,7 +187,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-brand-50 dark:bg-brand-950 lg:flex">
+    <div className="min-h-screen bg-brand-50 dark:bg-brand-950 lg:flex overflow-x-hidden">
 
       {/* ── Desktop Sidebar ─────────────────────────────── */}
       <aside className={`hidden lg:flex lg:flex-col ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64 xl:w-72'} bg-white dark:bg-brand-900 border-r border-brand-200 dark:border-brand-800 fixed inset-y-0 left-0 z-50 shadow-sidebar transition-all duration-300`}>
@@ -210,7 +210,7 @@ export default function FeatureLayout({ children }: FeatureLayoutProps) {
       </aside>
 
       {/* ── Main Content ─────────────────────────────────── */}
-      <div className={`${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64 xl:pl-72'} flex-1 flex flex-col min-h-screen bg-brand-50 dark:bg-brand-950 transition-all duration-300`}>
+      <div className={`${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64 xl:pl-72'} flex-1 min-w-0 flex flex-col min-h-screen bg-brand-50 dark:bg-brand-950 transition-all duration-300`}>
 
         {/* Mobile top bar */}
         <header className="lg:hidden bg-white dark:bg-brand-900 border-b border-brand-200 dark:border-brand-800 shadow-sm sticky top-0 z-30">
